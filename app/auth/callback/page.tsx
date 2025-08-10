@@ -1,56 +1,53 @@
-'use client'
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabaseBrowser } from '@/lib/supabase/client'
+"use client";
 
-export default function AuthCallback() {
-  const router = useRouter()
+import { Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { supabaseBrowser } from "@/lib/supabase/browser";
+
+function AuthCallbackEffect() {
+  const router = useRouter();
+  const sp = useSearchParams();
 
   useEffect(() => {
     (async () => {
-      try {
-        const href = typeof window !== 'undefined' ? window.location.href : ''
-        const hash = typeof window !== 'undefined' ? window.location.hash : ''
-        const search = typeof window !== 'undefined' ? window.location.search : ''
-        const params = typeof window !== 'undefined' ? new URLSearchParams(search) : null
-        const supabase = supabaseBrowser()
+      const supabase = supabaseBrowser();
+      const next = sp.get("next") ?? "/dashboard";
 
-        // Surface provider error query params early
-        if (params && params.get('error')) {
-          const providerError = params.get('error_description') || params.get('error') || 'OAuth error'
-          console.error('[auth/callback] provider error', providerError)
-          throw new Error(providerError)
-        }
-
-        console.debug('[auth/callback] starting', { hasHash: !!hash, href })
-
-        if (hash.includes('access_token')) {
-          // Hash-based magic link
-          // @ts-expect-error: typings may not yet include this method
-          const { error } = await supabase.auth.getSessionFromUrl({ storeSession: true })
-          if (error) throw error
-          if (typeof window !== 'undefined') {
-            history.replaceState({}, document.title, window.location.pathname)
-          }
-        } else {
-          // PKCE/code flow
-          const { error } = await supabase.auth.exchangeCodeForSession(href)
-          if (error) throw error
-        }
-
-        console.debug('[auth/callback] success; redirecting to /dashboard')
-        router.replace('/dashboard')
-      } catch (e) {
-        console.error('auth callback error', e)
-        router.replace('/sign-in')
+      // If provider returned an error, bounce to error screen
+      const errParam = sp.get("error") || sp.get("error_description");
+      if (errParam) {
+        router.replace(`/auth/error?m=${encodeURIComponent(errParam)}`);
+        return;
       }
-    })()
-  }, [router])
 
+      // Let Supabase parse the URL (hash or ?code) automatically,
+      // then read the stored session.
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) {
+        router.replace(`/auth/error?m=${encodeURIComponent(error.message)}`);
+        return;
+      }
+
+      if (data.session) {
+        // Clean up the URL (remove hash/query) and go to next page
+        router.replace(next);
+      } else {
+        // Nothing to process; send back to sign-in
+        router.replace("/sign-in");
+      }
+    })();
+  }, [router, sp]);
+  return null;
+}
+
+export default function AuthCallbackPage() {
   return (
-    <main className="mx-auto max-w-md p-6">
-      <h1 className="text-xl font-semibold mb-2">Signing you in…</h1>
-      <p className="text-neutral-600">Please wait.</p>
-    </main>
-  )
+    <Suspense>
+      <AuthCallbackEffect />
+      <div className="px-6 py-12 text-center">
+        <p>Signing you in…</p>
+      </div>
+    </Suspense>
+  );
 }

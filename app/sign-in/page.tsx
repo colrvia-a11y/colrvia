@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { supabaseBrowser } from '@/lib/supabase/client'
+import { supabaseBrowser } from '@/lib/supabase/browser'
 
 type Mode = 'magic' | 'password'
 type PwPhase = 'signin' | 'signup'
@@ -84,7 +84,7 @@ export default function SignInPage() {
     if (password !== confirm) { setMsg('Passwords do not match'); return }
     setBusy(true)
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/auth/callback` } })
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/auth/callback` } })
       if (error) throw error
       if (data.user && !data.session) {
         setAwaitingConfirm(true)
