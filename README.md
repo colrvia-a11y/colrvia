@@ -164,8 +164,24 @@ npm run build # production build
 
 If modifying motion tokens, re-run Lighthouse to ensure no layout shift regressions (CLS). GitHub Action workflow (`.github/workflows/ci.yml`) now runs install, type-check, lint, test, and build on push / PR.
 
-### Removed Legacy Endpoints
-`/api/projects/*` deprecated endpoints have been removed (replaced by story-centric flows). Clean up any lingering client references before deploying.
+### Removed Legacy Endpoints (Projects → Stories Migration)
+Legacy project endpoints (`/api/projects/*`) and related UI (project dashboard, project detail page, save-to-project widget, project sharing & image upload routes) were fully retired in favor of a simpler, story‑centric model.
+
+Redirects ensure old bookmarks still work:
+```
+/projects            → /dashboard (301)
+/project/:anything*  → /dashboard (301)
+```
+
+If you previously saved a Color Story inside a Project, those stories now surface directly in the dashboard (migration path relies on existing `stories` table; no project container concept remains). Any stale client code calling `/api/projects` should be removed—tests will fail if you reintroduce those routes.
+
+Removed files (illustrative list):
+- `app/api/projects/*` (all routes)
+- `app/(app)/project/[id]/*` (project detail + share controls + palette generator)
+- `components/SaveStoryToProject.tsx`
+- `app/(app)/dashboard/new-project-form.tsx`
+
+Add new story flows using `/api/stories` endpoints directly. Public sharing now relies on existing story reveal / OG mechanisms (project-specific public slug logic removed).
 
 ### New Tests
 Added `tests/og.test.ts` for OG text normalization.
