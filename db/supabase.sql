@@ -36,3 +36,29 @@ create policy "stories_owner_select" on public.stories
   for select using ( auth.uid() = user_id );
 create policy "stories_owner_crud" on public.stories
   for all using ( auth.uid() = user_id ) with check ( auth.uid() = user_id );
+
+-- Profiles for plan management
+create table if not exists public.profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  tier text not null default 'free' check (tier in ('free','pro')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer as $$
+begin
+  insert into public.profiles (user_id) values (new.id)
+  on conflict (user_id) do nothing;
+  return new;
+end $$;
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+alter table public.profiles enable row level security;
+drop policy if exists "own profile read" on public.profiles;
+create policy "own profile read" on public.profiles
+  for select using (auth.uid() = user_id);
+drop policy if exists "own profile update" on public.profiles;
+create policy "own profile update" on public.profiles
+  for update using (auth.uid() = user_id);
