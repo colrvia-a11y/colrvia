@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       room: parsed.room ?? null,
       ...(parsed.inputs ?? {}),
     },
-    palette: {},
+    palette: [],
     narrative: null,
     has_variants: false,
     status: "new",

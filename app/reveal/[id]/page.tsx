@@ -40,8 +40,12 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
   if (!user) return <main className="mx-auto max-w-xl p-6"><p className="mb-4">Sign in to view this story.</p><Link href="/sign-in" className="btn btn-primary">Sign in</Link></main>
   const { data, error } = await supabase.from('stories').select('*').eq('id', id).single()
   if (error || !data) return <main className="mx-auto max-w-xl p-6"><p className="text-neutral-600">Story not found.</p></main>
-  const placements = data.placements?.pct || { sixty:60, thirty:30, ten:10 }
-  const palette = (data.palette||[]) as any[]
+  const rawPalette = data.palette
+  const palette = Array.isArray(rawPalette) ? rawPalette : []
+  if(!Array.isArray(rawPalette)) {
+    console.warn('REVEAL_PALETTE_SHAPE_INVALID', { id, type: typeof rawPalette })
+  }
+  const placements = (data.placements && typeof data.placements === 'object' ? (data.placements as any).pct : undefined) || { sixty:60, thirty:30, ten:10 }
   const heroImage = data.photo_url || '/icons/icon-192.png'
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 space-y-10">
