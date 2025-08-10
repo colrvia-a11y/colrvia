@@ -5,6 +5,7 @@ import Button from '@/components/ui/Button'
 import PWABadge from './pwa-badge'
 import { Suspense } from 'react'
 import ReducedMotionToggle from './reduced-motion-toggle'
+import ProfileCard from '@/components/ProfileCard'
 import { getUserTier } from '@/lib/profile'
 
 export default async function AccountPage() {
@@ -25,7 +26,8 @@ export default async function AccountPage() {
   return (
   <div className="max-w-2xl mx-auto px-4 py-10 space-y-10">
       <h1 className="font-display text-4xl leading-[1.05]">Account</h1>
-      <section className="rounded-2xl border border-linen bg-surface p-6 shadow-soft space-y-4">
+  <ProfileCard />
+  <section className="rounded-2xl border border-linen bg-surface p-6 shadow-soft space-y-4">
         <header className="flex items-center justify-between"><h2 className="font-medium">Plan & Billing</h2><span className="text-xs uppercase tracking-wide px-2 py-1 rounded-full bg-linen/70">{tier}</span></header>
         <p className="text-sm text-[var(--ink-subtle)]">Manage your subscription and access palette exports.</p>
         {tier === 'free' ? (

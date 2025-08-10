@@ -15,9 +15,25 @@ Using `next-themes` with class strategy. Light = `light`, dark = `theme-dark`. T
 Client PostHog init in `lib/analytics.ts` (lazy). Provide env `NEXT_PUBLIC_POSTHOG_KEY` (optional) & `NEXT_PUBLIC_POSTHOG_HOST` (defaults). Events used: `variant_open`, `share_image_download`, `cinematic_play`, `cinematic_exit` (more TBD). Vercel page analytics via `<Analytics />` in layout.
 
 ## Variants
-Variant columns: `variant` (`recommended|softer|bolder`) and `parent_id` on `stories`. Generation endpoint: `/api/stories/[id]/variant?type=softer|bolder`.
-Algorithm now uses LAB-based lightness shifts + contrast guards (walls/trim >=3:1, accent vs walls >=2:1) in `lib/ai/variants.ts` & helpers in `lib/ai/color.ts`. Tests: `tests/ai.test.ts` (run with `npm test`).
-`has_variants` column (optional) plus `lib/db/stories.ts` computes and persists flags for dashboard badges.
+Variant columns: `variant` (`recommended|softer|bolder`) and `parent_id` on `stories`.
+
+Generation endpoint (POST only): `POST /api/stories/:id/variant` with JSON body:
+```
+{ "mode": "softer" | "bolder", "palette": DecodedSwatch[] }
+```
+Response:
+```
+{ "variant": DecodedSwatch[] }
+```
+Notes:
+1. `palette` is optional (server falls back to stored palette). If supplied, it is decoded & validated; malformed shapes yield 422.
+2. Deprecated: previous `GET /api/stories/:id/variant?type=...` now returns `405 USE_POST`.
+3. Rate limiting: in-memory best-effort limit of 6 requests/minute and 40/hour per user (429 with `{ error:"RATE_LIMITED", scope, retryAfter }`).
+4. Logs (`VARIANT_POST_*`) trace lifecycle: START, BAD_INPUT, RATE_LIMIT, OK, FAIL.
+
+Algorithm uses LAB-based lightness shifts + contrast guards (walls/trim >=3:1, accent vs walls >=2:1) in `lib/ai/variants.ts` & helpers in `lib/ai/color.ts`.
+Tests: `tests/ai.test.ts` + decoder/contract tests (`tests/variant-route.test.ts`, `tests/variant-post.test.ts`).
+`has_variants` column (optional) plus `lib/db/stories.ts` computes & persists flags for dashboard badges.
 
 ## Share Images
 OG/Twitter image endpoint: `/api/share/[id]/image` (edge, 1200×630). `generateMetadata` in reveal page attaches dynamic OG image (variant param aware). Place fonts (`/public/fonts/Inter-Regular.ttf`, `Fraunces-SemiBold.ttf`) for branded output; falls back if absent. Text normalization (length cap, trimming, fallbacks) covered by `buildOgText` in `lib/og.ts` with tests.
@@ -128,14 +144,15 @@ Security & Privacy
 Deployment Readiness
 - △ Add environment variable table (see below) and confirm all required keys documented
 
-### Environment Variables (Planned Table)
+### Environment Variables
 | Variable | Required | Description |
 |----------|----------|-------------|
 | NEXT_PUBLIC_SITE_URL | yes | Base site origin for absolute URL generation |
 | NEXT_PUBLIC_POSTHOG_KEY | optional | Analytics key for PostHog |
 | NEXT_PUBLIC_POSTHOG_HOST | optional | Override host (defaults to https://app.posthog.com) |
-| SUPABASE_URL | yes | Supabase project URL |
-| SUPABASE_ANON_KEY | yes | Supabase anonymous key |
+| NEXT_PUBLIC_SUPABASE_URL | yes | Supabase project URL (client & server) |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | yes | Supabase anonymous key |
+| SUPABASE_SERVICE_ROLE | yes (server ops) | Service role key for privileged server tasks (never expose client-side) |
 | STRIPE_SECRET_KEY | yes (billing) | Server key for Stripe integration |
 | STRIPE_WEBHOOK_SECRET | yes (billing) | Webhook verification secret |
 

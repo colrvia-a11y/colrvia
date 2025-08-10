@@ -85,7 +85,7 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
         </div>
       </div>
       <VariantTabs storyId={data.id} initialPalette={palette} initialTitle={data.title} initialNarrative={data.narrative} baseMeta={{ brand:data.brand, vibe:data.vibe }} />
-      {palette.length>0 ? (
+  {palette.length>0 ? (
         <>
           <SwatchRibbon swatches={palette.slice(0,5).filter(p=>p.hex).map(p=>({ hex:p.hex!, name:p.name }))} />
           <section className="relative" id="palette">
@@ -94,10 +94,13 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
           </section>
         </>
       ) : (
-        <div className="rounded-xl border border-dashed border-[var(--border)] p-8 text-center space-y-3 bg-[var(--bg-surface)]">
+        <div className="rounded-xl border border-dashed border-[var(--border)] p-8 text-center space-y-4 bg-[var(--bg-surface)]">
           <h2 className="font-display text-xl">No palette yet</h2>
-          <p className="text-sm text-[var(--ink-subtle)]">We couldn't parse a palette for this story. You can start a new one.</p>
-          <Link href="/start" className="btn btn-secondary">Create New Story</Link>
+          <p className="text-sm text-[var(--ink-subtle)]">We couldn't parse a palette for this story. Try generating again or start a new one.</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href={`/start?regenerate=${id}`} className="btn btn-primary">Regenerate</Link>
+            <Link href="/start" className="btn btn-secondary">New Story</Link>
+          </div>
         </div>
       )}
       <section className="prose prose-sm max-w-none text-neutral-800" aria-label="Narrative description"><p>{data.narrative}</p></section>

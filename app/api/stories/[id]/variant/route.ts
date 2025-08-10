@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase/server'
 import { makeVariant } from '@/lib/ai/variants'
 import { decodePalette } from '@/lib/palette'
+import { limitVariant } from '@/lib/rate-limit'
 
 export async function GET() {
   console.warn('VARIANT_GET_DEPRECATED')
@@ -22,6 +23,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { data: story, error } = await supabase.from('stories').select('*').eq('id', storyId).single()
   if(error || !story) return NextResponse.json({ error:'NOT_FOUND' }, { status:404 })
   if(story.user_id !== user.id) return NextResponse.json({ error:'FORBIDDEN' }, { status:403 })
+  // rate limiting (best-effort, in-memory)
+  const limited = limitVariant(user.id)
+  if(!limited.ok){
+    console.warn('VARIANT_POST_RATE_LIMIT', { storyId, scope: limited.scope })
+    return NextResponse.json({ error:'RATE_LIMITED', scope: limited.scope, retryAfter: limited.retryAfter }, { status:429, headers:{ 'Retry-After': String(limited.retryAfter) } })
+  }
   const basePalette = decodePalette(Array.isArray(inputPalette)? inputPalette : story.palette)
   if(basePalette.length===0){
     console.warn('VARIANT_POST_BAD_INPUT', { storyId, shape: typeof inputPalette })
