@@ -1,7 +1,7 @@
 import 'server-only'
 export const runtime = 'nodejs'
 import { NextResponse } from 'next/server'
-import { supabaseServer } from '../../../lib/supabase/server'
+import { supabaseServer } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export async function GET(request: Request) {
