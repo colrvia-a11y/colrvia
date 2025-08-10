@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const sig = req.headers.get('stripe-signature') ?? ''
   const buf = await req.text()
 
-  // ✅ No apiVersion here; SDK uses your Stripe account's default
+  // No apiVersion here; SDK uses your Stripe account's default
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
 
   let event: Stripe.Event
