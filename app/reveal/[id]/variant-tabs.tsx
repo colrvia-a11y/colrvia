@@ -32,13 +32,22 @@ export default function VariantTabs({ storyId, initialPalette, initialTitle, ini
     } finally { setLoading(false) }
   }
   return (
-    <div className="mb-6">
-      <div className="inline-flex rounded-full border bg-white overflow-hidden text-sm">
-        {['recommended','softer','bolder'].map(v=> (
-          <button key={v} onClick={()=>load(v as any)} className={`px-4 py-1.5 capitalize focus:outline-none ${variant===v?'bg-neutral-900 text-white':'hover:bg-neutral-100'}`}>{v}</button>
-        ))}
+    <div className="mb-8 space-y-4">
+      <div role="tablist" aria-label="Palette variants" className="inline-flex rounded-full border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden text-sm">
+        {['recommended','softer','bolder'].map(v=> {
+          const active = variant===v
+          return (
+            <button
+              key={v}
+              role="tab"
+              aria-selected={active}
+              onClick={()=>load(v as any)}
+              className={`px-5 py-2 capitalize focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] transition-colors ${active? 'bg-[var(--brand)] text-white':'hover:bg-[#F2EFE9] text-[var(--ink)]'}`}
+            >{v}</button>
+          )
+        })}
       </div>
-      {loading && <div className="mt-4 h-24 rounded-xl bg-neutral-100 animate-pulse" aria-label="Loading variant" />}
+      {loading && <div className="h-24 rounded-2xl bg-[#F2EFE9] animate-pulse" aria-label="Loading variant" />}
     </div>
   )
 }

@@ -75,7 +75,7 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
   <section className="relative" id="palette-grid">
     <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
       {palette.map((p,i)=> (
-        <SwatchCard key={i} color={p} onCopy={(c)=>{ if(typeof window!=='undefined'){ window.dispatchEvent(new CustomEvent('swatch-copied',{ detail:{ hex:c.hex, name:c.name } })) } }} />
+        <SwatchCard key={i} index={i} total={palette.length} color={p} onCopy={(c)=>{ if(typeof window!=='undefined'){ window.dispatchEvent(new CustomEvent('swatch-copied',{ detail:{ hex:c.hex, name:c.name } })) } }} />
       ))}
     </div>
     <CopyToast />
