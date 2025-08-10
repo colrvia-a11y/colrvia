@@ -66,7 +66,10 @@ export default function SignInPage() {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
-      if (data.session) window.location.href = '/dashboard'
+      if (data.session) {
+        try { await fetch('/api/auth/sync', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ event:'SIGNED_IN', access_token: data.session.access_token, refresh_token: data.session.refresh_token }) }) } catch {}
+        window.location.href = '/dashboard'
+      }
       else setMsg('Signed in, redirecting…')
     } catch (err:any) {
       setMsg(err.message || 'Sign in failed')
@@ -87,7 +90,10 @@ export default function SignInPage() {
         setAwaitingConfirm(true)
         setMsg('Check your email to confirm your address. If it does not arrive within a minute, check spam or click Resend below.')
       } else {
-        window.location.href = '/dashboard'
+        if (data.session) {
+          try { await fetch('/api/auth/sync', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ event:'SIGNED_IN', access_token: data.session.access_token, refresh_token: data.session.refresh_token }) }) } catch {}
+          window.location.href = '/dashboard'
+        }
       }
     } catch (err:any) {
       setMsg(err.message || 'Sign up failed')

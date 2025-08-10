@@ -15,14 +15,24 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
     let mounted = true
     const supabase = supabaseBrowser()
     supabase.auth.getUser().then(({ data:{ user } })=> { if(mounted){ setUser(user); setChecking(false) } })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, session)=> {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (evt, session)=> {
       if(mounted) setUser(session?.user ?? null)
+      try {
+        if (evt === 'SIGNED_OUT') {
+          await fetch('/api/auth/sync', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ event:'SIGNED_OUT' }) })
+        } else if (session?.access_token && session?.refresh_token) {
+          await fetch('/api/auth/sync', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ event: evt, access_token: session.access_token, refresh_token: session.refresh_token }) })
+        }
+      } catch (e) { /* swallow */ }
     })
     return ()=> { mounted=false; subscription?.unsubscribe?.() }
   },[])
 
   async function signOut(){
-    try { await supabaseBrowser().auth.signOut() } catch {}
+    try {
+      await supabaseBrowser().auth.signOut()
+      await fetch('/api/auth/sync', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ event:'SIGNED_OUT' }) })
+    } catch {}
   }
   return (
     <div className="min-h-screen flex flex-col">
