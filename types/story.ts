@@ -6,7 +6,16 @@ export type Vibe =
   | 'Modern Warm'  | 'Soft Pastels' | 'Moody Blue-Green';
 export type Role = 'walls'|'trim'|'ceiling'|'cabinets'|'accent';
 export type Paint = { name:string; code:string; brand:Brand; hex:string; tags?:string[] };
+// Full Swatch used internally ties to a role; decoding may yield partial.
 export type Swatch = Paint & { role: Role };
+// Lightweight palette swatch shape for decoded / resilient palette arrays.
+export type DecodedSwatch = {
+  name?: string;
+  brand?: string; // keep flexible for upstream
+  code?: string;
+  hex?: string; // normalized #RRGGBB
+  role?: string;
+};
 export type Placements = { walls:string; trim:string; ceiling?:string; cabinets?:string; accent?:string; pct?:{ sixty:number; thirty:number; ten:number } };
 export type GenerateInput = {
   designer: Designer; vibe: Vibe; brand: Brand;

@@ -9,6 +9,8 @@ import CopyToast from '@/components/reveal/CopyToast'
 import StoryHeroCard from '@/components/visual/StoryHeroCard'
 import SwatchRibbon from '@/components/visual/SwatchRibbon'
 import PdfButton from './pdf-button'
+import { decodePalette } from '@/lib/palette'
+import RevealPaletteClient from './RevealPaletteClient'
 export async function generateMetadata({ params, searchParams }:{ params:{id:string}; searchParams:Record<string,string|undefined> }): Promise<Metadata> {
   const id = params.id
   const v = searchParams?.v
@@ -52,9 +54,9 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
   const { data, error } = await supabase.from('stories').select('*').eq('id', id).single()
   if (error || !data) return <main className="mx-auto max-w-xl p-6"><p className="text-neutral-600">Story not found.</p></main>
   const rawPalette = data.palette
-  const palette = Array.isArray(rawPalette) ? rawPalette : []
+  const palette = decodePalette(rawPalette)
   if(!Array.isArray(rawPalette)) {
-    console.warn('REVEAL_PALETTE_SHAPE_INVALID', { id, type: typeof rawPalette })
+    console.warn('REVEAL_PALETTE_SHAPE_INVALID', { id, coerced: palette.length })
   }
   const placements = (data.placements && typeof data.placements === 'object' ? (data.placements as any).pct : undefined) || { sixty:60, thirty:30, ten:10 }
   const heroImage = data.photo_url || '/icons/icon-192.png'
@@ -62,7 +64,7 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 space-y-10">
       <div className="rounded-2xl overflow-hidden relative" aria-label={displayTitle}>
-        <StoryHeroCard imageSrc={heroImage} title={displayTitle} meta={`${data.brand} · ${data.vibe}`} href="#palette" palette={palette} ctaLabel="Open" />
+  <StoryHeroCard imageSrc={heroImage} title={displayTitle} meta={`${data.brand} · ${data.vibe}`} href="#palette" palette={palette.filter(p=>p.hex).map(p=>({ hex:p.hex!, name:p.name }))} ctaLabel="Open" />
         <div className="absolute bottom-4 right-4"><PdfButton storyId={data.id} /></div>
       </div>
       <div className="flex items-center gap-3 text-[11px] text-[var(--ink-subtle)]">
@@ -83,11 +85,21 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
         </div>
       </div>
       <VariantTabs storyId={data.id} initialPalette={palette} initialTitle={data.title} initialNarrative={data.narrative} baseMeta={{ brand:data.brand, vibe:data.vibe }} />
-      <SwatchRibbon swatches={palette.slice(0,5).map(p=>({ hex:p.hex, name:p.name }))} />
-      <section className="relative" id="palette">
-        <PaletteGrid palette={palette as any} onCopy={(c)=>{ if(typeof window!=='undefined'){ window.dispatchEvent(new CustomEvent('swatch-copied',{ detail:{ hex:c.hex, name:c.name } })) } }} />
-        <CopyToast />
-      </section>
+      {palette.length>0 ? (
+        <>
+          <SwatchRibbon swatches={palette.slice(0,5).filter(p=>p.hex).map(p=>({ hex:p.hex!, name:p.name }))} />
+          <section className="relative" id="palette">
+            <RevealPaletteClient palette={palette as any} />
+            <CopyToast />
+          </section>
+        </>
+      ) : (
+        <div className="rounded-xl border border-dashed border-[var(--border)] p-8 text-center space-y-3 bg-[var(--bg-surface)]">
+          <h2 className="font-display text-xl">No palette yet</h2>
+          <p className="text-sm text-[var(--ink-subtle)]">We couldn't parse a palette for this story. You can start a new one.</p>
+          <Link href="/start" className="btn btn-secondary">Create New Story</Link>
+        </div>
+      )}
       <section className="prose prose-sm max-w-none text-neutral-800" aria-label="Narrative description"><p>{data.narrative}</p></section>
       <StoryActionBar storyId={data.id} palette={palette as any} />
     </main>
