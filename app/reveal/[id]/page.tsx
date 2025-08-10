@@ -9,7 +9,7 @@ import CopyToast from '@/components/reveal/CopyToast'
 import StoryHeroCard from '@/components/visual/StoryHeroCard'
 import SwatchRibbon from '@/components/visual/SwatchRibbon'
 import PdfButton from './pdf-button'
-import { decodePalette } from '@/lib/palette'
+import { normalizePalette } from '@/lib/palette'
 import RevealPaletteClient from './RevealPaletteClient'
 export async function generateMetadata({ params, searchParams }:{ params:{id:string}; searchParams:Record<string,string|undefined> }): Promise<Metadata> {
   const id = params.id
@@ -53,10 +53,11 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
   if (!user) return <main className="mx-auto max-w-xl p-6"><p className="mb-4">Sign in to view this story.</p><Link href="/sign-in" className="btn btn-primary">Sign in</Link></main>
   const { data, error } = await supabase.from('stories').select('*').eq('id', id).single()
   if (error || !data) return <main className="mx-auto max-w-xl p-6"><p className="text-neutral-600">Story not found.</p></main>
-  const rawPalette = data.palette
-  const palette = decodePalette(rawPalette)
-  if(!Array.isArray(rawPalette)) {
-    console.warn('REVEAL_PALETTE_SHAPE_INVALID', { id, coerced: palette.length })
+  let palette: any[] = []
+  try {
+    palette = normalizePalette(data.palette, data.brand as any)
+  } catch {
+    console.warn('REVEAL_PALETTE_SHAPE_INVALID', { id, coerced: 0 })
   }
   const placements = (data.placements && typeof data.placements === 'object' ? (data.placements as any).pct : undefined) || { sixty:60, thirty:30, ten:10 }
   const heroImage = data.photo_url || '/icons/icon-192.png'

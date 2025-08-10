@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase/server'
 import { makeVariant } from '@/lib/ai/variants'
-import { decodePalette } from '@/lib/palette'
+import { decodePalette, normalizePalette } from '@/lib/palette'
 import { limitVariant } from '@/lib/rate-limit'
 
 export async function GET() {
@@ -29,8 +29,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     console.warn('VARIANT_POST_RATE_LIMIT', { storyId, scope: limited.scope })
     return NextResponse.json({ error:'RATE_LIMITED', scope: limited.scope, retryAfter: limited.retryAfter }, { status:429, headers:{ 'Retry-After': String(limited.retryAfter) } })
   }
-  const basePalette = decodePalette(Array.isArray(inputPalette)? inputPalette : story.palette)
-  if(basePalette.length===0){
+  let basePalette: any[] = []
+  try {
+    basePalette = normalizePalette(Array.isArray(inputPalette)? inputPalette : story.palette, story.brand)
+  } catch (e) {
     console.warn('VARIANT_POST_BAD_INPUT', { storyId, shape: typeof inputPalette })
     return NextResponse.json({ error:'INVALID_PALETTE' }, { status:422 })
   }

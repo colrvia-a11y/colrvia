@@ -15,6 +15,18 @@ Using `next-themes` with class strategy. Light = `light`, dark = `theme-dark`. T
 Client PostHog init in `lib/analytics.ts` (lazy). Provide env `NEXT_PUBLIC_POSTHOG_KEY` (optional) & `NEXT_PUBLIC_POSTHOG_HOST` (defaults). Events used: `variant_open`, `share_image_download`, `cinematic_play`, `cinematic_exit` (more TBD). Vercel page analytics via `<Analytics />` in layout.
 
 ## Variants
+### Palette Normalization & Backfill
+Palettes now persist as a strict ordered array of 5 swatches (`walls, trim, cabinets, accent, extra`). Normalization logic in `lib/palette.ts` (`normalizePalette`) coerces legacy shapes (role-keyed objects, colorN keys, string arrays). Invalid inputs trigger 422 on creation.
+
+Backfill script:
+```
+tsx scripts/backfill-palettes.ts
+```
+SQL sanity checks:
+```
+select count(*) from public.stories where jsonb_typeof(palette) <> 'array' or (jsonb_typeof(palette)='array' and jsonb_array_length(palette)=0);
+select id, jsonb_typeof(palette) palette_type, case when jsonb_typeof(palette)='array' then jsonb_array_length(palette) end palette_len, brand, created_at from public.stories order by created_at desc limit 20;
+```
 Variant columns: `variant` (`recommended|softer|bolder`) and `parent_id` on `stories`.
 
 Generation endpoint (POST only): `POST /api/stories/:id/variant` with JSON body:

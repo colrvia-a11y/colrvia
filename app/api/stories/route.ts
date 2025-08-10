@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { supabaseServer } from '@/lib/supabase/server';
+import { normalizePalette } from '@/lib/palette';
 
 // --- normalization helpers ---
 const normalizeBrand = (b?: string) => {
@@ -61,6 +62,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'AUTH_MISSING' }, { status: 401 });
   }
 
+  // Build initial (empty) palette structure; if user supplied something in inputs.palette normalize it.
+  let normalizedPalette: any = []
+  try {
+    if((raw as any)?.palette) {
+      normalizedPalette = normalizePalette((raw as any).palette, parsed.brand as any)
+    }
+  } catch (e) {
+    console.warn('CREATE_STORY_PALETTE_INVALID', { message: (e as any)?.message })
+    return NextResponse.json({ error: 'PALETTE_INVALID' }, { status: 422 })
+  }
   // DB payload with safe defaults (no unknown columns like title)
   const payload = {
     user_id: user.id,
@@ -73,7 +84,7 @@ export async function POST(req: Request) {
       room: parsed.room ?? null,
       ...(parsed.inputs ?? {})
     },
-    palette: {},
+  palette: normalizedPalette,
     narrative: null,
     has_variants: false,
     status: 'new'
