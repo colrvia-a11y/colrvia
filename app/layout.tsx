@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import AuthHashListener from '@/components/auth-hash-listener'
 import AppShell from '@/components/shell/AppShell'
+import AuthSyncBridge from '@/components/providers/AuthSyncBridge'
 import RegisterSW from '@/components/pwa/RegisterSW'
 import SupabaseListener from '@/components/providers/SupabaseListener'
 import { ThemeProvider } from 'next-themes'
@@ -69,6 +70,7 @@ export default function RootLayout({
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem value={{ light:'light', dark:'theme-dark' }}>
     <MotionProvider>
       <RegisterSW />
+  <AuthSyncBridge />
   <AppShell>{children}</AppShell>
   <Analytics />
   <SupabaseListener />
