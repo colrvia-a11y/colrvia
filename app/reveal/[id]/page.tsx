@@ -1,5 +1,6 @@
 import { supabaseServer } from '@/lib/supabase/server'
 import Link from 'next/link'
+import VariantTabs from './variant-tabs'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,8 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
         <div className="flex-1 h-3 rounded-full bg-neutral-200 overflow-hidden"><div className="h-full bg-neutral-600" style={{width: placements.thirty+'%'}} /></div>
         <div className="flex-1 h-3 rounded-full bg-neutral-200 overflow-hidden"><div className="h-full bg-neutral-400" style={{width: placements.ten+'%'}} /></div>
       </section>
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+  <VariantTabs storyId={data.id} initialPalette={palette} initialTitle={data.title} initialNarrative={data.narrative} baseMeta={{ brand:data.brand, vibe:data.vibe }} />
+  <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" id="palette-grid">
         {palette.map((p,i)=> (
           <div key={i} className="rounded-2xl border overflow-hidden group">
             <div className="h-24" style={{background:p.hex}} />
