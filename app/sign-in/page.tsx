@@ -4,8 +4,15 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { supabaseBrowser } from '@/lib/supabase/client'
 
+type Mode = 'magic' | 'password'
+type PwPhase = 'signin' | 'signup'
+
 export default function SignInPage() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [mode, setMode] = useState<Mode>('magic')
+  const [pwPhase, setPwPhase] = useState<PwPhase>('signin')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const supabase = supabaseBrowser()
@@ -50,32 +57,83 @@ export default function SignInPage() {
     }
   }
 
+  async function signInWithPassword(e: React.FormEvent) {
+    e.preventDefault()
+    setMsg(null)
+    if (!email || !password) { setMsg('Email and password required'); return }
+    setBusy(true)
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      if (data.session) window.location.href = '/dashboard'
+      else setMsg('Signed in, redirecting…')
+    } catch (err:any) {
+      setMsg(err.message || 'Sign in failed')
+    } finally { setBusy(false) }
+  }
+
+  async function signUpWithPassword(e: React.FormEvent) {
+    e.preventDefault()
+    setMsg(null)
+    if (!email || !password) { setMsg('Email and password required'); return }
+    if (password.length < 6) { setMsg('Password must be at least 6 characters'); return }
+    if (password !== confirm) { setMsg('Passwords do not match'); return }
+    setBusy(true)
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/auth/callback` } })
+      if (error) throw error
+      if (data.user && !data.session) {
+        setMsg('Check your email to confirm your address.')
+      } else {
+        window.location.href = '/dashboard'
+      }
+    } catch (err:any) {
+      setMsg(err.message || 'Sign up failed')
+    } finally { setBusy(false) }
+  }
+
   return (
     <main className="mx-auto max-w-md p-6">
       <div className="text-sm tracking-widest font-medium mb-6">COLRVIA</div>
-      <h1 className="text-2xl font-semibold mb-2">Sign in</h1>
-      <p className="text-neutral-600 mb-6">
-        Use a magic link sent to your email, or continue with Google.
-      </p>
+      <h1 className="text-2xl font-semibold mb-2">{mode==='magic' ? 'Sign in' : (pwPhase==='signin'?'Sign in':'Create account')}</h1>
+      <div className="flex gap-3 mb-6 text-sm" role="tablist">
+        <button role="tab" aria-selected={mode==='magic'} onClick={()=>{ setMode('magic'); setMsg(null) }} className={`px-3 py-1 rounded-full border ${mode==='magic'?'bg-black text-white':'bg-white'}`}>Magic link</button>
+        <button role="tab" aria-selected={mode==='password'} onClick={()=>{ setMode('password'); setMsg(null) }} className={`px-3 py-1 rounded-full border ${mode==='password'?'bg-black text-white':'bg-white'}`}>Email & password</button>
+      </div>
 
-      <form onSubmit={sendMagicLink} className="space-y-3 mb-6">
-        <input
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          className="w-full rounded-xl border px-3 py-2"
-          disabled={busy}
-          required
-        />
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-2xl py-3 bg-black text-white"
-        >
-          {busy ? 'Sending…' : 'Send magic link'}
-        </button>
-      </form>
+      {mode==='magic' && (
+        <form onSubmit={sendMagicLink} className="space-y-3 mb-6" aria-label="Magic link form">
+          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" className="w-full rounded-xl border px-3 py-2" disabled={busy} required />
+          <button type="submit" disabled={busy} className="w-full rounded-2xl py-3 bg-black text-white">{busy? 'Sending…':'Send magic link'}</button>
+        </form>
+      )}
+
+      {mode==='password' && (
+        <div className="mb-6">
+          {pwPhase==='signin' && (
+            <form onSubmit={signInWithPassword} className="space-y-3" aria-label="Password sign in form">
+              <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" className="w-full rounded-xl border px-3 py-2" disabled={busy} required />
+              <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" className="w-full rounded-xl border px-3 py-2" disabled={busy} required />
+              <button type="submit" disabled={busy} className="w-full rounded-2xl py-3 bg-black text-white">{busy? 'Signing in…':'Sign in'}</button>
+            </form>
+          )}
+          {pwPhase==='signup' && (
+            <form onSubmit={signUpWithPassword} className="space-y-3" aria-label="Password sign up form">
+              <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" className="w-full rounded-xl border px-3 py-2" disabled={busy} required />
+              <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password (min 6 chars)" className="w-full rounded-xl border px-3 py-2" disabled={busy} required minLength={6} />
+              <input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} placeholder="Confirm password" className="w-full rounded-xl border px-3 py-2" disabled={busy} required />
+              <button type="submit" disabled={busy} className="w-full rounded-2xl py-3 bg-black text-white">{busy? 'Creating…':'Create account'}</button>
+            </form>
+          )}
+          <div className="mt-4 text-xs text-neutral-600">
+            {pwPhase==='signin' ? (
+              <button type="button" onClick={()=>{ setPwPhase('signup'); setMsg(null) }} className="underline">Need an account? Create one</button>
+            ) : (
+              <button type="button" onClick={()=>{ setPwPhase('signin'); setMsg(null) }} className="underline">Have an account? Sign in</button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center my-4">
         <div className="h-px flex-1 bg-neutral-200" />
@@ -83,20 +141,11 @@ export default function SignInPage() {
         <div className="h-px flex-1 bg-neutral-200" />
       </div>
 
-      <button
-        onClick={continueWithGoogle}
-        disabled={busy}
-        className="w-full rounded-2xl py-3 border"
-      >
-        Continue with Google
-      </button>
+      <button onClick={continueWithGoogle} disabled={busy} className="w-full rounded-2xl py-3 border">Continue with Google</button>
 
-      {msg && <p className="mt-4 text-sm text-neutral-700">{msg}</p>}
-  <p className="mt-2 text-xs text-neutral-400">Redirect origin: {origin}</p>
-
-      <div className="mt-8 text-sm">
-        <Link className="underline" href="/">Back to home</Link>
-      </div>
+      {msg && <p className="mt-4 text-sm text-neutral-700 whitespace-pre-line">{msg}</p>}
+      <p className="mt-2 text-xs text-neutral-400">Redirect origin: {origin}</p>
+      <div className="mt-8 text-sm"><Link className="underline" href="/">Back to home</Link></div>
     </main>
   )
 }
