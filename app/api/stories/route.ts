@@ -13,9 +13,18 @@ const normalizeBrand = (b?: string) => {
   return s; // unknown -> will fail refine
 };
 
+// Title is now optional; keep strict schema so unknown keys still 422.
+const sanitizeTitle = (t?: string) => {
+  if (!t) return undefined;
+  const trimmed = t.trim().replace(/\s+/g,' ');
+  if (!trimmed) return undefined;
+  return trimmed.slice(0,120); // enforce max length
+};
+
 const BodySchema = z.object({
   brand: z.string().transform(normalizeBrand).refine(v => v === 'sherwin_williams' || v === 'behr', { message: 'brand must be sherwin_williams or behr' }),
   designerKey: z.enum(['marisol','emily','zane']).default('marisol'),
+  title: z.string().max(120).optional().transform(sanitizeTitle),
   vibe: z.string().optional(),
   lighting: z.enum(['daylight','evening','mixed']).optional(),
   room: z.string().optional(),
@@ -57,6 +66,7 @@ export async function POST(req: Request) {
     user_id: user.id,
     designer_key: parsed.designerKey,
     brand: parsed.brand,
+    title: parsed.title ?? null,
     inputs: {
       vibe: parsed.vibe ?? null,
       lighting: parsed.lighting ?? null,

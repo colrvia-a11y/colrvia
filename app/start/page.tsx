@@ -19,7 +19,8 @@ const Schema = z.object({
   lighting: z.enum(['day','evening','mixed']).default('day'),
   hasWarmWood: z.boolean().default(false),
   roomType: z.string().optional().nullable(),
-  photoUrl: z.string().url().optional().nullable()
+  photoUrl: z.string().url().optional().nullable(),
+  title: z.string().max(120).optional().nullable()
 })
 type FormData = z.infer<typeof Schema>
 
@@ -44,13 +45,16 @@ function StartInner(){
   async function submit(values:FormData){
     setMixing(true)
     try {
-      const body = {
+      const body: any = {
         brand: normalizeBrandForPost(values.brand),
         designerKey: (values.designer || 'Marisol').toLowerCase(),
         vibe: values.vibe || undefined,
         lighting: (values.lighting === 'day' ? 'daylight' : values.lighting) || undefined,
         room: values.roomType || undefined
       } as const
+      if(values.title){
+        body.title = values.title.trim().slice(0,120)
+      }
       const res = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
       let payload: any = null
       try { payload = await res.json() } catch {}
@@ -113,6 +117,10 @@ function StartInner(){
           <div>
             <label className="block text-sm font-medium mb-1">Room type (optional)</label>
             <input name="roomType" onChange={e=>setValue('roomType', e.target.value)} placeholder="Living room, Bedroom…" className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Story title (optional)</label>
+            <input name="title" maxLength={120} onChange={e=>setValue('title', e.target.value,{shouldValidate:true})} placeholder="E.g. Cozy Neutral Retreat" className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm" />
           </div>
         </section>
       </div>
