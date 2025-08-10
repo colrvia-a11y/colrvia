@@ -4,6 +4,7 @@ import Script from 'next/script'
 import AuthHashListener from '@/components/auth-hash-listener'
 import AppShell from '@/components/shell/AppShell'
 import RegisterSW from '@/components/pwa/RegisterSW'
+import SupabaseListener from '@/components/providers/SupabaseListener'
 import { ThemeProvider } from 'next-themes'
 import { Analytics } from '@vercel/analytics/react'
 import { MotionProvider } from '@/components/theme/MotionSettings'
@@ -68,8 +69,9 @@ export default function RootLayout({
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem value={{ light:'light', dark:'theme-dark' }}>
     <MotionProvider>
       <RegisterSW />
-      <AppShell>{children}</AppShell>
-      <Analytics />
+  <AppShell>{children}</AppShell>
+  <Analytics />
+  <SupabaseListener />
     </MotionProvider>
   </ThemeProvider>
       </body>

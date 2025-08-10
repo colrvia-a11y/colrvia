@@ -1,25 +1,14 @@
-import { getUserTier } from '@/lib/profile'
+
+import { supabaseServer } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import Button from '@/components/ui/Button'
 import PWABadge from './pwa-badge'
 import { Suspense } from 'react'
 import ReducedMotionToggle from './reduced-motion-toggle'
+import { getUserTier } from '@/lib/profile'
 
 export default async function AccountPage() {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  const supabase = supabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return <div className="p-8"><p>Please sign in to view your account.</p></div>

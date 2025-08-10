@@ -1,25 +1,21 @@
+import { supabaseServer } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import Link from 'next/link'
-import { supabaseServer } from '@/lib/supabase/server'
 import { getIndexForUser } from '@/lib/db/stories'
 import StoryHeroCard from '@/components/visual/StoryHeroCard'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Dashboard() {
-  const supabase = supabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
+  const supabase = supabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return (
-      <main className="mx-auto max-w-2xl p-6">
-        <p className="mb-4">You must sign in.</p>
-        <Link href="/sign-in" className="rounded-xl px-4 py-2 border inline-block">Sign in</Link>
-      </main>
-    )
+    redirect("/sign-in");
   }
 
-  let stories: any[] = []
+  let stories: any[] = [];
   try {
-  stories = await getIndexForUser(user.id)
+    stories = await getIndexForUser(user.id);
   } catch {}
 
   return (
@@ -37,7 +33,7 @@ export default async function Dashboard() {
       <StoriesGrid stories={stories} />
       <div className="text-xs text-[var(--ink-subtle)]">Dev: <Link href="/test-upload" className="underline">Test upload</Link></div>
     </main>
-  )
+  );
 }
 
 function StoriesGrid({ stories }: { stories:any[] }) {
@@ -49,13 +45,13 @@ function StoriesGrid({ stories }: { stories:any[] }) {
         <p className="text-sm text-[var(--ink-subtle)] mb-6 max-w-xs">Start your first palette to see it appear here.</p>
         <Link href="/start" className="btn btn-primary">Start a Color Story</Link>
       </div>
-    )
+    );
   }
   return (
     <ul className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
       {stories.map(s=>{
         const image = s.photoUrl || '/icons/icon-192.png'
-        const meta = `${s.vibe} · ${s.brand}`
+        const meta = `${s.vibe} 7 ${s.brand}`
         return (
           <li key={s.id} className="[&>div]:h-full">
             <StoryHeroCard imageSrc={image} title={s.title} meta={meta} href={`/reveal/${s.id}`} palette={s.palette} />
@@ -63,5 +59,5 @@ function StoriesGrid({ stories }: { stories:any[] }) {
         )
       })}
     </ul>
-  )
+  );
 }
