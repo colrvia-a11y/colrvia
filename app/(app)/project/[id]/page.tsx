@@ -1,25 +1,39 @@
-import { supabaseServer } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { supabaseServer } from '@/lib/supabase/server'
 import { Upload } from '@/components/upload'
 
-interface ProjectPageProps {
-  params: { id: string }
+function PaletteGenerator() {
+  'use client'
+  const colors = ['#F87171', '#FBBF24', '#34D399', '#60A5FA', '#A78BFA']
+  return (
+    <div className="space-y-2 mt-6">
+      <button
+        onClick={() => { /* placeholder no-op */ }}
+        className="rounded-xl px-4 py-2 border"
+      >Generate Palette</button>
+      <div className="flex gap-2">
+        {colors.map(c => (
+          <div key={c} className="h-10 w-10 rounded" style={{ background: c }} title={c} />
+        ))}
+      </div>
+    </div>
+  )
 }
 
-export default async function ProjectPage({ params }: ProjectPageProps) {
+export const dynamic = 'force-dynamic'
+
+export default async function ProjectPage({ params }: { params: { id: string } }) {
   const supabase = supabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
-
   if (!user) {
     return (
-      <main className="p-8 space-y-4">
-        <p>You must sign in to view this project.</p>
-        <Link className="underline" href="/sign-in">Sign in</Link>
+      <main className="mx-auto max-w-2xl p-6">
+        <p className="mb-4">You must sign in.</p>
+        <Link href="/sign-in" className="rounded-xl px-4 py-2 border inline-block">Sign in</Link>
       </main>
     )
   }
 
-  // Fetch the project ensuring ownership
   const { data: project, error: projectError } = await supabase
     .from('projects')
     .select('*')
@@ -28,64 +42,57 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     .single()
 
   if (projectError || !project) {
-    return (
-      <main className="p-8 space-y-4">
-        <p>Not found</p>
-        <Link href="/dashboard" className="underline">Back to dashboard</Link>
-      </main>
-    )
+    return <main className="mx-auto max-w-2xl p-6">Not found</main>
   }
 
-  // Fetch images for this project via API route
-  let images: { id: string; storage_path: string; created_at: string }[] = []
+  // Fetch images via API
+  let images: any[] = []
   try {
-    const res = await fetch(`/api/projects/${project.id}/images`, { cache: 'no-store' })
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/projects/${params.id}/images`, { cache: 'no-store' })
     if (res.ok) images = await res.json()
-  } catch (e) {
-    // ignore fetch errors, keep images empty
-  }
+  } catch {}
 
-  // Build public URLs for each storage path
-  const imagesWithUrls = images.map(img => {
-    const { data } = supabase.storage.from('uploads').getPublicUrl(img.storage_path)
+  const supabaseClient = supabaseServer()
+  const storage = supabaseClient.storage.from('uploads')
+  const withUrls = images.map(img => {
+    const { data } = storage.getPublicUrl(img.storage_path)
     return { ...img, publicUrl: data.publicUrl }
   })
 
   return (
-  <main className="mx-auto max-w-2xl p-6 space-y-8">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">{project.name}</h1>
-        <Link href="/dashboard" className="text-sm underline text-neutral-600">Back to dashboard</Link>
+    <main className="mx-auto max-w-2xl p-6 space-y-6">
+      <header>
+        <h1 className="text-2xl font-semibold mb-2">{project.name}</h1>
+        <Link href="/dashboard" className="text-sm underline">Back to projects</Link>
       </header>
 
-      <section className="space-y-4">
-        <h2 className="font-medium">Upload Image</h2>
+      <section className="space-y-3">
+        <h2 className="font-medium">Upload image</h2>
         <Upload projectId={project.id} />
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-3">
         <h2 className="font-medium">Images</h2>
-        {imagesWithUrls.length === 0 ? (
-          <p className="text-sm text-neutral-500">No images yet. Upload one above.</p>
+        {withUrls.length === 0 ? (
+          <p className="text-sm text-neutral-500">No images yet.</p>
         ) : (
-      <ul className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {imagesWithUrls.map(img => (
-        <li key={img.id} className="rounded-2xl border p-0 overflow-hidden bg-white hover:bg-neutral-50 transition">
-                <a href={img.publicUrl} target="_blank" rel="noopener noreferrer" className="block">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {withUrls.map(img => (
+              <a key={img.id} href={img.publicUrl} target="_blank" className="block group">
+                <div className="aspect-square overflow-hidden rounded-lg border">
                   <img
                     src={img.publicUrl}
-                    alt="Project image"
-                    className="w-full h-40 object-cover"
+                    alt="Uploaded"
+                    className="h-full w-full object-cover group-hover:opacity-80 transition"
                   />
-                </a>
-                <div className="p-1 text-[10px] text-neutral-500 text-right">
-                  {new Date(img.created_at).toLocaleDateString()}
                 </div>
-              </li>
+              </a>
             ))}
-          </ul>
+          </div>
         )}
       </section>
+
+      <PaletteGenerator />
     </main>
   )
 }

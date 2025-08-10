@@ -9,9 +9,7 @@ import { supabaseBrowser } from '@/lib/supabase/client'
  * named `uploads`. When a file is selected it is uploaded and a public URL
  * for the file is displayed as a link.
  */
-interface UploadProps {
-  projectId?: string
-}
+interface UploadProps { projectId?: string }
 
 export function Upload({ projectId }: UploadProps) {
   const [busy, setBusy] = useState(false)
@@ -32,7 +30,7 @@ export function Upload({ projectId }: UploadProps) {
       return
     }
 
-    const path = `${user.id}/${projectId ?? 'no-project'}/${crypto.randomUUID()}-${file.name}`
+  const path = `${user.id}/${projectId ?? 'no-project'}/${crypto.randomUUID()}-${file.name}`
     const { error: uploadError } = await supabase.storage
       .from('uploads')
       .upload(path, file, { upsert: false })
@@ -57,7 +55,7 @@ export function Upload({ projectId }: UploadProps) {
   }
 
   return (
-    <div className="space-y-3">
+  <div className="space-y-3">
       <input
         type="file"
         accept="image/*"
