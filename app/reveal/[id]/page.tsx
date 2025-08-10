@@ -50,10 +50,26 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
         </div>
         <p className="text-neutral-500 text-sm">{new Date(data.created_at).toLocaleString()} · {data.brand} · {data.vibe}</p>
       </header>
-      <section className="flex gap-4 text-xs font-medium">
-        <div className="flex-1 h-3 rounded-full bg-neutral-200 overflow-hidden"><div className="h-full bg-neutral-900" style={{width: placements.sixty+'%'}} /></div>
-        <div className="flex-1 h-3 rounded-full bg-neutral-200 overflow-hidden"><div className="h-full bg-neutral-600" style={{width: placements.thirty+'%'}} /></div>
-        <div className="flex-1 h-3 rounded-full bg-neutral-200 overflow-hidden"><div className="h-full bg-neutral-400" style={{width: placements.ten+'%'}} /></div>
+      <section className="flex flex-col gap-2" aria-label="Placement ratios">
+        <div className="flex gap-3 text-[10px] tracking-wide uppercase text-[var(--ink-subtle)]">
+          <span className="flex-1">Primary</span>
+          <span className="flex-1">Secondary</span>
+          <span className="flex-1">Accent</span>
+        </div>
+        <div className="flex gap-4 text-xs font-medium">
+          <div className="group relative flex-1 h-3 rounded-full bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+            <div className="h-full bg-[var(--brand)] transition-all" style={{width: placements.sixty+'%'}} />
+            <span className="sr-only">Primary {placements.sixty}%</span>
+          </div>
+          <div className="group relative flex-1 h-3 rounded-full bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+            <div className="h-full bg-[var(--accent)]/80 transition-all" style={{width: placements.thirty+'%'}} />
+            <span className="sr-only">Secondary {placements.thirty}%</span>
+          </div>
+          <div className="group relative flex-1 h-3 rounded-full bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+            <div className="h-full bg-[var(--accent)]/40 transition-all" style={{width: placements.ten+'%'}} />
+            <span className="sr-only">Accent {placements.ten}%</span>
+          </div>
+        </div>
       </section>
   <VariantTabs storyId={data.id} initialPalette={palette} initialTitle={data.title} initialNarrative={data.narrative} baseMeta={{ brand:data.brand, vibe:data.vibe }} />
   <section className="relative" id="palette-grid">

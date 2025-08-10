@@ -15,9 +15,9 @@ export default function SwatchCard({ color, onCopy }: Props){
     setTimeout(()=>setCopied(false), 1600)
   }
   return (
-    <motion.div layout initial={false} whileHover={{ y:-4 }} transition={{ type:'spring', stiffness:300, damping:25 }}
-      className="group relative rounded-3xl border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden shadow-sm">
-      <button onClick={copy} aria-label={`Copy ${color.name} ${color.hex}`} className="absolute top-2 right-2 z-10 px-2 py-1 rounded-full text-[10px] font-medium bg-[var(--bg-surface)]/80 backdrop-blur border border-[var(--border)] opacity-0 group-hover:opacity-100 transition focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">{copied? 'Copied':'Copy'}</button>
+    <motion.div layout initial={false} whileHover={{ y:-4 }} transition={{ duration:0.25, ease:[.4,0,.2,1] }}
+      className="group relative rounded-3xl border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[var(--brand)]">
+  <button onClick={copy} aria-label={`Copy ${color.name} ${color.hex}`} className="absolute top-2 right-2 z-10 px-2 py-1 rounded-full text-[10px] font-medium bg-[var(--bg-surface)]/85 backdrop-blur border border-[var(--border)] opacity-0 group-hover:opacity-100 transition-[opacity,background-color] duration-200 ease-[var(--motion-ease-standard)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] active:scale-[.97]">{copied? 'Copied':'Copy'}</button>
       <div className="h-32 w-full" style={{ backgroundColor: color.hex }} />
       <div className="p-4">
         <div className="font-medium text-sm flex items-center gap-2"><span>{color.name}</span><span className="text-[10px] uppercase tracking-wide text-[var(--ink-subtle)]">{color.role}</span></div>

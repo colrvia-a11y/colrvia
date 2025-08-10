@@ -30,6 +30,12 @@
   --space-8:32px;
   --space-10:40px;
   --space-12:48px;
+  /* Motion */
+  --motion-duration-fast:120ms;
+  --motion-duration:240ms;
+  --motion-duration-slow:360ms;
+  --motion-ease-standard:cubic-bezier(.4,0,.2,1);
+  --motion-ease-emphasized:cubic-bezier(.2,0,.2,1);
 }
 .theme-dark{
   --bg-canvas:#121212; --bg-surface:#1B1B19; --border:#2A2A27;
