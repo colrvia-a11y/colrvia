@@ -4,6 +4,7 @@ import { supabaseServer } from '@/lib/supabase/server';
 import { buildPalette } from '@/lib/ai/palette';
 import { buildNarrative, buildTitle } from '@/lib/ai/narrative';
 import type { GenerateInput } from '@/types/story';
+import { getUserTier } from '@/lib/profile';
 const Body = z.object({
   designer: z.enum(['Emily','Zane','Marisol']),
   vibe: z.enum(['Cozy Neutral','Airy Coastal','Earthy Organic','Modern Warm','Soft Pastels','Moody Blue-Green']),
@@ -21,10 +22,13 @@ export async function POST(req: NextRequest) {
   const parsed = Body.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error:'BAD_INPUT', details: parsed.error.flatten() }, { status: 400 });
   try {
-    // FREE LIMIT: 1 story for now (payment later)
-    const { count } = await supabase.from('stories').select('id', { count:'exact', head:true });
-    if ((count ?? 0) >= 1) {
-      return NextResponse.json({ error:'FREE_LIMIT_REACHED' }, { status: 402 });
+    // Plan enforcement
+    const { tier } = await getUserTier();
+    if (tier === 'free') {
+      const { count } = await supabase.from('stories').select('id', { count:'exact', head:true });
+      if ((count ?? 0) >= 1) {
+        return NextResponse.json({ code:'LIMIT_REACHED', message:'Free plan includes 1 saved Color Story. Upgrade to create more.' }, { status: 402 });
+      }
     }
     const input: GenerateInput = parsed.data;
     const title = buildTitle(input);
