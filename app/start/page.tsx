@@ -35,10 +35,27 @@ function StartInner(){
     defaultValues:{ designer:'Emily', vibe:'Cozy Neutral', brand:'SW', lighting:'day', hasWarmWood:false }
   })
   const values = watch()
+  function normalizeBrandForPost(b:string){
+    const s = b.trim().toLowerCase()
+    if(['sherwin-williams','sherwin_williams','sw','sherwin'].includes(s)) return 'sherwin_williams'
+    if(['behr','behr®','behr paint'].includes(s)) return 'behr'
+    return s
+  }
   async function submit(values:FormData){
     setMixing(true)
     try {
-      const res = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(values) })
+      const body = {
+        designerKey: (values.designer || 'Marisol').toLowerCase(),
+        brand: normalizeBrandForPost(values.brand),
+        vibe: values.vibe,
+        lighting: values.lighting === 'day' ? 'daylight' : values.lighting,
+        room: values.roomType || undefined,
+        inputs: {
+          hasWarmWood: values.hasWarmWood,
+          photoUrl: values.photoUrl || null,
+        }
+      }
+      const res = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
       let payload: any = null
       try { payload = await res.json() } catch {}
       if(res.status===401){
@@ -53,15 +70,15 @@ function StartInner(){
         setMixing(false)
         return
       }
-      if(res.status===400){
-        const issues = payload?.details?.fieldErrors ? Object.entries(payload.details.fieldErrors).map(([k,v]:any)=>`${k}: ${(v as string[]).join(',')}`).join('\n') : ''
-        alert('Invalid input. Please adjust your selections. '+ (issues?`\n${issues}`:''))
+      if(res.status===422){
+        const issues = payload?.issues ? payload.issues.map((i:any)=> `${i.path}: ${i.message}`).join('\n') : ''
+        alert('Invalid input:\n'+issues)
         setMixing(false)
         return
       }
       if(!res.ok){
         const code = payload?.error || payload?.code || 'SERVER_ERROR'
-        alert(`Error generating story (${code}).`)
+        alert(`Error generating story (${code}). ${payload?.detail || ''}`)
         setMixing(false)
         return
       }
@@ -109,7 +126,7 @@ function StartInner(){
             {mixing && <MixingIndicator reduced={reduced} />}
             <span className="hidden md:inline">Colrvia crafts harmonious placements from your vibe & brand.</span>
           </div>
-          <Button disabled={mixing} variant="primary" className="flex-1 md:flex-none" type="submit">{mixing? 'Mixing paints…' : 'Get My Palette'}</Button>
+          <Button disabled={mixing || !values.brand} variant="primary" className="flex-1 md:flex-none" type="submit">{mixing? 'Mixing paints…' : 'Get My Palette'}</Button>
         </div>
       </div>
     </form>
