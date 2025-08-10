@@ -2,6 +2,7 @@ import { supabaseServer } from '@/lib/supabase/server'
 import Link from 'next/link'
 import VariantTabs from './variant-tabs'
 import { Metadata } from 'next'
+import RevealClient from './reveal-client'
 export async function generateMetadata({ params, searchParams }:{ params:{id:string}; searchParams:Record<string,string|undefined> }): Promise<Metadata> {
   const id = params.id
   const v = searchParams?.v
@@ -39,7 +40,10 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
     <main className="mx-auto max-w-3xl p-6 space-y-10">
       <header>
         <div className="eyebrow mb-3">COLRVIA</div>
-        <h1 className="text-3xl font-semibold mb-2">{data.title}</h1>
+        <div className="flex items-center gap-4 mb-2 flex-wrap">
+          <h1 className="text-3xl font-semibold">{data.title}</h1>
+          <RevealClient story={{ id:data.id, title:data.title, narrative:data.narrative, palette, placements:data.placements }} />
+        </div>
         <p className="text-neutral-500 text-sm">{new Date(data.created_at).toLocaleString()} · {data.brand} · {data.vibe}</p>
       </header>
       <section className="flex gap-4 text-xs font-medium">
