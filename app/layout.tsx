@@ -7,6 +7,7 @@ import RegisterSW from '@/components/pwa/RegisterSW'
 import { ThemeProvider } from 'next-themes'
 import { Analytics } from '@vercel/analytics/react'
 import { Inter, Fraunces } from 'next/font/google'
+import { MotionProvider } from '@/components/theme/MotionSettings'
 
 const inter = Inter({ subsets:['latin'], variable:'--font-inter', display:'swap' })
 const fraunces = Fraunces({ subsets:['latin'], variable:'--font-fraunces', display:'swap' })
@@ -42,9 +43,11 @@ export default function RootLayout({
   `}</Script>
   <AuthHashListener />
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem value={{ light:'light', dark:'theme-dark' }}>
-    <RegisterSW />
-    <AppShell>{children}</AppShell>
-    <Analytics />
+    <MotionProvider>
+      <RegisterSW />
+      <AppShell>{children}</AppShell>
+      <Analytics />
+    </MotionProvider>
   </ThemeProvider>
       </body>
     </html>

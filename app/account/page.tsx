@@ -4,6 +4,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Button from '@/components/ui/Button'
 import PwaBadge from './pwa-badge'
+import { Suspense } from 'react'
+import MotionToggle from './reduced-motion-toggle'
 
 export default async function AccountPage() {
   const cookieStore = cookies()
@@ -45,6 +47,10 @@ export default async function AccountPage() {
         )}
   </div>
   <PwaBadge />
+  <div className="border rounded p-4 space-y-3">
+    <h2 className="font-medium">Accessibility</h2>
+    <Suspense fallback={null}><MotionToggle /></Suspense>
+  </div>
     </div>
   )
 }
