@@ -1,12 +1,29 @@
 "use client"
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { Menu } from 'lucide-react'
 import TabBar from '@/components/nav/TabBar'
+import { supabaseBrowser } from '@/lib/supabase/client'
 
 export default function AppShell({ children }: { children:React.ReactNode }) {
   const [menuOpen,setMenuOpen]=useState(false)
+  const [user,setUser]=useState<any>(null)
+  const [checking,setChecking]=useState(true)
+
+  useEffect(()=>{
+    let mounted = true
+    const supabase = supabaseBrowser()
+    supabase.auth.getUser().then(({ data:{ user } })=> { if(mounted){ setUser(user); setChecking(false) } })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, session)=> {
+      if(mounted) setUser(session?.user ?? null)
+    })
+    return ()=> { mounted=false; subscription?.unsubscribe?.() }
+  },[])
+
+  async function signOut(){
+    try { await supabaseBrowser().auth.signOut() } catch {}
+  }
   return (
     <div className="min-h-screen flex flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 z-[100] bg-white text-sm px-3 py-2 rounded shadow">Skip to content</a>
@@ -17,8 +34,11 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm" aria-label="Primary">
             <Link href="/start" className="hover:underline">Start</Link>
-            <Link href="/dashboard" className="hover:underline">My Stories</Link>
+            {user && <Link href="/dashboard" className="hover:underline">My Stories</Link>}
             <Link href="/designers" className="hover:underline">Designers</Link>
+            {!checking && !user && <Link href="/sign-in" className="hover:underline">Sign in / Sign up</Link>}
+            {user && <Link href="/account" className="hover:underline">Account</Link>}
+            {user && <button onClick={signOut} className="text-sm hover:underline" aria-label="Sign out">Sign out</button>}
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -29,9 +49,11 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
           <div className="md:hidden px-4 pb-4 animate-fadeIn" aria-label="Mobile menu">
             <div className="flex flex-col gap-2 text-sm">
               <Link href="/start" className="py-2">Start</Link>
-              <Link href="/dashboard" className="py-2">My Stories</Link>
+              {user && <Link href="/dashboard" className="py-2">My Stories</Link>}
               <Link href="/designers" className="py-2">Designers</Link>
-              <Link href="/account" className="py-2">Account</Link>
+              {!user && <Link href="/sign-in" className="py-2">Sign in / Sign up</Link>}
+              {user && <Link href="/account" className="py-2">Account</Link>}
+              {user && <button onClick={signOut} className="py-2 text-left">Sign out</button>}
             </div>
           </div>
         )}
