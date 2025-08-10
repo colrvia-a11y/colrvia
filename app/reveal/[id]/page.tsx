@@ -12,11 +12,22 @@ import PdfButton from './pdf-button'
 export async function generateMetadata({ params, searchParams }:{ params:{id:string}; searchParams:Record<string,string|undefined> }): Promise<Metadata> {
   const id = params.id
   const v = searchParams?.v
+  // Try fetching title + vibe for a richer page title; fall back silently if unauth.
+  let title: string | undefined
+  try {
+    const supabase = supabaseServer()
+    const { data } = await supabase.from('stories').select('title').eq('id', id).single()
+    if (data?.title) title = data.title
+  } catch {}
+  const displayTitle = title || 'Color Story'
   return {
+    title: displayTitle,
     openGraph: {
+      title: displayTitle,
       images: [`/api/share/${id}/image${v?`?variant=${v}`:''}`]
     },
     twitter: {
+      title: displayTitle,
       card: 'summary_large_image',
       images: [`/api/share/${id}/image${v?`?variant=${v}`:''}`]
     }
@@ -50,14 +61,14 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
   const displayTitle = data.title || 'Your Color Story'
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 space-y-10">
-      <div className="rounded-2xl overflow-hidden relative">
+      <div className="rounded-2xl overflow-hidden relative" aria-label={displayTitle}>
         <StoryHeroCard imageSrc={heroImage} title={displayTitle} meta={`${data.brand} · ${data.vibe}`} href="#palette" palette={palette} ctaLabel="Open" />
         <div className="absolute bottom-4 right-4"><PdfButton storyId={data.id} /></div>
       </div>
       <div className="flex items-center gap-3 text-[11px] text-[var(--ink-subtle)]">
         <span>{new Date(data.created_at).toLocaleDateString()}</span>
         <span aria-hidden>•</span>
-        <RevealClient story={{ id:data.id, title:data.title, narrative:data.narrative, palette, placements:data.placements }} />
+  <RevealClient story={{ id:data.id, title:displayTitle, narrative:data.narrative, palette, placements:data.placements }} />
       </div>
       <div className="space-y-4" aria-label="Placement ratios">
         <div className="flex gap-3 text-[10px] tracking-wide uppercase text-[var(--ink-subtle)]">
