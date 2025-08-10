@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { supabaseServer } from '@/lib/supabase/server'
 import NewProjectForm from './new-project-form'
 import { track, initAnalytics } from '@/lib/analytics'
+import { getIndexForUser } from '@/lib/db/stories'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,9 +25,7 @@ export default async function Dashboard() {
     if (res.ok) projects = await res.json()
   } catch {}
   try {
-    const supa = supabase
-    const { data: s } = await supa.from('stories').select('id,title,brand,vibe,palette,created_at').order('created_at',{ ascending:false })
-    stories = s || []
+  stories = await getIndexForUser(user.id)
   } catch {}
 
   return (
@@ -77,7 +76,7 @@ export default async function Dashboard() {
         ) : (
           <ul className="grid sm:grid-cols-2 gap-5">
             {stories.map(s => {
-              const hasVariants = !!(s.variant && s.variant !== 'recommended')
+              const hasVariants = !!s.hasVariants
               return (
               <li key={s.id} className="rounded-2xl border overflow-hidden bg-white hover:shadow-sm transition">
                 <Link href={`/reveal/${s.id}`} className="block p-4" aria-label={`Open story ${s.title}`}>

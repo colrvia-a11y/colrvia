@@ -68,3 +68,7 @@ alter table if exists public.stories
   add column if not exists variant text not null default 'recommended' check (variant in ('recommended','softer','bolder')),
   add column if not exists parent_id uuid null;
 create index if not exists stories_parent_idx on public.stories(parent_id);
+
+-- Sprint F: optional persistent flag for faster index queries
+alter table if exists public.stories
+  add column if not exists has_variants boolean not null default false;

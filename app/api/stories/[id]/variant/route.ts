@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase/server'
 import { makeVariant } from '@/lib/ai/variants'
+import { markHasVariants } from '@/lib/db/stories'
 import { randomUUID } from 'crypto'
 import { buildNarrative } from '@/lib/ai/narrative'
 
@@ -52,5 +53,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
   const { error: insertError } = await supabase.from('stories').insert(newStory as any)
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 })
+  await markHasVariants(base.id)
   return NextResponse.json(newStory)
 }
