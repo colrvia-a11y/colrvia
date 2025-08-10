@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import MagneticHover from '@/components/motion/MagneticHover'
 import Button from '@/components/ui/Button'
+import ThemeToggle from '@/components/ui/ThemeToggle'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -14,7 +15,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Link href="/dashboard" className="hover:underline">Dashboard</Link>
             <Link href="/sign-in" className="hover:underline">Sign in</Link>
           </nav>
-          <MagneticHover><Button as={Link} href="/designers">Get started</Button></MagneticHover>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <MagneticHover><Button as={Link} href="/designers">Get started</Button></MagneticHover>
+          </div>
         </div>
       </header>
       <main>{children}</main>

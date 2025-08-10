@@ -3,6 +3,13 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import AuthHashListener from '@/components/auth-hash-listener'
 import AppShell from '@/components/AppShell'
+import RegisterSW from '@/components/pwa/RegisterSW'
+import { ThemeProvider } from 'next-themes'
+import { Analytics } from '@vercel/analytics/react'
+import { Inter, Fraunces } from 'next/font/google'
+
+const inter = Inter({ subsets:['latin'], variable:'--font-inter', display:'swap' })
+const fraunces = Fraunces({ subsets:['latin'], variable:'--font-fraunces', display:'swap' })
 
 export const metadata: Metadata = {
   title: 'Colrvia',
@@ -19,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className="antialiased">
+    <html lang="en" className={`${inter.variable} ${fraunces.variable}`}> 
+      <body className="antialiased font-sans">
         <Script id="supabase-hash-redirect" strategy="beforeInteractive">{`
     (function () {
       try {
@@ -34,7 +41,11 @@ export default function RootLayout({
     })();
   `}</Script>
   <AuthHashListener />
-  <AppShell>{children}</AppShell>
+  <ThemeProvider attribute="class" defaultTheme="system" enableSystem value={{ light:'light', dark:'theme-dark' }}>
+    <RegisterSW />
+    <AppShell>{children}</AppShell>
+    <Analytics />
+  </ThemeProvider>
       </body>
     </html>
   )
