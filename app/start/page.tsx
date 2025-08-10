@@ -6,6 +6,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Button from '@/components/ui/Button'
 import Chip from '@/components/ui/Chip'
+import Progress from '@/components/ui/Progress'
+import DesignerCard from '@/components/start/DesignerCard'
+import SummaryCard from '@/components/start/SummaryCard'
 import { Upload } from '@/components/upload'
 
 export const dynamic = 'force-dynamic'
@@ -57,7 +60,7 @@ export default function StartPage(){
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-10 space-y-10">
-      <div className="h-2 w-full rounded-full bg-[var(--border)] overflow-hidden"><div className="h-full bg-[var(--brand)] transition-all" style={{width:pct+'%'}} /></div>
+  <Progress value={step} max={total} />
       <h1 className="font-display text-4xl leading-[1.05]">Start your Color Story</h1>
       <form onSubmit={handleSubmit(submit)} className="space-y-12">
         {step===1 && (
@@ -67,18 +70,7 @@ export default function StartPage(){
               <p className="text-sm text-[var(--ink-subtle)]">Choose a perspective to shape undertones & balance.</p>
             </div>
             <div className="grid sm:grid-cols-3 gap-5">
-              {DESIGNERS.map(d=>{
-                const active = values.designer === d.name
-                return (
-                  <button key={d.id} type="button" onClick={()=>setValue('designer', d.name as any,{shouldValidate:true})} className={`group text-left rounded-2xl border p-5 bg-[var(--bg-surface)] transition relative ${active?'ring-2 ring-[var(--brand)]':''}`} aria-pressed={active} aria-label={`Select designer ${d.name}`}>
-                    <div className="font-medium mb-1 flex items-center gap-2">{d.name}<span className="text-[10px] uppercase tracking-wide text-[var(--ink-subtle)]">{d.headline}</span></div>
-                    <p className="text-[11px] leading-relaxed text-[var(--ink-subtle)] mb-4 min-h-[2.5rem]">{d.blurb}</p>
-                    <div className="flex gap-1.5">
-                      {d.palette.map(c=> <span key={c} className="h-5 w-5 rounded-md border border-[var(--border)]" style={{background:c}} aria-hidden />)}
-                    </div>
-                  </button>
-                )
-              })}
+              {DESIGNERS.map(d=> <DesignerCard key={d.id} designer={d} active={values.designer===d.name} onSelect={()=>setValue('designer', d.name as any,{shouldValidate:true})} /> )}
             </div>
           </section>
         )}
@@ -135,18 +127,7 @@ export default function StartPage(){
                   <input {...register('roomType')} placeholder="Living Room, Bedroom..." className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm" />
                 </div>
               </div>
-              <aside className="w-full md:w-64 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 h-fit">
-                <h3 className="font-display text-lg mb-4">Summary</h3>
-                <ul className="space-y-3 text-xs">
-                  <li><span className="font-medium">Designer:</span> {values.designer}</li>
-                  <li><span className="font-medium">Vibe:</span> {values.vibe}</li>
-                  <li><span className="font-medium">Brand:</span> {values.brand}</li>
-                  <li><span className="font-medium capitalize">Lighting:</span> {values.lighting}</li>
-                  <li><span className="font-medium">Warm wood:</span> {values.hasWarmWood? 'Yes':'No'}</li>
-                  {values.roomType && <li><span className="font-medium">Room:</span> {values.roomType}</li>}
-                  {values.photoUrl && <li><span className="font-medium">Photo:</span> Added</li>}
-                </ul>
-              </aside>
+              <SummaryCard values={values} />
             </div>
           </section>
         )}

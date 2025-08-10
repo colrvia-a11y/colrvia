@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-export default function PwaBadge(){
+export default function PWABadge(){
   const [state,setState]=useState<'checking'|'installable'|'standalone'|'browser'>('checking')
   useEffect(()=>{
     const isStandalone = (window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone

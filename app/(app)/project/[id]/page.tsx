@@ -3,24 +3,7 @@ import { supabaseServer } from '@/lib/supabase/server'
 import { Upload } from '@/components/upload'
 import ColorSwatchCard from '@/components/ColorSwatchCard'
 import ShareControls from './share-controls'
-
-function PaletteGenerator() {
-  'use client'
-  const colors = ['#F87171', '#FBBF24', '#34D399', '#60A5FA', '#A78BFA']
-  return (
-    <div className="space-y-2 mt-6">
-      <button
-        onClick={() => { /* placeholder no-op */ }}
-        className="rounded-xl px-4 py-2 border"
-      >Generate Palette</button>
-      <div className="flex gap-2">
-        {colors.map(c => (
-          <div key={c} className="h-10 w-10 rounded" style={{ background: c }} title={c} />
-        ))}
-      </div>
-    </div>
-  )
-}
+import PaletteGenerator from './palette-generator'
 
 export const dynamic = 'force-dynamic'
 
@@ -124,7 +107,7 @@ export default async function ProjectPage({ params }: { params: { id: string } }
         )}
       </section>
 
-      <PaletteGenerator />
+  <PaletteGenerator />
     </main>
   )
 }
