@@ -20,7 +20,7 @@ const BodySchema = z.object({
   lighting: z.enum(['daylight','evening','mixed']).optional(),
   room: z.string().optional(),
   inputs: z.record(z.any()).optional()
-});
+}).strict();
 
 export async function POST(req: Request) {
   // guard JSON parsing
@@ -32,7 +32,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'INVALID_JSON' }, { status: 400 });
   }
 
-  // zod validation + normalization
+  console.log('STORIES_POST:RAW_KEYS', { keys: Object.keys((raw || {}) as any) });
+
+  // zod validation + normalization (strict)
   let parsed: z.infer<typeof BodySchema>;
   try {
     parsed = BodySchema.parse(raw ?? {});
@@ -50,7 +52,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'AUTH_MISSING' }, { status: 401 });
   }
 
-  // DB payload with safe defaults (include title & vibe for UI)
+  // DB payload with safe defaults (no unknown columns like title)
   const payload = {
     user_id: user.id,
     designer_key: parsed.designerKey,
@@ -61,9 +63,7 @@ export async function POST(req: Request) {
       room: parsed.room ?? null,
       ...(parsed.inputs ?? {})
     },
-    title: parsed.vibe ? `${parsed.vibe} Palette` : 'Color Story',
-    vibe: parsed.vibe ?? null,
-    palette: [],
+    palette: {},
     narrative: null,
     has_variants: false,
     status: 'new'
@@ -85,8 +85,7 @@ export async function POST(req: Request) {
         brand: payload.brand,
         keys: Object.keys(payload)
       });
-      const status = /check constraint|invalid input/i.test(error.message) ? 400 : 500;
-      return NextResponse.json({ error: 'DB_INSERT_FAILED', detail: error.message }, { status });
+  return NextResponse.json({ error: 'DB_INSERT_FAILED', detail: error.message }, { status: 400 });
     }
 
     return NextResponse.json({ id: row.id }, { status: 201 });

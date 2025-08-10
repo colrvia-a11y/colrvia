@@ -45,12 +45,12 @@ function StartInner(){
     setMixing(true)
     try {
       const body = {
-        designerKey: (values.designer || 'Marisol').toLowerCase(),
         brand: normalizeBrandForPost(values.brand),
+        designerKey: (values.designer || 'Marisol').toLowerCase(),
         vibe: values.vibe || undefined,
         lighting: (values.lighting === 'day' ? 'daylight' : values.lighting) || undefined,
         room: values.roomType || undefined
-      }
+      } as const
       const res = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
       let payload: any = null
       try { payload = await res.json() } catch {}
