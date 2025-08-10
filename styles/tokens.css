@@ -1,12 +1,39 @@
 :root{
-  --bg-canvas:#F7F5EF; --bg-surface:#FFFFFF; --border:#E7E1D7;
-  --text-primary:#1E1B16; --text-secondary:#5E5A53;
-  --brand:#2F5D50; --brand-contrast:#FFFFFF;
-  --accent:#C07A5A; --accent-contrast:#1E1B16;
-  --highlight:#F7BE58; --shadow-rgba:15,14,12;
+  /* Color primitives */
+  --bg-canvas:#F7F5EF; /* Paper */
+  --bg-surface:#FFFFFF; /* Surface */
+  --border:#E7E1D7; /* Linen border */
+  --ink:#1E1B16; /* Primary text (Ink) */
+  --ink-subtle:#5E5A53; /* Secondary text */
+  --brand:#2F5D50; /* Brand primary */
+  --brand-hover:#294F45; /* ~6% darken */
+  --brand-contrast:#FFFFFF;
+  --accent:#C07A5A;
+  --accent-contrast:#1E1B16;
+  --focus-ring: 0 0 0 2px rgb(255 255 255 / .85), 0 0 0 4px rgba(47,93,80,.4);
+  --highlight:#F7BE58;
+  --shadow-rgba:15,14,12;
+  /* Radii */
+  --radius-sm:8px;
+  --radius:16px; /* xl */
+  --radius-lg:24px; /* 2xl */
+  /* Typography */
+  --font-ui: var(--font-inter, 'Inter', system-ui, sans-serif);
+  --font-display: var(--font-fraunces, 'Fraunces', Georgia, serif);
+  /* Spacing scale (8pt rhythm) */
+  --space-1:4px; /* occasionally */
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --space-8:32px;
+  --space-10:40px;
+  --space-12:48px;
 }
 .theme-dark{
   --bg-canvas:#121212; --bg-surface:#1B1B19; --border:#2A2A27;
-  --text-primary:#F3EEE6; --text-secondary:#B8B2AA;
-  --brand:#C59A5A; --brand-contrast:#121212;
+  --ink:#F3EEE6; --ink-subtle:#B8B2AA;
+  --brand:#C59A5A; --brand-hover:#b4894e; --brand-contrast:#121212;
+  --focus-ring:0 0 0 2px rgba(18,18,18,.9),0 0 0 4px rgba(197,154,90,.45);
 }
