@@ -1,6 +1,20 @@
 import { supabaseServer } from '@/lib/supabase/server'
 import Link from 'next/link'
 import VariantTabs from './variant-tabs'
+import { Metadata } from 'next'
+export async function generateMetadata({ params, searchParams }:{ params:{id:string}; searchParams:Record<string,string|undefined> }): Promise<Metadata> {
+  const id = params.id
+  const v = searchParams?.v
+  return {
+    openGraph: {
+      images: [`/api/share/${id}/image${v?`?variant=${v}`:''}`]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      images: [`/api/share/${id}/image${v?`?variant=${v}`:''}`]
+    }
+  }
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -47,12 +61,12 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
         ))}
       </section>
       <section className="prose prose-sm max-w-none text-neutral-800"><p>{data.narrative}</p></section>
-      <div className="flex gap-3 pt-4">
+      <div className="flex gap-3 pt-4 flex-wrap">
         <button onClick={()=>{
           const lines = palette.map(p=>`${p.name} — ${p.code} (${p.hex})`).join('\n');
           navigator.clipboard.writeText(lines)
         }} className="btn btn-primary">Copy codes</button>
-        <button disabled className="btn btn-secondary" title="Coming soon">Download PDF</button>
+        <button onClick={()=>{ const v = new URLSearchParams(window.location.search).get('v'); window.open(`/api/share/${id}/image${v?`?variant=${v}`:''}`,'_blank'); }} className="btn btn-secondary">Share Image</button>
       </div>
     </main>
   )
