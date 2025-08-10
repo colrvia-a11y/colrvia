@@ -21,14 +21,15 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Script id="supabase-hash-redirect" strategy="beforeInteractive">{`
-    (function(){
-      try{
+    (function () {
+      try {
         var h = window.location.hash || '';
-        if(h.indexOf('access_token')>-1 || h.indexOf('refresh_token')>-1){
-          // Immediately send to the callback page; it will create the session.
+        if (h.indexOf('access_token') > -1 || h.indexOf('refresh_token') > -1) {
+          // If Supabase dropped tokens in the hash on the root page, send them to the callback route.
+          // Keep the hash intact so the callback can parse it.
           window.location.replace('/auth/callback' + h);
         }
-      }catch(e){}
+      } catch (e) {}
     })();
   `}</Script>
         <AuthHashListener />

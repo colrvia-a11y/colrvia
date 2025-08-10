@@ -1,37 +1,44 @@
-"use client"
-
+'use client'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabaseBrowser } from '@/lib/supabase/client'
 
-export default function AuthCallbackPage() {
+export default function AuthCallback() {
   const router = useRouter()
 
   useEffect(() => {
-    async function run() {
-      const supabase = supabaseBrowser();
+    (async () => {
       try {
-        if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
-          // Hash-based magic link flow
-          // @ts-expect-error: getSessionFromUrl may not yet be in types
-          await supabase.auth.getSessionFromUrl({ storeSession: true });
-          history.replaceState({}, document.title, window.location.pathname);
+        const href = typeof window !== 'undefined' ? window.location.href : ''
+        const hash = typeof window !== 'undefined' ? window.location.hash : ''
+        const supabase = supabaseBrowser()
+
+        if (hash.includes('access_token')) {
+          // Hash-based magic link
+          // @ts-expect-error: typings may not yet include this method
+          const { error } = await supabase.auth.getSessionFromUrl({ storeSession: true })
+          if (error) throw error
+          if (typeof window !== 'undefined') {
+            history.replaceState({}, document.title, window.location.pathname)
+          }
         } else {
-          // Code / PKCE flow
-          await supabase.auth.exchangeCodeForSession(window.location.href);
+          // PKCE/code flow
+          const { error } = await supabase.auth.exchangeCodeForSession(href)
+          if (error) throw error
         }
-        router.replace('/dashboard');
+
+        router.replace('/dashboard')
       } catch (e) {
-        console.error('auth callback error', e);
-        router.replace('/sign-in');
+        console.error('auth callback error', e)
+        router.replace('/sign-in')
       }
-    }
-    run();
+    })()
   }, [router])
 
   return (
-    <main className="max-w-sm mx-auto p-8 text-center">
-      <p className="text-sm text-neutral-600">Signing you in…</p>
+    <main className="mx-auto max-w-md p-6">
+      <h1 className="text-xl font-semibold mb-2">Signing you in…</h1>
+      <p className="text-neutral-600">Please wait.</p>
     </main>
   )
 }
