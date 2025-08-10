@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { supabaseServer } from '@/lib/supabase/server'
 import { Upload } from '@/components/upload'
+import ColorSwatchCard from '@/components/ColorSwatchCard'
+import ShareControls from './share-controls'
 
 function PaletteGenerator() {
   'use client'
@@ -45,6 +47,16 @@ export default async function ProjectPage({ params }: { params: { id: string } }
     return <main className="mx-auto max-w-2xl p-6">Not found</main>
   }
 
+  // Fetch saved story via API (server-side fetch)
+  let story: any = null
+  try {
+    const storyRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/projects/${params.id}/story`, { cache: 'no-store' })
+    if (storyRes.ok) {
+      const json = await storyRes.json()
+      story = json.story
+    }
+  } catch {}
+
   // Fetch images via API
   let images: any[] = []
   try {
@@ -60,13 +72,33 @@ export default async function ProjectPage({ params }: { params: { id: string } }
   })
 
   return (
-    <main className="mx-auto max-w-2xl p-6 space-y-6">
+    <main className="mx-auto max-w-2xl p-6 space-y-8">
       <header>
         <h1 className="text-2xl font-semibold mb-2">{project.name}</h1>
         <Link href="/dashboard" className="text-sm underline">Back to projects</Link>
       </header>
 
-      <section className="space-y-3">
+      {story && (
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold mb-1">{story.title || 'Saved Color Story'}</h2>
+            <p className="text-sm text-neutral-500">{story.designer ? `Designer: ${story.designer}` : ''}</p>
+          </div>
+          {Array.isArray(story.palette) && story.palette.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {story.palette.map((c: any, i: number) => (
+                <ColorSwatchCard key={i} c={c} />
+              ))}
+            </div>
+          )}
+          {story.narrative && (
+            <p className="text-neutral-700 leading-relaxed whitespace-pre-line">{story.narrative}</p>
+          )}
+          <ShareControls projectId={project.id} />
+        </section>
+      )}
+
+  <section className="space-y-3">
         <h2 className="font-medium">Upload image</h2>
         <Upload projectId={project.id} />
       </section>
