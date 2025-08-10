@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import { supabaseServer } from '@/lib/supabase/server'
-import NewProjectForm from './new-project-form'
 import { getIndexForUser } from '@/lib/db/stories'
-import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,12 +16,7 @@ export default async function Dashboard() {
     )
   }
 
-  let projects: any[] = []
   let stories: any[] = []
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/projects`, { cache: 'no-store' })
-    if (res.ok) projects = await res.json()
-  } catch {}
   try {
   stories = await getIndexForUser(user.id)
   } catch {}
@@ -33,37 +26,14 @@ export default async function Dashboard() {
       <section className="space-y-6">
         <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
-            <h1 className="font-display text-4xl leading-[1.05] mb-2">Your Space Hub</h1>
-            <p className="text-sm text-[var(--ink-subtle)]">Projects & Color Stories in one calm place.</p>
+            <h1 className="font-display text-4xl leading-[1.05] mb-2">Your Color Stories</h1>
+            <p className="text-sm text-[var(--ink-subtle)]">Generate, view, and refine saved palettes.</p>
           </div>
           <div className="flex gap-3">
             <Link href="/start" className="btn btn-primary">New Story</Link>
             <a href="/designers" className="btn btn-secondary">Designers</a>
           </div>
         </header>
-        {projects.length === 0 ? (
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-10 text-center space-y-5">
-            <h2 className="font-display text-2xl">No projects yet</h2>
-            <p className="text-sm max-w-sm mx-auto text-[var(--ink-subtle)]">Create a project to collect uploads and save Color Stories you love.</p>
-            <div className="flex justify-center"><NewProjectForm /></div>
-          </div>
-        ) : (
-          <div className="space-y-5">
-            <h2 className="font-display text-xl">Projects</h2>
-            <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {projects.map(p => (
-                <li key={p.id} className="group rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 hover:shadow-sm transition relative">
-                  <Link href={`/reveal/${p.story_id || p.id}`} className="absolute inset-0" aria-label={`Open story from project ${p.name}`} />
-                  <div className="font-medium mb-1 pr-6 group-hover:underline line-clamp-1">{p.name}</div>
-                  <div className="text-[11px] text-[var(--ink-subtle)]">{new Date(p.created_at).toLocaleDateString()}</div>
-                </li>
-              ))}
-            </ul>
-            <div className="pt-2">
-              <NewProjectForm />
-            </div>
-          </div>
-        )}
       </section>
       <StoriesSection stories={stories} />
       <div className="text-xs text-[var(--ink-subtle)]">Dev: <Link href="/test-upload" className="underline">Test upload</Link></div>
