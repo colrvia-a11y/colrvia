@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import '../styles/tokens.css';
-/* TODO: Consider self-hosting fonts; temporary remote load could be added here if CDN chosen. */
+@import '../styles/local-fonts.css';
 
 /* Design tokens / CSS variables */
 :root {

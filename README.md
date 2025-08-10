@@ -66,13 +66,13 @@ Account page -> Accessibility section. Toggle persists in localStorage (`colrvia
 - Undertone extraction from photos (avgHueSaturationFromPhoto stub)
 - Expand catalog-driven variant selection (deltaE nearest matches)
 - Add deletion endpoint variant recompute (recomputeHasVariants) triggers on delete
-- Provide real branded PNG icon sizes & local font files for OG (self-host Inter & Fraunces; add preload hints)
+- Provide real branded PNG icon sizes & local font files for OG (self-host Inter & Fraunces; add preload hints) – IN PROGRESS (fonts scaffolded)
 - Add additional UI interaction tests (copy codes, variant keyboard nav, cinematic lifecycle)
 - Start flow: optional designer lens re-introduction (currently defaulting to Emily)
 - Single-photo upload constraint (enforce / show replace state) – CURRENT: silent replace
 - Carousel: ensure focus-visible ring theming – DONE (keyboard region + instructions)
 - Motion: audit stray keyframes (keep fadeIn, swatchIn, blob) & document reduced-motion override – PARTIAL
-- Dark theme polish pass (adjust brand hover, surface contrast, focus ring) – PLANNED
+- Dark theme polish pass (adjust brand hover, surface contrast, focus ring) – PARTIAL (tokens updated)
 - Contrast audit for accent on brand / highlight on surface combinations – PLANNED
 - Environment variable table implementation in README – PLANNED
 

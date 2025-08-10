@@ -6,11 +6,7 @@ import AppShell from '@/components/shell/AppShell'
 import RegisterSW from '@/components/pwa/RegisterSW'
 import { ThemeProvider } from 'next-themes'
 import { Analytics } from '@vercel/analytics/react'
-import { Inter, Fraunces } from 'next/font/google'
 import { MotionProvider } from '@/components/theme/MotionSettings'
-
-const inter = Inter({ subsets:['latin'], variable:'--font-inter', display:'swap' })
-const fraunces = Fraunces({ subsets:['latin'], variable:'--font-fraunces', display:'swap' })
 
 export const metadata: Metadata = {
   title: {
@@ -50,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${fraunces.variable}`}> 
+  <html lang="en"> 
       <head>
         <meta name="theme-color" content="#F7F5EF" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
