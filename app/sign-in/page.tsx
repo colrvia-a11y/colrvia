@@ -15,6 +15,7 @@ export default function SignInPage() {
   const [pwPhase, setPwPhase] = useState<PwPhase>('signin')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
+  const [awaitingConfirm, setAwaitingConfirm] = useState(false)
   const supabase = supabaseBrowser()
 
   const origin =
@@ -83,12 +84,26 @@ export default function SignInPage() {
       const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/auth/callback` } })
       if (error) throw error
       if (data.user && !data.session) {
-        setMsg('Check your email to confirm your address.')
+        setAwaitingConfirm(true)
+        setMsg('Check your email to confirm your address. If it does not arrive within a minute, check spam or click Resend below.')
       } else {
         window.location.href = '/dashboard'
       }
     } catch (err:any) {
       setMsg(err.message || 'Sign up failed')
+    } finally { setBusy(false) }
+  }
+
+  async function resendConfirmation(){
+    if(!email) return
+    setBusy(true)
+    setMsg(null)
+    try {
+      const { error } = await supabase.auth.resend({ type:'signup', email }) as any
+      if(error) throw error
+      setMsg('Confirmation email resent. Check inbox & spam.')
+    } catch(err:any){
+      setMsg(err.message || 'Could not resend confirmation email')
     } finally { setBusy(false) }
   }
 
@@ -127,9 +142,16 @@ export default function SignInPage() {
           )}
           <div className="mt-4 text-xs text-neutral-600">
             {pwPhase==='signin' ? (
-              <button type="button" onClick={()=>{ setPwPhase('signup'); setMsg(null) }} className="underline">Need an account? Create one</button>
+              <button type="button" onClick={()=>{ setPwPhase('signup'); setMsg(null); setAwaitingConfirm(false) }} className="underline">Need an account? Create one</button>
             ) : (
-              <button type="button" onClick={()=>{ setPwPhase('signin'); setMsg(null) }} className="underline">Have an account? Sign in</button>
+              <button type="button" onClick={()=>{ setPwPhase('signin'); setMsg(null); setAwaitingConfirm(false) }} className="underline">Have an account? Sign in</button>
+            )}
+            {awaitingConfirm && (
+              <div className="mt-3 flex flex-col gap-2">
+                <span>Didn’t get the email?</span>
+                <button type="button" onClick={resendConfirmation} disabled={busy} className="underline text-left">Resend confirmation</button>
+                <span className="text-[11px] text-neutral-500">Add this site URL to your Supabase Auth Redirect URLs if emails fail.</span>
+              </div>
             )}
           </div>
         </div>
