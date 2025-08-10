@@ -17,9 +17,15 @@ export default async function Dashboard() {
   }
 
   let projects: any[] = []
+  let stories: any[] = []
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/projects`, { cache: 'no-store' })
     if (res.ok) projects = await res.json()
+  } catch {}
+  try {
+    const supa = supabase
+    const { data: s } = await supa.from('stories').select('id,title,brand,vibe,palette,created_at').order('created_at',{ ascending:false })
+    stories = s || []
   } catch {}
 
   return (
@@ -59,6 +65,31 @@ export default async function Dashboard() {
           </div>
         </div>
       )}
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold">Stories</h2>
+          <Link href="/start" className="btn btn-primary">New Story</Link>
+        </div>
+        {stories.length === 0 ? (
+          <div className="border rounded-2xl p-8 text-sm text-neutral-600">No stories yet. Generate your first one.</div>
+        ) : (
+          <ul className="grid sm:grid-cols-2 gap-5">
+            {stories.map(s => (
+              <li key={s.id} className="rounded-2xl border overflow-hidden bg-white hover:shadow-sm transition">
+                <Link href={`/reveal/${s.id}`} className="block p-4">
+                  <div className="flex gap-1 mb-3">
+                    {(s.palette||[]).slice(0,5).map((pc:any,i:number)=>(<span key={i} className="h-8 w-8 rounded-md border" style={{background:pc.hex}} />))}
+                  </div>
+                  <div className="font-medium mb-1 line-clamp-1">{s.title}</div>
+                  <div className="text-xs text-neutral-500">{s.brand} · {s.vibe}</div>
+                  <div className="text-[10px] text-neutral-400 mt-1">{new Date(s.created_at).toLocaleDateString()}</div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <div className="text-xs text-neutral-500">Developer tools: <Link href="/test-upload" className="underline">Test upload</Link></div>
     </main>
