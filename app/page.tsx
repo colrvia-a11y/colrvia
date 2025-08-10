@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import AuthHashListener from '@/components/auth-hash-listener'
 
 /**
  * Landing page for Colrvia. Introduces the app and offers sign in and a
@@ -7,7 +8,9 @@ import Link from 'next/link'
  */
 export default function Home() {
   return (
-    <main className="mx-auto max-w-md px-6 py-12 text-center">
+    <>
+      <AuthHashListener />
+      <main className="mx-auto max-w-md px-6 py-12 text-center">
       <div className="text-sm tracking-widest font-medium mb-6">COLRVIA</div>
       <div className="h-36 rounded-2xl border mb-4 grid place-items-center">
         <span>illustration placeholder</span>
@@ -29,6 +32,7 @@ export default function Home() {
         <Link href="/sign-in" className="rounded-xl px-4 py-2 border inline-block">Sign in</Link>
         <Link href="/dashboard" className="rounded-xl px-4 py-2 border inline-block ml-2">Go to dashboard</Link>
       </div>
-    </main>
+      </main>
+    </>
   )
 }

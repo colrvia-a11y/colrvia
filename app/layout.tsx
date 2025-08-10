@@ -1,5 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import AuthHashListener from '@/components/auth-hash-listener'
 
 export const metadata: Metadata = {
   title: 'Colrvia',
@@ -17,7 +18,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthHashListener />
+        {children}
+      </body>
     </html>
   )
 }
