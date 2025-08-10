@@ -37,6 +37,7 @@ export default function SignInPage() {
   async function continueWithGoogle() {
     setBusy(true)
     try {
+  console.debug('[sign-in] initiating Google OAuth', { origin })
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: `${origin}/auth/callback` },
@@ -91,6 +92,7 @@ export default function SignInPage() {
       </button>
 
       {msg && <p className="mt-4 text-sm text-neutral-700">{msg}</p>}
+  <p className="mt-2 text-xs text-neutral-400">Redirect origin: {origin}</p>
 
       <div className="mt-8 text-sm">
         <Link className="underline" href="/">Back to home</Link>

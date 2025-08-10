@@ -11,7 +11,18 @@ export default function AuthCallback() {
       try {
         const href = typeof window !== 'undefined' ? window.location.href : ''
         const hash = typeof window !== 'undefined' ? window.location.hash : ''
+        const search = typeof window !== 'undefined' ? window.location.search : ''
+        const params = typeof window !== 'undefined' ? new URLSearchParams(search) : null
         const supabase = supabaseBrowser()
+
+        // Surface provider error query params early
+        if (params && params.get('error')) {
+          const providerError = params.get('error_description') || params.get('error') || 'OAuth error'
+          console.error('[auth/callback] provider error', providerError)
+          throw new Error(providerError)
+        }
+
+        console.debug('[auth/callback] starting', { hasHash: !!hash, href })
 
         if (hash.includes('access_token')) {
           // Hash-based magic link
@@ -27,6 +38,7 @@ export default function AuthCallback() {
           if (error) throw error
         }
 
+        console.debug('[auth/callback] success; redirecting to /dashboard')
         router.replace('/dashboard')
       } catch (e) {
         console.error('auth callback error', e)
