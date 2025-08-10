@@ -2,11 +2,11 @@ import { supabaseServer } from '@/lib/supabase/server'
 import Link from 'next/link'
 import VariantTabs from './variant-tabs'
 import { Metadata } from 'next'
-import { PlacementIcon } from '@/components/reveal/PlacementIcon'
 import { initAnalytics, track } from '@/lib/analytics'
 import ActionsClient from './actions-client'
 import RevealClient from './reveal-client'
 import SwatchCard from '@/components/reveal/SwatchCard'
+import CopyToast from '@/components/reveal/CopyToast'
 export async function generateMetadata({ params, searchParams }:{ params:{id:string}; searchParams:Record<string,string|undefined> }): Promise<Metadata> {
   const id = params.id
   const v = searchParams?.v
@@ -56,11 +56,14 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
         <div className="flex-1 h-3 rounded-full bg-neutral-200 overflow-hidden"><div className="h-full bg-neutral-400" style={{width: placements.ten+'%'}} /></div>
       </section>
   <VariantTabs storyId={data.id} initialPalette={palette} initialTitle={data.title} initialNarrative={data.narrative} baseMeta={{ brand:data.brand, vibe:data.vibe }} />
-  <section className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6" id="palette-grid">
-        {palette.map((p,i)=> (
-          <SwatchCard key={i} color={p} />
-        ))}
-      </section>
+  <section className="relative" id="palette-grid">
+    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+      {palette.map((p,i)=> (
+        <SwatchCard key={i} color={p} onCopy={(c)=>{ if(typeof window!=='undefined'){ window.dispatchEvent(new CustomEvent('swatch-copied',{ detail:{ hex:c.hex, name:c.name } })) } }} />
+      ))}
+    </div>
+    <CopyToast />
+  </section>
       <section className="prose prose-sm max-w-none text-neutral-800"><p>{data.narrative}</p></section>
   <ActionsClient storyId={data.id} palette={palette as any} />
     </main>
