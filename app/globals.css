@@ -1,6 +1,26 @@
 @import "tailwindcss";
 
-/* Custom global styles */
+/* Design tokens */
+:root {
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-lg: 24px;
+  --shadow: 0 10px 30px rgba(0,0,0,.06);
+  --container: 72rem;
+}
+
+/* Base styles */
 @layer base {
   body { @apply min-h-screen bg-white text-neutral-900 antialiased; }
+  *:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+}
+
+/* Utilities */
+@layer components {
+  .container-xy { @apply mx-auto max-w-[var(--container)] px-6; }
+  .card { @apply rounded-2xl border bg-white; box-shadow: var(--shadow); }
+  .btn { @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium outline-none transition; }
+  .btn-primary { @apply bg-black text-white hover:opacity-90 active:scale-[.98]; }
+  .btn-secondary { @apply border hover:bg-neutral-50; }
+  .eyebrow { @apply text-xs tracking-[0.2em] font-semibold text-neutral-500; }
 }

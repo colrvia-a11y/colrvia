@@ -1,38 +1,60 @@
 import Link from 'next/link'
-import AuthHashListener from '@/components/auth-hash-listener'
+import FadeIn from '@/components/motion/FadeIn'
+import Stagger, { Item } from '@/components/motion/Stagger'
+import Card from '@/components/ui/Card'
+import Button from '@/components/ui/Button'
 
-/**
- * Landing page for Colrvia. Introduces the app and offers sign in and a
- * placeholder area for an illustration. Feel free to enhance this page
- * further with images and onboarding flow.
- */
 export default function Home() {
   return (
-    <>
-      <AuthHashListener />
-      <main className="mx-auto max-w-md px-6 py-12 text-center">
-      <div className="text-sm tracking-widest font-medium mb-6">COLRVIA</div>
-      <div className="h-36 rounded-2xl border mb-4 grid place-items-center">
-        <span>illustration placeholder</span>
-      </div>
-      <div className="flex items-center justify-center gap-1 mb-4">
-        <div className="h-1 w-4 rounded-full bg-black" />
-        <div className="h-1 w-1.5 rounded-full bg-neutral-300" />
-        <div className="h-1 w-1.5 rounded-full bg-neutral-300" />
-      </div>
-      <h1 className="text-2xl font-semibold mb-2">Design your color story</h1>
-      <p className="text-neutral-600 mb-6">
-        Personalized paint palettes matched to your space, lighting, and
-        style.
-      </p>
-      <Link href="/designers" className="w-full rounded-2xl py-3 bg-black text-white inline-block text-center mb-6">
-        Get started
-      </Link>
-  <div className="mt-8 text-sm">
-        <Link href="/sign-in" className="rounded-xl px-4 py-2 border inline-block">Sign in</Link>
-        <Link href="/dashboard" className="rounded-xl px-4 py-2 border inline-block ml-2">Go to dashboard</Link>
-      </div>
-      </main>
-    </>
+    <div>
+      <section className="container-xy pt-20 pb-24">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <FadeIn delay={0.05}><div className="eyebrow mb-4">COLRVIA</div></FadeIn>
+            <FadeIn delay={0.1}><h1 className="text-4xl sm:text-5xl font-semibold leading-tight">Design your color story</h1></FadeIn>
+            <FadeIn delay={0.18}><p className="text-neutral-600 mt-6 text-lg max-w-lg">Personalized paint palettes shaped by your space, lighting, mood, and aesthetic preferences—crafted in seconds.</p></FadeIn>
+            <FadeIn delay={0.26}>
+              <div className="mt-8 flex gap-4">
+                <Button as={Link} href="/designers">Get started</Button>
+                <Button as={Link} variant="secondary" href="/sign-in">Sign in</Button>
+              </div>
+            </FadeIn>
+          </div>
+          <FadeIn delay={0.2}>
+            <div className="card h-80 lg:h-96 grid place-items-center text-neutral-400 text-sm">
+              <span>illustration / preview coming soon</span>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      <section className="container-xy pb-24">
+        <Stagger delay={0.1}>
+          <div className="grid md:grid-cols-3 gap-6">
+            <Item>
+              <Card className="p-6 h-full flex flex-col">
+                <h3 className="font-medium text-lg mb-2">Smart Uploads</h3>
+                <p className="text-sm text-neutral-600 flex-1">Bring in photos of your space to ground palette choices in real context.</p>
+                <Link href="/dashboard" className="text-sm mt-4 underline">Try uploads →</Link>
+              </Card>
+            </Item>
+            <Item>
+              <Card className="p-6 h-full flex flex-col">
+                <h3 className="font-medium text-lg mb-2">Palette Intelligence</h3>
+                <p className="text-sm text-neutral-600 flex-1">Designer vibes plus adaptive logic shape harmonious, livable color stories.</p>
+                <Link href="/designers" className="text-sm mt-4 underline">Pick a designer →</Link>
+              </Card>
+            </Item>
+            <Item>
+              <Card className="p-6 h-full flex flex-col">
+                <h3 className="font-medium text-lg mb-2">Share & Export</h3>
+                <p className="text-sm text-neutral-600 flex-1">Save stories to projects, iterate, and prepare paint specs to take with you.</p>
+                <Link href="/reveal" className="text-sm mt-4 underline">View a story →</Link>
+              </Card>
+            </Item>
+          </div>
+        </Stagger>
+      </section>
+    </div>
   )
 }

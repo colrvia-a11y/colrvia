@@ -6,7 +6,9 @@ export default function RevealPage(){
 	return (
 		<div className="mx-auto max-w-3xl p-6">
 			<StoryReveal />
-			<SaveStoryToProject />
+			<div className="card p-6">
+				<SaveStoryToProject />
+			</div>
 		</div>
 	)
 }

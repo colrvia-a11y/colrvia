@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import AuthHashListener from '@/components/auth-hash-listener'
+import AppShell from '@/components/AppShell'
 
 export const metadata: Metadata = {
   title: 'Colrvia',
@@ -19,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="antialiased">
         <Script id="supabase-hash-redirect" strategy="beforeInteractive">{`
     (function () {
       try {
@@ -32,8 +33,8 @@ export default function RootLayout({
       } catch (e) {}
     })();
   `}</Script>
-        <AuthHashListener />
-        {children}
+  <AuthHashListener />
+  <AppShell>{children}</AppShell>
       </body>
     </html>
   )
