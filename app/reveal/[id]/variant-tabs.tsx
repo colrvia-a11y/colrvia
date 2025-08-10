@@ -22,12 +22,20 @@ export default function VariantTabs({ storyId, initialPalette, initialTitle, ini
     setLoading(true); setVariant(v)
     const sp = new URLSearchParams(window.location.search); sp.set('v', v); history.replaceState(null,'',`?${sp.toString()}`)
     try {
-      const res = await fetch(`/api/stories/${storyId}/variant?type=${v}`)
-      const json = await res.json()
-      if(res.ok){
-        setPalette(json.palette)
-        setTitle(json.title)
-        setNarrative(json.narrative)
+      const res = await fetch(`/api/stories/${storyId}/variant`, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ palette: initialPalette, mode: v })
+      })
+      const json = await res.json().catch(()=>({}))
+      if(res.status===422){
+        console.warn('VARIANT_CLIENT_INVALID', json)
+        setLoading(false)
+        return
+      }
+      if(res.ok && Array.isArray(json.variant)){
+        setPalette(json.variant)
+        // Keep title/narrative stable for now; could request regen separately
         track('variant_open',{ id: storyId, variant: v })
       }
     } finally { setLoading(false) }
