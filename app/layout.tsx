@@ -13,8 +13,31 @@ const inter = Inter({ subsets:['latin'], variable:'--font-inter', display:'swap'
 const fraunces = Fraunces({ subsets:['latin'], variable:'--font-fraunces', display:'swap' })
 
 export const metadata: Metadata = {
-  title: 'Colrvia',
-  description: 'Create your home color story'
+  title: {
+    default: 'Colrvia',
+    template: '%s · Colrvia'
+  },
+  description: 'Create your home color story',
+  openGraph: {
+    title: 'Colrvia',
+    description: 'Create your home color story',
+    type: 'website',
+    url: 'https://colrvia.app',
+    siteName: 'Colrvia'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Colrvia',
+    description: 'Create your home color story'
+  },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes:'192x192', type:'image/png' },
+      { url: '/icons/icon-512.png', sizes:'512x512', type:'image/png' }
+    ],
+    apple: '/icons/icon-192.png'
+  },
+  manifest: '/manifest.webmanifest'
 }
 
 /**
@@ -28,6 +51,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${fraunces.variable}`}> 
+      <head>
+        <meta name="theme-color" content="#F7F5EF" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
+      </head>
       <body className="antialiased font-sans">
         <Script id="supabase-hash-redirect" strategy="beforeInteractive">{`
     (function () {

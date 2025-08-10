@@ -30,7 +30,7 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
     return (
       <main className="mx-auto max-w-3xl p-6 space-y-6">
         <h1 className="text-3xl font-semibold">Mock Story</h1>
-        <p className="text-neutral-600 text-sm">This is a placeholder. Generate a real story from Start.</p>
+  <p className="text-neutral-600 text-sm">Placeholder story. Create a real one from the start flow.</p>
       </main>
     )
   }
@@ -77,7 +77,7 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
   <PaletteGrid palette={palette as any} onCopy={(c)=>{ if(typeof window!=='undefined'){ window.dispatchEvent(new CustomEvent('swatch-copied',{ detail:{ hex:c.hex, name:c.name } })) } }} />
     <CopyToast />
   </section>
-      <section className="prose prose-sm max-w-none text-neutral-800"><p>{data.narrative}</p></section>
+      <section className="prose prose-sm max-w-none text-neutral-800" aria-label="Narrative description"><p>{data.narrative}</p></section>
   <StoryActionBar storyId={data.id} palette={palette as any} />
     </main>
   )

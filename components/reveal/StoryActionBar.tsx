@@ -17,8 +17,8 @@ export default function StoryActionBar({ storyId, palette }: ActionBarProps){
   }
   return (
     <div className="flex gap-3 pt-6 flex-wrap">
-      <button onClick={copyAll} className="btn btn-primary">Copy all codes</button>
-      <button onClick={openShare} className="btn btn-secondary">Share Image</button>
+  <button onClick={copyAll} className="btn btn-primary">Copy palette codes</button>
+  <button onClick={openShare} className="btn btn-secondary">Open share image</button>
     </div>
   )
 }

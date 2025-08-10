@@ -1,19 +1,23 @@
 import { describe, it, expect } from 'vitest'
-import React from 'react'
-import { render, fireEvent } from '@testing-library/react'
+import React, { useState } from 'react'
+import { render } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import Chip from '@/components/ui/Chip'
 import Progress from '@/components/ui/Progress'
 
 describe('Chip', ()=>{
-  it('renders with inactive state and toggles aria-pressed when clicked via handler', ()=>{
-    let active=false
-    const { getByRole, rerender } = render(<Chip active={active} onClick={()=>{ active=!active; rerender(<Chip active={active} onClick={()=>{ active=!active; }} />) }} />)
+  it('toggles aria-pressed when clicked', async ()=>{
+    function Wrapper(){
+      const [active,setActive]=useState(false)
+      return <Chip active={active} onClick={()=>setActive(a=>!a)}>Chip</Chip>
+    }
+    const { getByRole } = render(<Wrapper />)
     const btn = getByRole('button')
     expect(btn.getAttribute('aria-pressed')).toBe('false')
-    fireEvent.click(btn)
-    // simulate another rerender to reflect change
-    rerender(<Chip active={true} onClick={()=>{}} />)
+    await userEvent.click(btn)
     expect(btn.getAttribute('aria-pressed')).toBe('true')
+    await userEvent.click(btn)
+    expect(btn.getAttribute('aria-pressed')).toBe('false')
   })
 })
 

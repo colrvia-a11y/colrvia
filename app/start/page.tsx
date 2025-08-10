@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import Button from '@/components/ui/Button'
 import Chip from '@/components/ui/Chip'
 import Progress from '@/components/ui/Progress'
+import FadeIn from '@/components/motion/FadeIn'
 import DesignerCard from '@/components/start/DesignerCard'
 import SummaryCard from '@/components/start/SummaryCard'
 import { Upload } from '@/components/upload'
@@ -61,24 +62,24 @@ export default function StartPage(){
   return (
     <main className="max-w-3xl mx-auto px-4 py-10 space-y-10">
   <Progress value={step} max={total} />
-      <h1 className="font-display text-4xl leading-[1.05]">Start your Color Story</h1>
+  <h1 className="font-display text-4xl leading-[1.05]">Create your color story</h1>
       <form onSubmit={handleSubmit(submit)} className="space-y-12">
         {step===1 && (
-          <section className="space-y-6 animate-fadeIn" aria-labelledby="designer-heading">
+          <FadeIn as='section' className="space-y-6" aria-labelledby="designer-heading">
             <div>
-              <h2 id="designer-heading" className="font-display text-2xl mb-1">Designer</h2>
-              <p className="text-sm text-[var(--ink-subtle)]">Choose a perspective to shape undertones & balance.</p>
+              <h2 id="designer-heading" className="font-display text-2xl mb-1">Choose a designer lens</h2>
+              <p className="text-sm text-[var(--ink-subtle)]">Each brings a different balance of contrast, warmth, and saturation.</p>
             </div>
             <div className="grid sm:grid-cols-3 gap-5">
               {DESIGNERS.map(d=> <DesignerCard key={d.id} designer={d} active={values.designer===d.name} onSelect={()=>setValue('designer', d.name as any,{shouldValidate:true})} /> )}
             </div>
-          </section>
+          </FadeIn>
         )}
         {step===2 && (
-          <section className="space-y-8 animate-fadeIn" aria-labelledby="space-heading">
+          <FadeIn as='section' className="space-y-8" aria-labelledby="space-heading">
             <div>
-              <h2 id="space-heading" className="font-display text-2xl mb-1">Your Space</h2>
-              <p className="text-sm text-[var(--ink-subtle)]">Pick what feels right — you can tweak later.</p>
+              <h2 id="space-heading" className="font-display text-2xl mb-1">Describe your space</h2>
+              <p className="text-sm text-[var(--ink-subtle)]">A few quick choices help tailor undertones and contrast.</p>
             </div>
             <div className="space-y-5">
               <div>
@@ -89,52 +90,52 @@ export default function StartPage(){
               </div>
               <div className="flex flex-wrap gap-6">
                 <fieldset className="space-y-2">
-                  <legend className="text-sm font-medium">Brand</legend>
+                  <legend className="text-sm font-medium">Paint brand</legend>
                   <div className="flex gap-2">
                     {['SW','Behr'].map(b=> <Chip key={b} active={values.brand===b} onClick={()=>setValue('brand', b as any,{shouldValidate:true})}>{b}</Chip> )}
                   </div>
                 </fieldset>
                 <fieldset className="space-y-2">
-                  <legend className="text-sm font-medium">Lighting</legend>
+                  <legend className="text-sm font-medium">Typical lighting</legend>
                   <div className="flex gap-2">
                     {['day','evening','mixed'].map(l=> <Chip key={l} active={values.lighting===l} onClick={()=>setValue('lighting', l as any,{shouldValidate:true})} className="capitalize">{l}</Chip> )}
                   </div>
                 </fieldset>
                 <fieldset className="space-y-2">
-                  <legend className="text-sm font-medium">Warm wood?</legend>
+                  <legend className="text-sm font-medium">Warm wood present?</legend>
                   <div className="flex gap-2">
                     {[true,false].map(val=> <Chip key={String(val)} active={values.hasWarmWood===val} onClick={()=>setValue('hasWarmWood', val,{shouldValidate:true})}>{val? 'Yes':'No'}</Chip> )}
                   </div>
                 </fieldset>
               </div>
             </div>
-          </section>
+          </FadeIn>
         )}
         {step===3 && (
-          <section className="space-y-10 animate-fadeIn" aria-labelledby="photo-heading">
+          <FadeIn as='section' className="space-y-10" aria-labelledby="photo-heading">
             <div className="flex flex-col md:flex-row gap-10">
               <div className="flex-1 space-y-6">
                 <div>
-                  <h2 id="photo-heading" className="font-display text-2xl mb-1">Photo & Review</h2>
-                  <p className="text-sm text-[var(--ink-subtle)]">Optional photo helps ground undertones.</p>
+                  <h2 id="photo-heading" className="font-display text-2xl mb-1">Photo & summary</h2>
+                  <p className="text-sm text-[var(--ink-subtle)]">Optional reference photo further anchors undertones.</p>
                 </div>
                 <Upload onUploaded={(u)=> setValue('photoUrl', u,{shouldValidate:true})} />
                 {values.photoUrl && (
                   <div className="text-xs text-[var(--ink-subtle)]">Photo attached.</div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Room Type (optional)</label>
-                  <input {...register('roomType')} placeholder="Living Room, Bedroom..." className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm" />
+                  <label className="block text-sm font-medium mb-1">Room type (optional)</label>
+                  <input {...register('roomType')} placeholder="Living room, Bedroom…" className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm" />
                 </div>
               </div>
               <SummaryCard values={values} />
             </div>
-          </section>
+          </FadeIn>
         )}
         <div className="flex gap-3 pt-2">
-          {step<total && <Button type="button" onClick={next} variant="primary" className="flex-1">Next</Button>}
-          {step===total && <Button disabled={isSubmitting || !values.designer || !values.vibe} className="flex-1" variant="primary">{isSubmitting? 'Working…':'Get my palette'}</Button>}
-          {step>1 && <Button type="button" onClick={back} variant="secondary">Back</Button>}
+          {step<total && <Button type="button" onClick={next} variant="primary" className="flex-1">Continue</Button>}
+          {step===total && <Button disabled={isSubmitting || !values.designer || !values.vibe} className="flex-1" variant="primary">{isSubmitting? 'Generating…':'Generate palette'}</Button>}
+          {step>1 && <Button type="button" onClick={back} variant="secondary">Previous</Button>}
         </div>
       </form>
     </main>
