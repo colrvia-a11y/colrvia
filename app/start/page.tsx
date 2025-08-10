@@ -1,8 +1,11 @@
 'use client'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 
-export default function StartInterview() {
+// Force dynamic rendering so Next.js doesn't attempt to pre-render and error on useSearchParams
+export const dynamic = 'force-dynamic'
+
+function StartInterviewInner() {
   const sp = useSearchParams()
   const router = useRouter()
   const designer = (sp.get('designer') ?? 'emily') as 'emily'|'zane'|'marisol'
@@ -32,5 +35,13 @@ export default function StartInterview() {
         <button disabled={busy} className="w-full rounded-2xl py-3 bg-black text-white">{busy ? 'Working…' : 'Generate my Color Story'}</button>
       </form>
     </main>
+  )
+}
+
+export default function StartInterview() {
+  return (
+    <Suspense fallback={<main className="mx-auto max-w-xl p-6"><p className="text-neutral-600">Loading…</p></main>}>
+      <StartInterviewInner />
+    </Suspense>
   )
 }
