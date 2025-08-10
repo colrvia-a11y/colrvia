@@ -1,20 +1,11 @@
 "use client"
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import ThemeToggle from '@/components/ui/ThemeToggle'
-import { Home, PlusCircle, FolderOpen, User, Menu } from 'lucide-react'
-
-interface NavItem { href:string; label:string; icon:any }
-const tabs:NavItem[] = [
-  { href:'/', label:'Home', icon:Home },
-  { href:'/start', label:'New', icon:PlusCircle },
-  { href:'/dashboard', label:'Stories', icon:FolderOpen },
-  { href:'/account', label:'Account', icon:User },
-]
+import { Menu } from 'lucide-react'
+import TabBar from '@/components/nav/TabBar'
 
 export default function AppShell({ children }: { children:React.ReactNode }) {
-  const pathname = usePathname()
   const [menuOpen,setMenuOpen]=useState(false)
   return (
     <div className="min-h-screen flex flex-col">
@@ -56,24 +47,7 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
           </div>
         </div>
       </footer>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--border)] bg-[color:rgba(247,245,239,0.9)] backdrop-blur" aria-label="App tabs">
-        <ul className="flex justify-around py-2">
-          {tabs.map(t=>{
-            const active = pathname === t.href
-            const Icon = t.icon
-            return (
-              <li key={t.href}>
-                <Link href={t.href} className="flex flex-col items-center text-[11px] font-medium relative px-2 py-1 focus:outline-none focus-visible:underline">
-                  <Icon size={20} className="mb-0.5" />
-                  {t.label}
-                  {active && <span aria-hidden className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[var(--brand)]" />}
-                  <span className="sr-only">{active? '(Current)': ''}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
+  <TabBar />
     </div>
   )
 }

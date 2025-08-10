@@ -34,23 +34,29 @@ export default async function AccountPage() {
   }
 
   return (
-  <div className="max-w-xl mx-auto p-8 space-y-6">
-      <h1 className="text-2xl font-semibold">Account</h1>
-      <div className="border rounded p-4 space-y-2">
-        <div className="flex justify-between"><span>Plan</span><span className="font-medium uppercase">{tier}</span></div>
+  <div className="max-w-2xl mx-auto px-4 py-10 space-y-10">
+      <h1 className="font-display text-4xl leading-[1.05]">Account</h1>
+      <section className="rounded-2xl border border-linen bg-surface p-6 shadow-soft space-y-4">
+        <header className="flex items-center justify-between"><h2 className="font-medium">Plan & Billing</h2><span className="text-xs uppercase tracking-wide px-2 py-1 rounded-full bg-linen/70">{tier}</span></header>
+        <p className="text-sm text-[var(--ink-subtle)]">Manage your subscription and access palette exports.</p>
         {tier === 'free' ? (
-          <Button as={Link} href="/start" variant="primary">Upgrade (create a story first)</Button>
+          <Button as={Link} href="/start" variant="primary">Create a Story to Upgrade</Button>
         ) : (
-          <form action={async () => { 'use server'; /* call portal endpoint soon */ }}>
+          <form action={async () => { 'use server'; }}>
             <Button type="submit" variant="secondary">Manage Billing</Button>
           </form>
         )}
-  </div>
-  <PWABadge />
-  <div className="border rounded p-4 space-y-3">
-    <h2 className="font-medium">Accessibility</h2>
-    <Suspense fallback={null}><ReducedMotionToggle /></Suspense>
-  </div>
+      </section>
+      <section className="rounded-2xl border border-linen bg-surface p-6 shadow-soft space-y-4">
+        <h2 className="font-medium">PWA</h2>
+        <p className="text-sm text-[var(--ink-subtle)]">Install Colrvia for a faster, app-like experience.</p>
+        <PWABadge />
+      </section>
+      <section className="rounded-2xl border border-linen bg-surface p-6 shadow-soft space-y-4">
+        <h2 className="font-medium">Accessibility & Motion</h2>
+        <p className="text-sm text-[var(--ink-subtle)]">Control motion intensity for reduced animation.</p>
+        <Suspense fallback={null}><ReducedMotionToggle /></Suspense>
+      </section>
     </div>
   )
 }
