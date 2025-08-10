@@ -20,7 +20,10 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error:'UNAUTH' }, { status: 401 });
   const json = await req.json();
   const parsed = Body.safeParse(json);
-  if (!parsed.success) return NextResponse.json({ error:'BAD_INPUT', details: parsed.error.flatten() }, { status: 400 });
+  if (!parsed.success) {
+    console.warn('STORIES_BAD_INPUT', parsed.error.flatten())
+    return NextResponse.json({ error:'BAD_INPUT', details: parsed.error.flatten() }, { status: 400 });
+  }
   try {
     // Plan enforcement
     const { tier } = await getUserTier();
@@ -34,6 +37,7 @@ export async function POST(req: NextRequest) {
     const title = buildTitle(input);
     const { swatches, placements } = buildPalette(input);
     const narrative = buildNarrative(input, { palette: swatches, placements } as any);
+    console.log('STORIES_CREATE', { user: user.id, title, designer: input.designer, vibe: input.vibe, brand: input.brand })
     const toInsert = {
       user_id: user.id, title,
       designer: input.designer, vibe: input.vibe, brand: input.brand,

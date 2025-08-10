@@ -39,9 +39,33 @@ function StartInner(){
     setMixing(true)
     try {
       const res = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(values) })
-      if(res.status===402){ alert('Free limit reached — upgrade to save more stories'); setMixing(false); return }
-      if(!res.ok){ alert('Error generating story.'); setMixing(false); return }
-      const json = await res.json(); router.push('/reveal/'+json.id)
+      let payload: any = null
+      try { payload = await res.json() } catch {}
+      if(res.status===401){
+        alert('Please sign in to create a Color Story.')
+        setMixing(false)
+        router.push('/sign-in')
+        return
+      }
+      if(res.status===402){
+        const msg = payload?.message || 'Free limit reached — upgrade to save more stories'
+        alert(msg)
+        setMixing(false)
+        return
+      }
+      if(res.status===400){
+        const issues = payload?.details?.fieldErrors ? Object.entries(payload.details.fieldErrors).map(([k,v]:any)=>`${k}: ${(v as string[]).join(',')}`).join('\n') : ''
+        alert('Invalid input. Please adjust your selections. '+ (issues?`\n${issues}`:''))
+        setMixing(false)
+        return
+      }
+      if(!res.ok){
+        const code = payload?.error || payload?.code || 'SERVER_ERROR'
+        alert(`Error generating story (${code}).`)
+        setMixing(false)
+        return
+      }
+      router.push('/reveal/'+payload.id)
     } catch(e){ console.error(e); alert('Unexpected error.'); setMixing(false) }
   }
   return (
