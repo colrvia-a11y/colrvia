@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+  "start": "next start",
+  "lint": "next lint",
+  "smoke:generate": "node -e \"fetch('http://localhost:3000/api/stories',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({designer:'Marisol',vibe:'Cozy Neutral',brand:'SW',lighting:'mixed',hasWarmWood:true,photoUrl:null})}).then(r=>r.text()).then(console.log).catch(console.error)\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
