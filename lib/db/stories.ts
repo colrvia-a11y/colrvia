@@ -6,7 +6,7 @@ function requireEnv(name:string){ const v=process.env[name]; if(!v) throw new Er
 export async function getIndexForUser(userId: string){
   const supabase = supabaseServer()
   const { data, error } = await supabase.from('stories')
-    .select('id,title,brand,vibe,palette,created_at,variant')
+    .select('id,title,brand,vibe,palette,created_at,variant,photo_url')
     .eq('user_id', userId)
     .eq('variant','recommended')
     .order('created_at',{ ascending:false })
@@ -16,7 +16,7 @@ export async function getIndexForUser(userId: string){
   if (ids.length===0) return []
   const { data: children } = await supabase.from('stories').select('parent_id, id').in('parent_id', ids)
   const map = new Set(children?.map(c=>c.parent_id) || [])
-  return data.map(s=> ({ id:s.id, title:s.title, brand:s.brand, vibe:s.vibe, palette:s.palette, created_at:s.created_at, hasVariants: map.has(s.id) }))
+  return data.map(s=> ({ id:s.id, title:s.title, brand:s.brand, vibe:s.vibe, palette:s.palette, created_at:s.created_at, photoUrl: (s as any).photo_url, hasVariants: map.has(s.id) }))
 }
 
 export async function markHasVariants(parentId: string){

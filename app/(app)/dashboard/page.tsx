@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { supabaseServer } from '@/lib/supabase/server'
 import { getIndexForUser } from '@/lib/db/stories'
+import StoryHeroCard from '@/components/visual/StoryHeroCard'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,66 +23,45 @@ export default async function Dashboard() {
   } catch {}
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-12 space-y-16">
-      <section className="space-y-6">
-        <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div>
-            <h1 className="font-display text-4xl leading-[1.05] mb-2">Your Color Stories</h1>
-            <p className="text-sm text-[var(--ink-subtle)]">Generate, view, and refine saved palettes.</p>
-          </div>
-          <div className="flex gap-3">
-            <Link href="/start" className="btn btn-primary">New Story</Link>
-            <a href="/designers" className="btn btn-secondary">Designers</a>
-          </div>
-        </header>
-      </section>
-      <StoriesSection stories={stories} />
+    <main className="max-w-7xl mx-auto px-4 py-10 space-y-10">
+      <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div>
+          <h1 className="font-display text-4xl leading-[1.05] mb-3">Your Color Stories</h1>
+          <p className="text-sm text-[var(--ink-subtle)] max-w-md">Saved palettes and variants. Open any to view placements and export.</p>
+        </div>
+        <div className="flex gap-3">
+          <Link href="/start" className="btn btn-primary">New Story</Link>
+          <Link href="/designers" className="btn btn-secondary">Designers</Link>
+        </div>
+      </header>
+      <StoriesGrid stories={stories} />
       <div className="text-xs text-[var(--ink-subtle)]">Dev: <Link href="/test-upload" className="underline">Test upload</Link></div>
     </main>
   )
 }
 
-function StoriesSection({ stories }: { stories:any[] }) {
-  const brandOptions = ['All','SW','Behr'] as const
-  // simple inline filtering on client after hydration (progressive enhancement could be added)
-  return (
-    <section className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="font-display text-2xl">Color Stories</h2>
-        <form className="flex flex-wrap gap-3 items-center text-sm" role="search" aria-label="Filter stories">
-          <div className="flex gap-2 bg-[var(--bg-surface)] rounded-full px-2 py-1 border border-[var(--border)]">
-            {brandOptions.map(b => (
-              <button key={b} type="button" data-brand={b} className="px-3 py-1 rounded-full hover:bg-[color:rgba(0,0,0,.04)] text-[11px] font-medium" aria-pressed={b==='All'}>{b}</button>
-            ))}
-          </div>
-          <div className="relative">
-            <input type="search" placeholder="Search title" className="text-sm rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2 focus:outline-none focus:ring-0" />
-          </div>
-        </form>
+function StoriesGrid({ stories }: { stories:any[] }) {
+  if (stories.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center py-24 border border-dashed rounded-2xl border-[var(--border)] bg-[var(--bg-surface)]">
+        <div className="w-48 h-32 rounded-2xl bg-gradient-to-br from-linen to-paper mb-8 shadow-soft" aria-hidden />
+        <h2 className="font-display text-2xl mb-2">No stories yet</h2>
+        <p className="text-sm text-[var(--ink-subtle)] mb-6 max-w-xs">Start your first palette to see it appear here.</p>
+        <Link href="/start" className="btn btn-primary">Start a Color Story</Link>
       </div>
-      {stories.length === 0 ? (
-        <div className="rounded-2xl border border-[var(--border)] p-10 text-center text-sm text-[var(--ink-subtle)]">No stories yet. Start one above.</div>
-      ) : (
-        <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {stories.map(s => {
-            const hasVariants = !!s.hasVariants
-            return (
-              <li key={s.id} className="group relative rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 hover:shadow-sm transition">
-                <Link href={`/reveal/${s.id}`} className="absolute inset-0" aria-label={`Open story ${s.title}`} />
-                <div className="flex gap-1 mb-3">
-                  {(s.palette||[]).slice(0,5).map((pc:any,i:number)=>(<span key={i} className="h-7 w-7 rounded-md border border-[var(--border)]" style={{background:pc.hex}} aria-hidden />))}
-                </div>
-                <div className="font-medium mb-0.5 pr-4 line-clamp-1 flex items-center gap-2">
-                  {s.title}
-                  {hasVariants && <span className="text-[9px] px-1 py-0.5 rounded-full bg-emerald-100 text-emerald-700">VAR</span>}
-                </div>
-                <div className="text-[11px] text-[var(--ink-subtle)]">{s.brand} · {s.vibe}</div>
-                <div className="text-[10px] text-[var(--ink-subtle)] mt-1">{new Date(s.created_at).toLocaleDateString()}</div>
-              </li>
-            )
-          })}
-        </ul>
-      )}
-    </section>
+    )
+  }
+  return (
+    <ul className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
+      {stories.map(s=>{
+        const image = s.photoUrl || '/icons/icon-192.png'
+        const meta = `${s.vibe} · ${s.brand}`
+        return (
+          <li key={s.id} className="[&>div]:h-full">
+            <StoryHeroCard imageSrc={image} title={s.title} meta={meta} href={`/reveal/${s.id}`} palette={s.palette} />
+          </li>
+        )
+      })}
+    </ul>
   )
 }
