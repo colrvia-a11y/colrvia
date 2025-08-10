@@ -6,15 +6,6 @@ export default async function Dashboard() {
   const supabase = supabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    return (
-      <main className="p-8 space-y-4">
-        <p>You must sign in to view your dashboard.</p>
-        <Link href="/sign-in" className="underline">Sign in</Link>
-      </main>
-    )
-  }
-
   // Server fetch projects via API route (ensures same auth context)
   let projects: any[] = []
   try {
@@ -29,8 +20,8 @@ export default async function Dashboard() {
   return (
     <main className="mx-auto max-w-2xl p-6 space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold mb-1">Dashboard</h1>
-        <p className="text-sm text-neutral-500">Welcome, {user.email}</p>
+  <h1 className="text-2xl font-semibold mb-1">Dashboard</h1>
+  {user && <p className="text-sm text-neutral-500">Welcome, {user.email}</p>}
       </header>
 
       <section className="space-y-4">
