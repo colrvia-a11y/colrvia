@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { supabaseServer } from '@/lib/supabase/server'
 import NewProjectForm from './new-project-form'
+import { track, initAnalytics } from '@/lib/analytics'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,18 +76,20 @@ export default async function Dashboard() {
           <div className="border rounded-2xl p-8 text-sm text-neutral-600">No stories yet. Generate your first one.</div>
         ) : (
           <ul className="grid sm:grid-cols-2 gap-5">
-            {stories.map(s => (
+            {stories.map(s => {
+              const hasVariants = !!(s.variant && s.variant !== 'recommended')
+              return (
               <li key={s.id} className="rounded-2xl border overflow-hidden bg-white hover:shadow-sm transition">
-                <Link href={`/reveal/${s.id}`} className="block p-4">
+                <Link href={`/reveal/${s.id}`} className="block p-4" aria-label={`Open story ${s.title}`}>
                   <div className="flex gap-1 mb-3">
-                    {(s.palette||[]).slice(0,5).map((pc:any,i:number)=>(<span key={i} className="h-8 w-8 rounded-md border" style={{background:pc.hex}} />))}
+                    {(s.palette||[]).slice(0,5).map((pc:any,i:number)=>(<span key={i} className="h-8 w-8 rounded-md border" style={{background:pc.hex}} aria-hidden />))}
                   </div>
-                  <div className="font-medium mb-1 line-clamp-1">{s.title}</div>
+                  <div className="font-medium mb-1 line-clamp-1 flex items-center gap-2">{s.title}{hasVariants && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">VAR</span>}</div>
                   <div className="text-xs text-neutral-500">{s.brand} · {s.vibe}</div>
                   <div className="text-[10px] text-neutral-400 mt-1">{new Date(s.created_at).toLocaleDateString()}</div>
                 </Link>
-              </li>
-            ))}
+              </li>)
+            })}
           </ul>
         )}
       </section>

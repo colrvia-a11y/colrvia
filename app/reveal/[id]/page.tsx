@@ -70,7 +70,7 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
           const lines = palette.map(p=>`${p.name} — ${p.code} (${p.hex})`).join('\n');
           navigator.clipboard.writeText(lines)
         }} className="btn btn-primary">Copy codes</button>
-        <button onClick={()=>{ const v = new URLSearchParams(window.location.search).get('v'); window.open(`/api/share/${id}/image${v?`?variant=${v}`:''}`,'_blank'); }} className="btn btn-secondary">Share Image</button>
+  <button onClick={()=>{ const v = new URLSearchParams(window.location.search).get('v'); const url = `/api/share/${id}/image${v?`?variant=${v}`:''}`; window.open(url,'_blank'); }} className="btn btn-secondary">Share Image</button>
       </div>
     </main>
   )
