@@ -2,6 +2,8 @@ import { supabaseServer } from '@/lib/supabase/server'
 import Link from 'next/link'
 import VariantTabs from './variant-tabs'
 import { Metadata } from 'next'
+import { PlacementIcon } from '@/components/reveal/PlacementIcon'
+import { initAnalytics, track } from '@/lib/analytics'
 import RevealClient from './reveal-client'
 export async function generateMetadata({ params, searchParams }:{ params:{id:string}; searchParams:Record<string,string|undefined> }): Promise<Metadata> {
   const id = params.id
@@ -57,9 +59,9 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
           <div key={i} className="rounded-2xl border overflow-hidden group">
             <div className="h-24" style={{background:p.hex}} />
             <div className="p-3 text-sm">
-              <div className="font-medium">{p.name}</div>
-              <div className="text-neutral-600 text-xs">{p.code} · {p.brand}</div>
-              <div className="text-neutral-500 mt-1 text-xs">{p.role}</div>
+      <div className="font-medium flex items-center gap-1">{p.name}</div>
+      <div className="text-neutral-600 text-xs">{p.code} · {p.brand}</div>
+      <div className="text-neutral-500 mt-1 text-xs flex items-center gap-1"><PlacementIcon role={p.role} /> <span className="capitalize">{p.role}</span></div>
             </div>
           </div>
         ))}
@@ -67,10 +69,10 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
       <section className="prose prose-sm max-w-none text-neutral-800"><p>{data.narrative}</p></section>
       <div className="flex gap-3 pt-4 flex-wrap">
         <button onClick={()=>{
-          const lines = palette.map(p=>`${p.name} — ${p.code} (${p.hex})`).join('\n');
+          const lines = palette.map(p=>`${p.brand} — ${p.name} (${p.code}) ${p.hex} [${p.role}]`).join('\n');
           navigator.clipboard.writeText(lines)
-        }} className="btn btn-primary">Copy codes</button>
-  <button onClick={()=>{ const v = new URLSearchParams(window.location.search).get('v'); const url = `/api/share/${id}/image${v?`?variant=${v}`:''}`; window.open(url,'_blank'); }} className="btn btn-secondary">Share Image</button>
+        }} className="btn btn-primary">Copy all codes</button>
+        <button onClick={()=>{ const v = new URLSearchParams(window.location.search).get('v'); const url = `/api/share/${id}/image${v?`?variant=${v}`:''}`; track('share_image_download',{ id, variant:v||'recommended' }); window.open(url,'_blank'); }} className="btn btn-secondary">Share Image</button>
       </div>
     </main>
   )

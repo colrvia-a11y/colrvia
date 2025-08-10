@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Button from '@/components/ui/Button'
+import PwaBadge from './pwa-badge'
 
 export default async function AccountPage() {
   const cookieStore = cookies()
@@ -31,7 +32,7 @@ export default async function AccountPage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-8 space-y-6">
+  <div className="max-w-xl mx-auto p-8 space-y-6">
       <h1 className="text-2xl font-semibold">Account</h1>
       <div className="border rounded p-4 space-y-2">
         <div className="flex justify-between"><span>Plan</span><span className="font-medium uppercase">{tier}</span></div>
@@ -42,7 +43,8 @@ export default async function AccountPage() {
             <Button type="submit" variant="secondary">Manage Billing</Button>
           </form>
         )}
-      </div>
+  </div>
+  <PwaBadge />
     </div>
   )
 }
