@@ -14,11 +14,13 @@ module.exports = {
         ink: '#1E1B16',
         taupe: '#5E5A53',
         brand: {
+          DEFAULT: '#2F5D50',
           500: '#2F5D50',
           600: '#284E43',
           700: '#213F37'
         },
         accent: {
+          DEFAULT: '#C07A5A',
           500: '#C07A5A'
         },
         highlight: '#F7BE58',
