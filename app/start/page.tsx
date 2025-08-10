@@ -7,11 +7,17 @@ import { zodResolver } from '@hookform/resolvers/zod'
 
 export const dynamic = 'force-dynamic'
 
-const Step1 = z.object({ lighting: z.string().min(2), mood: z.string().min(2) })
-const Step2 = z.object({ style: z.string().min(2), floor: z.string().min(1) })
-const Step3 = z.object({ accent: z.string().min(2) })
-const All = Step1.merge(Step2).merge(Step3)
-type FormData = z.infer<typeof All>
+// Interim schema (will evolve to vibe, brand, lighting, warm wood, etc.)
+const Schema = z.object({
+  designer: z.enum(['Emily','Zane','Marisol']).default('Emily'),
+  vibe: z.enum(['Cozy Neutral','Airy Coastal','Earthy Organic','Modern Warm','Soft Pastels','Moody Blue-Green']),
+  brand: z.enum(['SW','Behr']),
+  lighting: z.enum(['day','evening','mixed']),
+  hasWarmWood: z.boolean().default(false),
+  roomType: z.string().optional().nullable(),
+  photoUrl: z.string().url().optional().nullable()
+})
+type FormData = z.infer<typeof Schema>
 
 function StepperInner() {
   const sp = useSearchParams()
@@ -19,24 +25,41 @@ function StepperInner() {
   const designer = (sp.get('designer') ?? 'emily') as 'emily'|'zane'|'marisol'
   const [step, setStep] = useState(1)
   const [busy, setBusy] = useState(false)
-  const { register, handleSubmit, trigger, formState: { errors, isValid }, getValues } = useForm<FormData>({ resolver: zodResolver(All), mode: 'onChange' })
+  const { register, handleSubmit, trigger, formState: { errors }, setValue, watch } = useForm<FormData>({ resolver: zodResolver(Schema), mode: 'onChange', defaultValues:{ designer: designer==='emily'?'Emily': designer==='zane'?'Zane':'Marisol' } as any })
 
   const total = 3
   const pct = Math.round((step/total)*100)
 
   async function next() {
-    const fields = step===1 ? ['lighting','mood'] : step===2 ? ['style','floor'] : ['accent']
-    const ok = await trigger(fields as any)
+    // simple step validation for now
+    const ok = await trigger()
     if (!ok) return
     if (step < total) setStep(s => s+1)
   }
 
   async function onSubmit(values: FormData) {
     setBusy(true)
-    const res = await fetch('/api/generate', { method: 'POST', body: JSON.stringify({ designer, answers: values }) })
-    const data = await res.json()
-    localStorage.setItem('colrvia:lastStory', JSON.stringify(data.story))
-    router.push('/reveal')
+    try {
+      const res = await fetch('/api/stories', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(values) })
+      if (res.status === 402) {
+        alert('Free limit reached — upgrade to save more stories')
+        setBusy(false)
+        return
+      }
+      if (!res.ok) {
+        console.error('START_SUBMIT_FAILED', await res.text())
+        alert('Error generating story. Ensure stories table exists (run /db/supabase.sql).')
+        setBusy(false)
+        return
+      }
+      const json = await res.json()
+      router.push('/reveal/' + json.id)
+    } catch (e) {
+      console.error('START_SUBMIT_ERR', e)
+      alert('Unexpected error.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -48,39 +71,48 @@ function StepperInner() {
         {step===1 && (
           <div className="space-y-4 animate-fadeIn">
             <div>
-              <label className="block text-sm mb-1">Lighting</label>
-              <input {...register('lighting')} className="w-full border rounded-xl px-3 py-2" placeholder="Soft morning light..." />
-              {errors.lighting && <p className="text-xs text-red-600 mt-1">Lighting required</p>}
+              <label className="block text-sm mb-1">Vibe</label>
+              <select {...register('vibe')} className="w-full border rounded-xl px-3 py-2">
+                <option>Cozy Neutral</option>
+                <option>Airy Coastal</option>
+                <option>Earthy Organic</option>
+                <option>Modern Warm</option>
+                <option>Soft Pastels</option>
+                <option>Moody Blue-Green</option>
+              </select>
             </div>
             <div>
-              <label className="block text-sm mb-1">Mood</label>
-              <input {...register('mood')} className="w-full border rounded-xl px-3 py-2" placeholder="Calm, energizing..." />
-              {errors.mood && <p className="text-xs text-red-600 mt-1">Mood required</p>}
+              <label className="block text-sm mb-1">Brand</label>
+              <select {...register('brand')} className="w-full border rounded-xl px-3 py-2">
+                <option>SW</option>
+                <option>Behr</option>
+              </select>
             </div>
           </div>
         )}
         {step===2 && (
           <div className="space-y-4 animate-fadeIn">
             <div>
-              <label className="block text-sm mb-1">Style</label>
-              <input {...register('style')} className="w-full border rounded-xl px-3 py-2" placeholder="Minimal, boho..." />
-              {errors.style && <p className="text-xs text-red-600 mt-1">Style required</p>}
+              <label className="block text-sm mb-1">Lighting</label>
+              <select {...register('lighting')} className="w-full border rounded-xl px-3 py-2">
+                <option value="day">Day</option>
+                <option value="evening">Evening</option>
+                <option value="mixed">Mixed</option>
+              </select>
             </div>
-            <div>
-              <label className="block text-sm mb-1">Flooring</label>
-              <input {...register('floor')} className="w-full border rounded-xl px-3 py-2" placeholder="Oak, tile..." />
-              {errors.floor && <p className="text-xs text-red-600 mt-1">Floor info required</p>}
+            <div className="flex items-center gap-2">
+              <input id="warmwood" type="checkbox" {...register('hasWarmWood')} className="rounded" />
+              <label htmlFor="warmwood" className="text-sm">Warm wood present</label>
             </div>
           </div>
         )}
         {step===3 && (
           <div className="space-y-4 animate-fadeIn">
             <div>
-              <label className="block text-sm mb-1">Accent colors or items</label>
-              <input {...register('accent')} className="w-full border rounded-xl px-3 py-2" placeholder="Brass hardware, navy sofa..." />
-              {errors.accent && <p className="text-xs text-red-600 mt-1">Accent required</p>}
+              <label className="block text-sm mb-1">Room Type (optional)</label>
+              <input {...register('roomType')} className="w-full border rounded-xl px-3 py-2" placeholder="Living Room, Bedroom..." />
             </div>
-            <div className="text-sm text-neutral-600 bg-neutral-50 border rounded-xl p-3">Review your answers then generate your story.</div>
+            <div className="text-sm text-neutral-600 bg-neutral-50 border rounded-xl p-3">Review then generate.</div>
           </div>
         )}
         <div className="flex gap-3 pt-2">
