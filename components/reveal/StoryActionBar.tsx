@@ -1,4 +1,5 @@
 "use client"
+import React from 'react'
 import { track } from '@/lib/analytics'
 
 interface ActionBarProps { storyId:string; palette: Array<{ brand:string; name:string; code:string; hex:string; role:string }> }

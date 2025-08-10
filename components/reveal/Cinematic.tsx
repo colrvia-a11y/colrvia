@@ -1,7 +1,7 @@
 "use client"
+import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReducedMotion } from '@/components/theme/MotionSettings'
-import { useEffect, useRef, useState } from 'react'
 import { track, initAnalytics } from '@/lib/analytics'
 
 interface CinematicProps { open:boolean; onExit:()=>void; story:{ id:string; title:string; palette:any[]; narrative:string; placements:any; }; }

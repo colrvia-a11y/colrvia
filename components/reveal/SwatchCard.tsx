@@ -1,6 +1,6 @@
 "use client"
+import React, { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { useState, useEffect, useRef } from 'react'
 import { PlacementIcon } from './PlacementIcon'
 
 export interface SwatchColor { brand:string; name:string; code:string; hex:string; role:string }

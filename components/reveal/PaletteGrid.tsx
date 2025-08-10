@@ -1,4 +1,5 @@
 "use client"
+import React from 'react'
 import SwatchCard, { SwatchColor } from './SwatchCard'
 
 interface PaletteGridProps { palette: SwatchColor[]; onCopy?: (c:SwatchColor)=>void }
