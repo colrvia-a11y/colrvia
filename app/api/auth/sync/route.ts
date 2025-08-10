@@ -12,8 +12,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, cleared: true })
     }
     if (access_token && refresh_token) {
-      // @ts-expect-error: setSession may not be typed in current package version
-      const { error } = await supabase.auth.setSession({ access_token, refresh_token })
+      // Basic shape guard (JWTs contain at least two dots)
+      if (!(access_token.includes('.') && refresh_token.includes('.'))) {
+        return NextResponse.json({ ok:false, error:'INVALID_TOKEN_FORMAT' }, { status:400 })
+      }
+      const { error } = await (supabase.auth as any).setSession({ access_token, refresh_token })
       if (error) return NextResponse.json({ ok:false, error: error.message }, { status: 400 })
       return NextResponse.json({ ok: true })
     }
