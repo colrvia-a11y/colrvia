@@ -92,6 +92,8 @@
 
 @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 
+@keyframes swatchIn { 0% { opacity:0; transform:translateY(14px) scale(.94); } 60% { opacity:1; transform:translateY(-2px) scale(1.02);} 100% { opacity:1; transform:translateY(0) scale(1);} }
+
 /* Motion utilities */
 .transition-standard { transition-timing-function: var(--motion-ease-standard); transition-duration: var(--motion-duration); }
 .transition-fast { transition-timing-function: var(--motion-ease-standard); transition-duration: var(--motion-duration-fast); }
