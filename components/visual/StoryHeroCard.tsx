@@ -16,9 +16,10 @@ interface StoryHeroCardProps {
   skeleton?: boolean
   palette?: { hex:string; name?:string }[]
   ctaLabel?: string
+  singleLineTitle?: boolean
 }
 
-export default function StoryHeroCard({ imageSrc, title, meta, href, priority, skeleton=false, palette=[], ctaLabel='Open' }: StoryHeroCardProps){
+export default function StoryHeroCard({ imageSrc, title, meta, href, priority, skeleton=false, palette=[], ctaLabel='Open', singleLineTitle=false }: StoryHeroCardProps){
   const reduced = useReducedMotion()
   const [loaded, setLoaded] = useState(false)
   return (
@@ -35,7 +36,7 @@ export default function StoryHeroCard({ imageSrc, title, meta, href, priority, s
         </div>
       )}
       <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-2 text-white">
-        <h3 className="font-display text-lg leading-snug tracking-[-0.01em] drop-shadow-sm line-clamp-2">{title}</h3>
+  <h3 className={clsx('font-display text-lg leading-snug tracking-[-0.01em] drop-shadow-sm', singleLineTitle ? 'line-clamp-1' : 'line-clamp-2')}>{title}</h3>
         {meta && <p className="text-[11px] uppercase tracking-wide font-medium text-white/80 line-clamp-1">{meta}</p>}
         <div className="pt-1">
           <Button as={Link} href={href} variant="primary" className="text-sm px-4 py-2 rounded-xl">{ctaLabel}</Button>

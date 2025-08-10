@@ -51,10 +51,12 @@ function StoriesGrid({ stories }: { stories:any[] }) {
     <ul className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
       {stories.map(s=>{
         const image = s.photoUrl || '/icons/icon-192.png'
-        const meta = `${s.vibe} 7 ${s.brand}`
+        const meta = `${s.vibe} · ${s.brand}`
+        const fallback = `Color Story ${s.id.slice(0,6)}`
+        const title = s.title || fallback
         return (
           <li key={s.id} className="[&>div]:h-full">
-            <StoryHeroCard imageSrc={image} title={s.title} meta={meta} href={`/reveal/${s.id}`} palette={s.palette} />
+            <StoryHeroCard imageSrc={image} title={title} meta={meta} href={`/reveal/${s.id}`} palette={s.palette} singleLineTitle />
           </li>
         )
       })}

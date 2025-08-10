@@ -47,10 +47,11 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
   }
   const placements = (data.placements && typeof data.placements === 'object' ? (data.placements as any).pct : undefined) || { sixty:60, thirty:30, ten:10 }
   const heroImage = data.photo_url || '/icons/icon-192.png'
+  const displayTitle = data.title || 'Your Color Story'
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 space-y-10">
       <div className="rounded-2xl overflow-hidden relative">
-        <StoryHeroCard imageSrc={heroImage} title={data.title} meta={`${data.brand} · ${data.vibe}`} href="#palette" palette={palette} ctaLabel="Open" />
+        <StoryHeroCard imageSrc={heroImage} title={displayTitle} meta={`${data.brand} · ${data.vibe}`} href="#palette" palette={palette} ctaLabel="Open" />
         <div className="absolute bottom-4 right-4"><PdfButton storyId={data.id} /></div>
       </div>
       <div className="flex items-center gap-3 text-[11px] text-[var(--ink-subtle)]">
