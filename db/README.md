@@ -11,3 +11,6 @@ Steps:
 2. Paste entire contents of `db/supabase.sql` and Run (safe: uses `if not exists`).
 3. Confirm `stories` and `profiles` tables exist and RLS policies applied.
 4. Test by signing in and calling /api/stories.
+
+### Sprint E (Variants) Migration
+Variant support adds `variant` and `parent_id` columns plus an index. Re-run the full `supabase.sql` or just the appended block at the end (it's idempotent with `if not exists`).

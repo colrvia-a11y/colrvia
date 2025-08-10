@@ -62,3 +62,9 @@ create policy "own profile read" on public.profiles
 drop policy if exists "own profile update" on public.profiles;
 create policy "own profile update" on public.profiles
   for update using (auth.uid() = user_id);
+
+-- Variants: add variant + parent_id columns (Sprint E)
+alter table if exists public.stories
+  add column if not exists variant text not null default 'recommended' check (variant in ('recommended','softer','bolder')),
+  add column if not exists parent_id uuid null;
+create index if not exists stories_parent_idx on public.stories(parent_id);

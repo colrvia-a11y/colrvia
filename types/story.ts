@@ -18,3 +18,10 @@ export type ColorStory = {
   palette: Swatch[]; placements: Placements; narrative: string; previewUrl?: string|null;
   createdAt: string;
 };
+
+export type VariantType = 'recommended'|'softer'|'bolder';
+export interface StoryIndexItem {
+  id:string; title:string; createdAt:string; brand:Brand; vibe:string; designer:string;
+  swatches: Array<{ hex:string; role?:Role }>;
+  hasVariants?: boolean;
+}
