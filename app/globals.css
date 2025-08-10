@@ -29,4 +29,7 @@
   .btn-ghost:hover { color:var(--ink); background:rgba(0,0,0,.04); }
   .btn:focus-visible { box-shadow:var(--focus-ring); }
   .eyebrow { font-size:0.75rem; letter-spacing:0.2em; font-weight:600; color:#737373; }
+  .animate-fadeIn { animation:fadeIn .5s ease both; }
 }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
