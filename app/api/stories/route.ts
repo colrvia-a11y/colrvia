@@ -1,49 +1,56 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { supabaseServer } from "@/lib/supabase/server";
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-const normalizeBrand = (b: string) => {
-  const s = b.trim().toLowerCase();
-  if (["sherwin-williams", "sherwin_williams", "sw", "sherwin"].includes(s)) return "sherwin_williams";
-  if (["behr", "behr®", "behr paint"].includes(s)) return "behr";
-  return s;
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { supabaseServer } from '@/lib/supabase/server';
+
+// --- normalization helpers ---
+const normalizeBrand = (b?: string) => {
+  const s = (b ?? '').trim().toLowerCase();
+  if (['sherwin-williams', 'sherwin_williams', 'sw', 'sherwin'].includes(s)) return 'sherwin_williams';
+  if (['behr', 'behr®', 'behr paint'].includes(s)) return 'behr';
+  return s; // unknown -> will fail refine
 };
 
-const BrandSchema = z
-  .string()
-  .transform(normalizeBrand)
-  .refine((v) => v === "sherwin_williams" || v === "behr", "brand must be sherwin_williams or behr");
-
-const DesignerSchema = z.enum(["marisol", "emily", "zane"]).default("marisol");
-
 const BodySchema = z.object({
-  brand: BrandSchema.default("sherwin_williams"),
-  designerKey: DesignerSchema,
+  brand: z.string().transform(normalizeBrand).refine(v => v === 'sherwin_williams' || v === 'behr', { message: 'brand must be sherwin_williams or behr' }),
+  designerKey: z.enum(['marisol','emily','zane']).default('marisol'),
   vibe: z.string().optional(),
-  lighting: z.enum(["daylight", "evening", "mixed"]).optional(),
+  lighting: z.enum(['daylight','evening','mixed']).optional(),
   room: z.string().optional(),
-  inputs: z.record(z.any()).optional(),
+  inputs: z.record(z.any()).optional()
 });
 
 export async function POST(req: Request) {
+  // guard JSON parsing
+  let raw: unknown;
+  try {
+    raw = await req.json();
+  } catch (e) {
+    console.warn('STORIES_POST:INVALID_JSON', { error: String(e) });
+    return NextResponse.json({ error: 'INVALID_JSON' }, { status: 400 });
+  }
+
+  // zod validation + normalization
+  let parsed: z.infer<typeof BodySchema>;
+  try {
+    parsed = BodySchema.parse(raw ?? {});
+  } catch (e) {
+    const issues = (e as z.ZodError).issues?.map(i => ({ path: i.path.join('.'), message: i.message }));
+    console.warn('STORIES_POST:INVALID_INPUT', issues);
+    return NextResponse.json({ error: 'INVALID_INPUT', issues }, { status: 422 });
+  }
+
+  // SSR server client
   const supabase = supabaseServer();
   const { data: { user }, error: userErr } = await supabase.auth.getUser();
   if (userErr || !user) {
-    console.error("AUTH_MISSING", userErr);
-    return NextResponse.json({ error: "AUTH_MISSING" }, { status: 401 });
+    console.error('STORIES_POST:AUTH_MISSING', { userErr });
+    return NextResponse.json({ error: 'AUTH_MISSING' }, { status: 401 });
   }
 
-  let parsed: z.infer<typeof BodySchema>;
-  try {
-    const body = await req.json();
-    parsed = BodySchema.parse(body);
-  } catch (e) {
-    const zerr = e as z.ZodError;
-    const issues = zerr.issues?.map((i) => ({ path: i.path.join("."), message: i.message }));
-    console.warn("INVALID_INPUT", issues);
-    return NextResponse.json({ error: "INVALID_INPUT", issues }, { status: 422 });
-  }
-
+  // DB payload with safe defaults (include title & vibe for UI)
   const payload = {
     user_id: user.id,
     designer_key: parsed.designerKey,
@@ -52,34 +59,40 @@ export async function POST(req: Request) {
       vibe: parsed.vibe ?? null,
       lighting: parsed.lighting ?? null,
       room: parsed.room ?? null,
-      ...(parsed.inputs ?? {}),
+      ...(parsed.inputs ?? {})
     },
-  title: parsed.vibe ? `${parsed.vibe} Palette` : 'Color Story',
-  vibe: parsed.vibe ?? null,
+    title: parsed.vibe ? `${parsed.vibe} Palette` : 'Color Story',
+    vibe: parsed.vibe ?? null,
     palette: [],
     narrative: null,
     has_variants: false,
-    status: "new",
-  };
+    status: 'new'
+  } as const;
 
-  const { data: row, error } = await supabase
-    .from("stories")
-    .insert(payload)
-    .select("id")
-    .single();
+  try {
+    const { data: row, error } = await supabase
+      .from('stories')
+      .insert(payload)
+      .select('id')
+      .single();
 
-  if (error) {
-    console.error("DB_INSERT_FAILED", {
-      code: (error as any).code,
-      message: error.message,
-      details: (error as any).details,
-      hint: (error as any).hint,
-      payloadKeys: Object.keys(payload),
-      brand: payload.brand,
-    });
-    const status = /check constraint/i.test(error.message) ? 400 : 500;
-    return NextResponse.json({ error: "DB_INSERT_FAILED", detail: error.message }, { status });
+    if (error) {
+      console.error('STORIES_POST:DB_INSERT_FAILED', {
+        code: (error as any).code,
+        message: error.message,
+        details: (error as any).details,
+        hint: (error as any).hint,
+        brand: payload.brand,
+        keys: Object.keys(payload)
+      });
+      const status = /check constraint|invalid input/i.test(error.message) ? 400 : 500;
+      return NextResponse.json({ error: 'DB_INSERT_FAILED', detail: error.message }, { status });
+    }
+
+    return NextResponse.json({ id: row.id }, { status: 201 });
+  } catch (e) {
+    // final safety net so Next.js never throws a Digest error
+    console.error('STORIES_POST:FATAL', { error: String(e), stack: (e as any)?.stack });
+    return NextResponse.json({ error: 'FATAL', detail: String(e) }, { status: 500 });
   }
-
-  return NextResponse.json({ id: row.id }, { status: 201 });
 }

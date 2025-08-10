@@ -47,13 +47,9 @@ function StartInner(){
       const body = {
         designerKey: (values.designer || 'Marisol').toLowerCase(),
         brand: normalizeBrandForPost(values.brand),
-        vibe: values.vibe,
-        lighting: values.lighting === 'day' ? 'daylight' : values.lighting,
-        room: values.roomType || undefined,
-        inputs: {
-          hasWarmWood: values.hasWarmWood,
-          photoUrl: values.photoUrl || null,
-        }
+        vibe: values.vibe || undefined,
+        lighting: (values.lighting === 'day' ? 'daylight' : values.lighting) || undefined,
+        room: values.roomType || undefined
       }
       const res = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
       let payload: any = null
@@ -72,7 +68,7 @@ function StartInner(){
       }
       if(res.status===422){
         const issues = payload?.issues ? payload.issues.map((i:any)=> `${i.path}: ${i.message}`).join('\n') : ''
-        alert('Invalid input:\n'+issues)
+        alert(issues || 'Invalid input')
         setMixing(false)
         return
       }
