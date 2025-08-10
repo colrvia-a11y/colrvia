@@ -54,6 +54,8 @@ export async function POST(req: Request) {
       room: parsed.room ?? null,
       ...(parsed.inputs ?? {}),
     },
+  title: parsed.vibe ? `${parsed.vibe} Palette` : 'Color Story',
+  vibe: parsed.vibe ?? null,
     palette: [],
     narrative: null,
     has_variants: false,
