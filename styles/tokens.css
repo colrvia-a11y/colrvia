@@ -1,0 +1,12 @@
+:root{
+  --bg-canvas:#F7F5EF; --bg-surface:#FFFFFF; --border:#E7E1D7;
+  --text-primary:#1E1B16; --text-secondary:#5E5A53;
+  --brand:#2F5D50; --brand-contrast:#FFFFFF;
+  --accent:#C07A5A; --accent-contrast:#1E1B16;
+  --highlight:#F7BE58; --shadow-rgba:15,14,12;
+}
+.theme-dark{
+  --bg-canvas:#121212; --bg-surface:#1B1B19; --border:#2A2A27;
+  --text-primary:#F3EEE6; --text-secondary:#B8B2AA;
+  --brand:#C59A5A; --brand-contrast:#121212;
+}
