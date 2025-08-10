@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-export const runtime = 'nodejs' // make sure this uses Node runtime
+export const runtime = 'nodejs' // ensure Node runtime
 
 export async function POST(req: NextRequest) {
   try {
     const { priceId } = (await req.json()) as { priceId: string }
 
-    // Create the Stripe client without hard-coding apiVersion
+    // ✅ No apiVersion here. The SDK will use your Stripe account's default.
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
 
     const session = await stripe.checkout.sessions.create({
