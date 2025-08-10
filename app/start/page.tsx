@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Button from '@/components/ui/Button'
+import Chip from '@/components/ui/Chip'
 import { Upload } from '@/components/upload'
 
 export const dynamic = 'force-dynamic'
@@ -91,38 +92,26 @@ export default function StartPage(){
               <div>
                 <h3 className="text-sm font-medium mb-2">Vibe</h3>
                 <div className="flex flex-wrap gap-2">
-                  {VIBES.map(v=> {
-                    const active = values.vibe === v
-                    return <button key={v} type="button" onClick={()=>setValue('vibe', v,{shouldValidate:true})} className={`px-3 py-1.5 rounded-full text-[12px] border transition ${active? 'bg-[var(--brand)] text-white border-[var(--brand)]':'bg-[var(--bg-surface)] hover:bg-[#F2EFE9]'}`} aria-pressed={active}>{v}</button>
-                  })}
+                  {VIBES.map(v=> <Chip key={v} active={values.vibe===v} onClick={()=>setValue('vibe', v,{shouldValidate:true})}>{v}</Chip> )}
                 </div>
               </div>
               <div className="flex flex-wrap gap-6">
                 <fieldset className="space-y-2">
                   <legend className="text-sm font-medium">Brand</legend>
                   <div className="flex gap-2">
-                    {['SW','Behr'].map(b=>{
-                      const active=values.brand===b
-                      return <button key={b} type="button" onClick={()=>setValue('brand', b as any,{shouldValidate:true})} className={`px-4 py-1.5 rounded-full text-[12px] border ${active?'bg-[var(--brand)] text-white border-[var(--brand)]':'hover:bg-[#F2EFE9]'}`} aria-pressed={active}>{b}</button>
-                    })}
+                    {['SW','Behr'].map(b=> <Chip key={b} active={values.brand===b} onClick={()=>setValue('brand', b as any,{shouldValidate:true})}>{b}</Chip> )}
                   </div>
                 </fieldset>
                 <fieldset className="space-y-2">
                   <legend className="text-sm font-medium">Lighting</legend>
                   <div className="flex gap-2">
-                    {['day','evening','mixed'].map(l=> {
-                      const active = values.lighting===l
-                      return <button key={l} type="button" onClick={()=>setValue('lighting', l as any,{shouldValidate:true})} className={`px-4 py-1.5 rounded-full text-[12px] border capitalize ${active?'bg-[var(--brand)] text-white border-[var(--brand)]':'hover:bg-[#F2EFE9]'}`} aria-pressed={active}>{l}</button>
-                    })}
+                    {['day','evening','mixed'].map(l=> <Chip key={l} active={values.lighting===l} onClick={()=>setValue('lighting', l as any,{shouldValidate:true})} className="capitalize">{l}</Chip> )}
                   </div>
                 </fieldset>
                 <fieldset className="space-y-2">
                   <legend className="text-sm font-medium">Warm wood?</legend>
                   <div className="flex gap-2">
-                    {[true,false].map(val=>{
-                      const active = values.hasWarmWood===val
-                      return <button key={String(val)} type="button" onClick={()=>setValue('hasWarmWood', val,{shouldValidate:true})} className={`px-4 py-1.5 rounded-full text-[12px] border ${active?'bg-[var(--brand)] text-white border-[var(--brand)]':'hover:bg-[#F2EFE9]'}`} aria-pressed={active}>{val? 'Yes':'No'}</button>
-                    })}
+                    {[true,false].map(val=> <Chip key={String(val)} active={values.hasWarmWood===val} onClick={()=>setValue('hasWarmWood', val,{shouldValidate:true})}>{val? 'Yes':'No'}</Chip> )}
                   </div>
                 </fieldset>
               </div>
