@@ -1,16 +1,73 @@
 @import "tailwindcss";
 @import '../styles/tokens.css';
 
-/* Design tokens */
+/* Design tokens / CSS variables */
 :root {
-  --shadow: 0 10px 30px rgba(0,0,0,.06);
-  --container: 72rem;
+  /* colors */
+  --color-paper:#F7F5EF;
+  --color-surface:#FFFFFF;
+  --color-linen:#E7E1D7;
+  --color-ink:#1E1B16;
+  --color-ink-subtle: #4E4A44;
+  --color-taupe:#5E5A53;
+  --color-brand:#2F5D50;
+  --color-brand-hover:#284E43;
+  --color-brand-active:#213F37;
+  --color-accent:#C07A5A;
+  --color-highlight:#F7BE58;
+  --color-info:#3869D6;
+  --color-success:#2E7D32;
+  --color-warning:#DC6803;
+  --color-danger:#D92D20;
+  --border-color: #D8D3CA;
+  /* dark theme overrides (Brass brand) */
+  --color-brand-dark:#C59A5A;
+  --color-surface-dark:#191713;
+  --color-paper-dark:#12100E;
+  --color-ink-dark:#F5F2EC;
+  --color-ink-subtle-dark:#BEB8AE;
+
+  /* radius */
+  --radius-card:24px;
+  --radius-pill:16px;
+
+  /* shadows */
+  --shadow-lift:0 6px 18px rgba(15,14,12,0.10);
+  --shadow-soft:0 2px 8px rgba(15,14,12,0.06);
+
+  /* motion */
+  --ease-colrvia:cubic-bezier(0.2,0.8,0.2,1);
+  --dur-swatch:400ms;
+
+  /* typography */
+  --font-display:'Fraunces', serif;
+  --font-sans:Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+
+  /* semantic */
+  --bg-canvas:var(--color-paper);
+  --bg-surface:var(--color-surface);
+  --ink:var(--color-ink);
+  --ink-subtle:var(--color-ink-subtle);
+  --brand:var(--color-brand);
+  --brand-hover:var(--color-brand-hover);
+  --border:var(--border-color);
+  --focus-ring:0 0 0 3px rgba(47,93,80,.4);
+}
+
+.theme-dark {
+  --bg-canvas:var(--color-paper-dark);
+  --bg-surface:var(--color-surface-dark);
+  --ink:var(--color-ink-dark);
+  --ink-subtle:var(--color-ink-subtle-dark);
+  --brand:var(--color-brand-dark);
+  --brand-hover:#b7894c;
+  --border:#3A362F;
 }
 
 /* Base styles */
 @layer base {
-  body { min-height:100vh; -webkit-font-smoothing:antialiased; font-family:var(--font-ui); }
-  html,body{ background:var(--bg-canvas); color:var(--ink); }
+  html,body{ background:var(--bg-canvas); color:var(--ink); font-family:var(--font-sans); }
+  body { min-height:100vh; -webkit-font-smoothing:antialiased; }
   h1,h2,h3,.font-display{ font-family:var(--font-display); font-weight:600; letter-spacing:-0.015em; }
   *:focus-visible { outline:none; box-shadow:var(--focus-ring); }
 }
@@ -18,13 +75,13 @@
 /* Utilities */
 @layer components {
   .container-xy { margin-left:auto; margin-right:auto; max-width:var(--container); padding-left:1.5rem; padding-right:1.5rem; }
-  .card { border-radius:1rem; border:1px solid hsl(var(--border,0 0% 90%)); background:#fff; box-shadow: var(--shadow); }
-  .btn { display:inline-flex; align-items:center; justify-content:center; gap:0.5ch; border-radius:var(--radius-sm); padding:0.625rem 1rem; font-size:0.875rem; font-weight:500; outline:none; line-height:1.2; transition:background-color var(--motion-duration-fast) var(--motion-ease-standard), color var(--motion-duration-fast) var(--motion-ease-standard), box-shadow var(--motion-duration) var(--motion-ease-standard), transform var(--motion-duration-fast) var(--motion-ease-standard); }
-  .btn-primary { background:var(--brand); color:var(--brand-contrast); box-shadow:0 1px 2px rgba(var(--shadow-rgba),.15); }
-  .btn-primary:hover { background:var(--brand-hover); }
+  .card { border-radius:var(--radius-card); border:1px solid var(--border); background:var(--bg-surface); box-shadow: var(--shadow-soft); }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:0.5ch; border-radius:var(--radius-pill); padding:0.75rem 1.25rem; font-size:0.9rem; font-weight:500; outline:none; line-height:1.2; transition:background-color .2s var(--ease-colrvia), color .2s var(--ease-colrvia), box-shadow .35s var(--ease-colrvia), transform .3s var(--ease-colrvia); }
+  .btn-primary { background:var(--brand); color:#fff; box-shadow:0 2px 4px rgba(0,0,0,.08); }
+  .btn-primary:hover { background:var(--brand-hover); box-shadow:var(--shadow-lift); }
   .btn-primary:active { transform:translateY(1px); }
   .btn-secondary { background:var(--bg-surface); color:var(--ink); border:1px solid var(--border); }
-  .btn-secondary:hover { background:#F2EFE9; }
+  .btn-secondary:hover { background:var(--color-linen); }
   .btn-ghost { color:var(--ink-subtle); }
   .btn-ghost:hover { color:var(--ink); background:rgba(0,0,0,.04); }
   .btn:focus-visible { box-shadow:var(--focus-ring); }

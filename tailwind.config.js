@@ -13,9 +13,19 @@ module.exports = {
         linen: '#E7E1D7',
         ink: '#1E1B16',
         taupe: '#5E5A53',
-        brand: { 500: '#2F5D50' },
-        accent: { 500: '#C07A5A' },
-        highlight: '#F7BE58'
+        brand: {
+          500: '#2F5D50',
+          600: '#284E43',
+          700: '#213F37'
+        },
+        accent: {
+          500: '#C07A5A'
+        },
+        highlight: '#F7BE58',
+        info: '#3869D6',
+        success: '#2E7D32',
+        warning: '#DC6803',
+        danger: '#D92D20'
       },
       borderRadius: {
         xl: '16px',
@@ -30,6 +40,10 @@ module.exports = {
       },
       transitionDuration: {
         swatch: '400ms'
+      },
+      fontFamily: {
+        display: ['var(--font-display)','Fraunces','serif'],
+        sans: ['var(--font-sans)','Inter','system-ui','sans-serif']
       }
     }
   },
