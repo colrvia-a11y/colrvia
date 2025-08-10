@@ -27,10 +27,15 @@
       {
         "name": "next"
       }
+    ],
+    "types": [
+      "vitest",
+      "node"
     ]
   },
   "include": [
     "next-env.d.ts",
+    "vitest-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
