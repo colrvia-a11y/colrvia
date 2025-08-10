@@ -1,138 +1,172 @@
 'use client'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { Suspense, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { z } from 'zod'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import Button from '@/components/ui/Button'
+import { Upload } from '@/components/upload'
 
 export const dynamic = 'force-dynamic'
 
-// Interim schema (will evolve to vibe, brand, lighting, warm wood, etc.)
 const Schema = z.object({
-  designer: z.enum(['Emily','Zane','Marisol']).default('Emily'),
+  designer: z.enum(['Emily','Zane','Marisol']),
   vibe: z.enum(['Cozy Neutral','Airy Coastal','Earthy Organic','Modern Warm','Soft Pastels','Moody Blue-Green']),
   brand: z.enum(['SW','Behr']),
   lighting: z.enum(['day','evening','mixed']),
-  hasWarmWood: z.boolean().default(false),
+  hasWarmWood: z.boolean(),
   roomType: z.string().optional().nullable(),
   photoUrl: z.string().url().optional().nullable()
 })
 type FormData = z.infer<typeof Schema>
 
-function StepperInner() {
-  const sp = useSearchParams()
-  const router = useRouter()
-  const designer = (sp.get('designer') ?? 'emily') as 'emily'|'zane'|'marisol'
-  const [step, setStep] = useState(1)
-  const [busy, setBusy] = useState(false)
-  const { register, handleSubmit, trigger, formState: { errors }, setValue, watch } = useForm<FormData>({ resolver: zodResolver(Schema), mode: 'onChange', defaultValues:{ designer: designer==='emily'?'Emily': designer==='zane'?'Zane':'Marisol' } as any })
+const DESIGNERS: { id:'emily'|'zane'|'marisol'; name:string; headline:string; blurb:string; palette:string[] }[] = [
+  { id:'emily', name:'Emily', headline:'Tonal calm', blurb:'Low-contrast, airy balance for serene spaces.', palette:['#EDEAE4','#D2D0CB','#ADB5B2','#6F8F86','#2F5D50'] },
+  { id:'zane', name:'Zane', headline:'Bold energy', blurb:'Sculpted contrast and saturated accents.', palette:['#F7BE58','#C07A5A','#2F5D50','#203A35','#111312'] },
+  { id:'marisol', name:'Marisol', headline:'Earthy warmth', blurb:'Grounded neutrals with sun-soft accents.', palette:['#F0E8DE','#D9C8B8','#C07A5A','#8A5232','#2F5D50'] },
+]
 
-  const total = 3
+const VIBES = ['Cozy Neutral','Airy Coastal','Earthy Organic','Modern Warm','Soft Pastels','Moody Blue-Green'] as const
+
+export default function StartPage(){
+  const sp = useSearchParams()
+  const seedDesigner = (sp.get('designer') ?? 'emily') as 'emily'|'zane'|'marisol'
+  const router = useRouter()
+  const [step,setStep]=useState(1)
+  const total=3
+  const { register, handleSubmit, setValue, watch, trigger, formState:{ isValid, isSubmitting } } = useForm<FormData>({
+    resolver:zodResolver(Schema),
+    mode:'onChange',
+    defaultValues:{ designer: seedDesigner==='emily'?'Emily':seedDesigner==='zane'?'Zane':'Marisol', vibe:'Cozy Neutral', brand:'SW', lighting:'day', hasWarmWood:false }
+  })
+  const values = watch()
   const pct = Math.round((step/total)*100)
 
-  async function next() {
-    // simple step validation for now
-    const ok = await trigger()
-    if (!ok) return
-    if (step < total) setStep(s => s+1)
+  async function submit(values:FormData){
+    try {
+      const res = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(values) })
+      if(res.status===402){ alert('Free limit reached — upgrade to save more stories'); return }
+      if(!res.ok){ alert('Error generating story.'); return }
+      const json = await res.json(); router.push('/reveal/'+json.id)
+    } catch(e){ console.error(e); alert('Unexpected error.') }
   }
 
-  async function onSubmit(values: FormData) {
-    setBusy(true)
-    try {
-      const res = await fetch('/api/stories', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(values) })
-      if (res.status === 402) {
-        alert('Free limit reached — upgrade to save more stories')
-        setBusy(false)
-        return
-      }
-      if (!res.ok) {
-        console.error('START_SUBMIT_FAILED', await res.text())
-        alert('Error generating story. Ensure stories table exists (run /db/supabase.sql).')
-        setBusy(false)
-        return
-      }
-      const json = await res.json()
-      router.push('/reveal/' + json.id)
-    } catch (e) {
-      console.error('START_SUBMIT_ERR', e)
-      alert('Unexpected error.')
-    } finally {
-      setBusy(false)
-    }
-  }
+  function next(){ if(step<total) setStep(s=>s+1) }
+  function back(){ if(step>1) setStep(s=>s-1) }
 
   return (
-    <main className="mx-auto max-w-xl p-6">
-      <div className="h-2 w-full bg-neutral-200 rounded-full overflow-hidden mb-8"><div className="h-full bg-black transition-all" style={{ width: pct+'%' }} /></div>
-      <h1 className="text-2xl font-semibold mb-2">Quick interview</h1>
-      <p className="text-neutral-600 mb-6">Step {step} of {total}</p>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <main className="max-w-3xl mx-auto px-4 py-10 space-y-10">
+      <div className="h-2 w-full rounded-full bg-[var(--border)] overflow-hidden"><div className="h-full bg-[var(--brand)] transition-all" style={{width:pct+'%'}} /></div>
+      <h1 className="font-display text-4xl leading-[1.05]">Start your Color Story</h1>
+      <form onSubmit={handleSubmit(submit)} className="space-y-12">
         {step===1 && (
-          <div className="space-y-4 animate-fadeIn">
+          <section className="space-y-6 animate-fadeIn" aria-labelledby="designer-heading">
             <div>
-              <label className="block text-sm mb-1">Vibe</label>
-              <select {...register('vibe')} className="w-full border rounded-xl px-3 py-2">
-                <option>Cozy Neutral</option>
-                <option>Airy Coastal</option>
-                <option>Earthy Organic</option>
-                <option>Modern Warm</option>
-                <option>Soft Pastels</option>
-                <option>Moody Blue-Green</option>
-              </select>
+              <h2 id="designer-heading" className="font-display text-2xl mb-1">Designer</h2>
+              <p className="text-sm text-[var(--ink-subtle)]">Choose a perspective to shape undertones & balance.</p>
             </div>
-            <div>
-              <label className="block text-sm mb-1">Brand</label>
-              <select {...register('brand')} className="w-full border rounded-xl px-3 py-2">
-                <option>SW</option>
-                <option>Behr</option>
-              </select>
+            <div className="grid sm:grid-cols-3 gap-5">
+              {DESIGNERS.map(d=>{
+                const active = values.designer === d.name
+                return (
+                  <button key={d.id} type="button" onClick={()=>setValue('designer', d.name as any,{shouldValidate:true})} className={`group text-left rounded-2xl border p-5 bg-[var(--bg-surface)] transition relative ${active?'ring-2 ring-[var(--brand)]':''}`} aria-pressed={active} aria-label={`Select designer ${d.name}`}>
+                    <div className="font-medium mb-1 flex items-center gap-2">{d.name}<span className="text-[10px] uppercase tracking-wide text-[var(--ink-subtle)]">{d.headline}</span></div>
+                    <p className="text-[11px] leading-relaxed text-[var(--ink-subtle)] mb-4 min-h-[2.5rem]">{d.blurb}</p>
+                    <div className="flex gap-1.5">
+                      {d.palette.map(c=> <span key={c} className="h-5 w-5 rounded-md border border-[var(--border)]" style={{background:c}} aria-hidden />)}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
-          </div>
+          </section>
         )}
         {step===2 && (
-          <div className="space-y-4 animate-fadeIn">
+          <section className="space-y-8 animate-fadeIn" aria-labelledby="space-heading">
             <div>
-              <label className="block text-sm mb-1">Lighting</label>
-              <select {...register('lighting')} className="w-full border rounded-xl px-3 py-2">
-                <option value="day">Day</option>
-                <option value="evening">Evening</option>
-                <option value="mixed">Mixed</option>
-              </select>
+              <h2 id="space-heading" className="font-display text-2xl mb-1">Your Space</h2>
+              <p className="text-sm text-[var(--ink-subtle)]">Pick what feels right — you can tweak later.</p>
             </div>
-            <div className="flex items-center gap-2">
-              <input id="warmwood" type="checkbox" {...register('hasWarmWood')} className="rounded" />
-              <label htmlFor="warmwood" className="text-sm">Warm wood present</label>
+            <div className="space-y-5">
+              <div>
+                <h3 className="text-sm font-medium mb-2">Vibe</h3>
+                <div className="flex flex-wrap gap-2">
+                  {VIBES.map(v=> {
+                    const active = values.vibe === v
+                    return <button key={v} type="button" onClick={()=>setValue('vibe', v,{shouldValidate:true})} className={`px-3 py-1.5 rounded-full text-[12px] border transition ${active? 'bg-[var(--brand)] text-white border-[var(--brand)]':'bg-[var(--bg-surface)] hover:bg-[#F2EFE9]'}`} aria-pressed={active}>{v}</button>
+                  })}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-6">
+                <fieldset className="space-y-2">
+                  <legend className="text-sm font-medium">Brand</legend>
+                  <div className="flex gap-2">
+                    {['SW','Behr'].map(b=>{
+                      const active=values.brand===b
+                      return <button key={b} type="button" onClick={()=>setValue('brand', b as any,{shouldValidate:true})} className={`px-4 py-1.5 rounded-full text-[12px] border ${active?'bg-[var(--brand)] text-white border-[var(--brand)]':'hover:bg-[#F2EFE9]'}`} aria-pressed={active}>{b}</button>
+                    })}
+                  </div>
+                </fieldset>
+                <fieldset className="space-y-2">
+                  <legend className="text-sm font-medium">Lighting</legend>
+                  <div className="flex gap-2">
+                    {['day','evening','mixed'].map(l=> {
+                      const active = values.lighting===l
+                      return <button key={l} type="button" onClick={()=>setValue('lighting', l as any,{shouldValidate:true})} className={`px-4 py-1.5 rounded-full text-[12px] border capitalize ${active?'bg-[var(--brand)] text-white border-[var(--brand)]':'hover:bg-[#F2EFE9]'}`} aria-pressed={active}>{l}</button>
+                    })}
+                  </div>
+                </fieldset>
+                <fieldset className="space-y-2">
+                  <legend className="text-sm font-medium">Warm wood?</legend>
+                  <div className="flex gap-2">
+                    {[true,false].map(val=>{
+                      const active = values.hasWarmWood===val
+                      return <button key={String(val)} type="button" onClick={()=>setValue('hasWarmWood', val,{shouldValidate:true})} className={`px-4 py-1.5 rounded-full text-[12px] border ${active?'bg-[var(--brand)] text-white border-[var(--brand)]':'hover:bg-[#F2EFE9]'}`} aria-pressed={active}>{val? 'Yes':'No'}</button>
+                    })}
+                  </div>
+                </fieldset>
+              </div>
             </div>
-          </div>
+          </section>
         )}
         {step===3 && (
-          <div className="space-y-4 animate-fadeIn">
-            <div>
-              <label className="block text-sm mb-1">Room Type (optional)</label>
-              <input {...register('roomType')} className="w-full border rounded-xl px-3 py-2" placeholder="Living Room, Bedroom..." />
+          <section className="space-y-10 animate-fadeIn" aria-labelledby="photo-heading">
+            <div className="flex flex-col md:flex-row gap-10">
+              <div className="flex-1 space-y-6">
+                <div>
+                  <h2 id="photo-heading" className="font-display text-2xl mb-1">Photo & Review</h2>
+                  <p className="text-sm text-[var(--ink-subtle)]">Optional photo helps ground undertones.</p>
+                </div>
+                <Upload onUploaded={(u)=> setValue('photoUrl', u,{shouldValidate:true})} />
+                {values.photoUrl && (
+                  <div className="text-xs text-[var(--ink-subtle)]">Photo attached.</div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Room Type (optional)</label>
+                  <input {...register('roomType')} placeholder="Living Room, Bedroom..." className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm" />
+                </div>
+              </div>
+              <aside className="w-full md:w-64 rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 h-fit">
+                <h3 className="font-display text-lg mb-4">Summary</h3>
+                <ul className="space-y-3 text-xs">
+                  <li><span className="font-medium">Designer:</span> {values.designer}</li>
+                  <li><span className="font-medium">Vibe:</span> {values.vibe}</li>
+                  <li><span className="font-medium">Brand:</span> {values.brand}</li>
+                  <li><span className="font-medium capitalize">Lighting:</span> {values.lighting}</li>
+                  <li><span className="font-medium">Warm wood:</span> {values.hasWarmWood? 'Yes':'No'}</li>
+                  {values.roomType && <li><span className="font-medium">Room:</span> {values.roomType}</li>}
+                  {values.photoUrl && <li><span className="font-medium">Photo:</span> Added</li>}
+                </ul>
+              </aside>
             </div>
-            <div className="text-sm text-neutral-600 bg-neutral-50 border rounded-xl p-3">Review then generate.</div>
-          </div>
+          </section>
         )}
         <div className="flex gap-3 pt-2">
-          {step < total && <button type="button" onClick={next} className="btn btn-primary flex-1">Next</button>}
-          {step === total && <button disabled={busy} className="btn btn-primary flex-1">{busy?'Working…':'Generate'}</button>}
-          {step>1 && <button type="button" onClick={()=>setStep(s=>s-1)} className="btn btn-secondary">Back</button>}
+          {step<total && <Button type="button" onClick={next} variant="primary" className="flex-1">Next</Button>}
+          {step===total && <Button disabled={isSubmitting || !values.designer || !values.vibe} className="flex-1" variant="primary">{isSubmitting? 'Working…':'Get my palette'}</Button>}
+          {step>1 && <Button type="button" onClick={back} variant="secondary">Back</Button>}
         </div>
       </form>
     </main>
-  )
-}
-
-function StartWrapper(){
-  return <StepperInner />
-}
-
-export default function StartPage(){
-  return (
-    <Suspense fallback={<main className="mx-auto max-w-xl p-6"><p className="text-neutral-600">Loading…</p></main>}>
-      <StartWrapper />
-    </Suspense>
   )
 }
