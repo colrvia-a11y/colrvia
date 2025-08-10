@@ -25,7 +25,7 @@ export default function Home() {
         Personalized paint palettes matched to your space, lighting, and
         style.
       </p>
-      <Link href="/dashboard" className="w-full rounded-2xl py-3 bg-black text-white inline-block text-center mb-6">
+      <Link href="/designers" className="w-full rounded-2xl py-3 bg-black text-white inline-block text-center mb-6">
         Get started
       </Link>
   <div className="mt-8 text-sm">

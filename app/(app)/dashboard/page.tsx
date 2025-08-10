@@ -24,6 +24,9 @@ export default async function Dashboard() {
 
   return (
     <main className="mx-auto max-w-2xl p-6 space-y-8">
+      <div>
+        <a href="/designers" className="inline-block rounded-xl px-4 py-2 bg-black text-white">Start a new Color Story</a>
+      </div>
       <header>
         <h1 className="text-2xl font-semibold mb-1">Projects</h1>
         <p className="text-sm text-neutral-600">Manage your projects</p>
