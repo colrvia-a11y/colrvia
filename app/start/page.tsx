@@ -33,7 +33,9 @@ const DESIGNERS: { id:'emily'|'zane'|'marisol'; name:string; headline:string; bl
 
 const VIBES = ['Cozy Neutral','Airy Coastal','Earthy Organic','Modern Warm','Soft Pastels','Moody Blue-Green'] as const
 
-export default function StartPage(){
+import { Suspense } from 'react'
+
+function StartInner(){
   const sp = useSearchParams()
   const seedDesigner = (sp.get('designer') ?? 'emily') as 'emily'|'zane'|'marisol'
   const router = useRouter()
@@ -139,5 +141,13 @@ export default function StartPage(){
         </div>
       </form>
     </main>
+  )
+}
+
+export default function StartPage(){
+  return (
+    <Suspense fallback={<main className="max-w-3xl mx-auto px-4 py-10"><div className="animate-pulse h-6 w-40 bg-[var(--bg-mute)] rounded" /></main>}>
+      <StartInner />
+    </Suspense>
   )
 }

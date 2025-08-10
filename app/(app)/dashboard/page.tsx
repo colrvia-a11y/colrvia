@@ -53,7 +53,7 @@ export default async function Dashboard() {
             <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {projects.map(p => (
                 <li key={p.id} className="group rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-4 hover:shadow-sm transition relative">
-                  <Link href={`/project/${p.id}`} className="absolute inset-0" aria-label={`Open project ${p.name}`} />
+                  <Link href={`/reveal/${p.story_id || p.id}`} className="absolute inset-0" aria-label={`Open story from project ${p.name}`} />
                   <div className="font-medium mb-1 pr-6 group-hover:underline line-clamp-1">{p.name}</div>
                   <div className="text-[11px] text-[var(--ink-subtle)]">{new Date(p.created_at).toLocaleDateString()}</div>
                 </li>

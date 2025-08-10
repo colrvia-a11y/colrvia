@@ -20,7 +20,7 @@ Algorithm now uses LAB-based lightness shifts + contrast guards (walls/trim >=3:
 `has_variants` column (optional) plus `lib/db/stories.ts` computes and persists flags for dashboard badges.
 
 ## Share Images
-OG/Twitter image endpoint: `/api/share/[id]/image` (edge, 1200×630). `generateMetadata` in reveal page attaches dynamic OG image (variant param aware). Place fonts (`/public/fonts/Inter-Regular.ttf`, `Fraunces-SemiBold.ttf`) for branded output; falls back if absent.
+OG/Twitter image endpoint: `/api/share/[id]/image` (edge, 1200×630). `generateMetadata` in reveal page attaches dynamic OG image (variant param aware). Place fonts (`/public/fonts/Inter-Regular.ttf`, `Fraunces-SemiBold.ttf`) for branded output; falls back if absent. Text normalization (length cap, trimming, fallbacks) covered by `buildOgText` in `lib/og.ts` with tests.
 
 ## Cinematic Reveal & Motion Accessibility
 Overlay component `components/reveal/Cinematic.tsx` triggered in reveal page via `Play Reveal`. Animates title, swatches, narrative lines; accessible exit (Esc / button).
@@ -67,6 +67,7 @@ Account page -> Accessibility section. Toggle persists in localStorage (`colrvia
 - Expand catalog-driven variant selection (deltaE nearest matches)
 - Add deletion endpoint variant recompute (recomputeHasVariants) triggers on delete
 - Provide real branded PNG icon sizes & local font files for OG
+- Add additional UI interaction tests (copy codes, variant keyboard nav, cinematic lifecycle)
 
 ### Task 8 (PWA / OG polish) Status
 ✔ Public OG image endpoint (no auth) at `/api/share/[id]/image` for social cards.
@@ -161,7 +162,13 @@ npm test      # vitest suite
 npm run build # production build
 ```
 
-If modifying motion tokens, re-run Lighthouse to ensure no layout shift regressions (CLS). Consider adding a simple GitHub Action later for test + build verification.
+If modifying motion tokens, re-run Lighthouse to ensure no layout shift regressions (CLS). GitHub Action workflow (`.github/workflows/ci.yml`) now runs install, type-check, lint, test, and build on push / PR.
+
+### Removed Legacy Endpoints
+`/api/projects/*` deprecated endpoints have been removed (replaced by story-centric flows). Clean up any lingering client references before deploying.
+
+### New Tests
+Added `tests/og.test.ts` for OG text normalization.
 
 Console hints:
 If you want PostHog: set NEXT_PUBLIC_POSTHOG_KEY (and optional NEXT_PUBLIC_POSTHOG_HOST).

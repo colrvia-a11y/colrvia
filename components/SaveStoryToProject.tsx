@@ -71,7 +71,7 @@ export default function SaveStoryToProject() {
         body: JSON.stringify({ story })
       })
       if (res.ok) {
-        router.push(`/project/${selected}`)
+  router.push(`/reveal/${story.id}`)
       } else if (res.status === 401) {
         setAuth(false)
         setError('Please sign in.')
