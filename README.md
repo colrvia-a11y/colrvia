@@ -66,8 +66,15 @@ Account page -> Accessibility section. Toggle persists in localStorage (`colrvia
 - Undertone extraction from photos (avgHueSaturationFromPhoto stub)
 - Expand catalog-driven variant selection (deltaE nearest matches)
 - Add deletion endpoint variant recompute (recomputeHasVariants) triggers on delete
-- Provide real branded PNG icon sizes & local font files for OG
+- Provide real branded PNG icon sizes & local font files for OG (self-host Inter & Fraunces; add preload hints)
 - Add additional UI interaction tests (copy codes, variant keyboard nav, cinematic lifecycle)
+- Start flow: optional designer lens re-introduction (currently defaulting to Emily)
+- Single-photo upload constraint (enforce / show replace state) – CURRENT: silent replace
+- Carousel: ensure focus-visible ring theming – DONE (keyboard region + instructions)
+- Motion: audit stray keyframes (keep fadeIn, swatchIn, blob) & document reduced-motion override – PARTIAL
+- Dark theme polish pass (adjust brand hover, surface contrast, focus ring) – PLANNED
+- Contrast audit for accent on brand / highlight on surface combinations – PLANNED
+- Environment variable table implementation in README – PLANNED
 
 ### Task 8 (PWA / OG polish) Status
 ✔ Public OG image endpoint (no auth) at `/api/share/[id]/image` for social cards.
@@ -80,8 +87,8 @@ Account page -> Accessibility section. Toggle persists in localStorage (`colrvia
 Snapshot of current status (✓ done, △ partial, ○ not started):
 
 Accessibility
-- ✓ Keyboard: start flow, reveal swatches (roving tabindex), cinematic dialog (focus trap / Esc)
-- ✓ ARIA: progressbar, tablist for variants, live region toast (Copy), dialog semantics
+- ✓ Keyboard: start flow, reveal swatches (roving tabindex), cinematic dialog (focus trap / Esc), carousel horizontal scroll keys
+- ✓ ARIA: progressbar, tablist for variants, live region toast (Copy), dialog semantics, carousel region + instructions
 - ✓ Reduced motion toggle persists and guards stagger/animations
 - △ Color contrast: core text & buttons meet WCAG AA; verify accent-on-brand combos (manual pass needed)
 
