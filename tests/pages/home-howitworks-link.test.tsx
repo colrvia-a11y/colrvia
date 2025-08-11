@@ -2,14 +2,14 @@ import React from 'react'
 import { describe, it, expect } from 'vitest'
 import Home from '@/app/page'
 import { render } from '@testing-library/react'
+import { vi } from 'vitest'
+vi.mock('@/components/ux/StartStoryPortal', () => ({ useStartStory: () => (()=>{}) }))
 
-describe("Home 'See how it works' link", () => {
-  it('shows simplified link text', () => {
+describe("Home 'How it works' trigger", () => {
+  it('shows how it works button', () => {
     // @ts-ignore
-    const { getByText, queryByText } = render(<Home />)
-    expect(getByText('See how it works')).toBeTruthy()
-    expect(queryByText('(full page)')).toBeNull()
-    expect(queryByText('1 min')).toBeNull()
+  const { getByText } = render(<Home />)
+    expect(getByText('How it works')).toBeTruthy()
   })
 })
 
