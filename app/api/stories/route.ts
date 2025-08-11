@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { supabaseServer } from '@/lib/supabase/server';
 import { normalizePalette } from '@/lib/palette';
 import { buildPalette, seedPaletteFor } from '@/lib/ai/palette';
-import { getSWSeedPalette } from '@/lib/seed/sw_fallback';
+import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair';
 
 // --- normalization helpers ---
 const normalizeBrand = (b?: string) => {
@@ -66,38 +66,20 @@ export async function POST(req: Request) {
 
   // Force brand to sherwin_williams temporarily (SW-only mode)
   const brand = 'sherwin_williams'
-  // Build initial (empty) palette structure; always attempt AI then fallback to SW seed(s)
-  let normalizedPalette: any[] = []
+  const vibe = parsed.vibe
+  let built: any[] | undefined
   try {
-    const aiInput = {
-      designer: parsed.designerKey === 'marisol' ? 'Marisol' : 'Emily', // lightweight mapping
-      vibe: (parsed.vibe as any) || 'Cozy Neutral',
-      brand: 'SW',
-      lighting: (parsed.lighting as any) || 'mixed',
-      hasWarmWood: !!(parsed.inputs as any)?.hasWarmWood,
-      photoUrl: null
-    }
-    let candidate: any = null
-    try { candidate = buildPalette(aiInput as any).swatches } catch {}
-    if(!candidate || candidate.length===0){
-      candidate = seedPaletteFor({ brand: 'SW' })
-    }
-    try {
-      normalizedPalette = normalizePalette(candidate, brand as any)
-    } catch {
-      // fallback to catalog seed palette
-      const seed = await getSWSeedPalette(parsed.vibe)
-      normalizedPalette = normalizePalette(seed, brand as any)
-    }
-  } catch (e) {
-    // final fallback attempt with seed
-    try {
-      const seed = await getSWSeedPalette(parsed.vibe)
-      normalizedPalette = normalizePalette(seed, brand as any)
-    } catch (err){
-      console.error('CREATE_STORY_PALETTE_INVALID', { message: (err as any)?.message })
-      return NextResponse.json({ error: 'PALETTE_INVALID' }, { status: 422 })
-    }
+    const aiInput = { designer: parsed.designerKey==='marisol'?'Marisol':'Emily', vibe: vibe || 'Cozy Neutral', brand:'SW', lighting:(parsed.lighting as any)||'mixed', hasWarmWood: !!(parsed.inputs as any)?.hasWarmWood, photoUrl:null }
+    try { built = buildPalette(aiInput as any).swatches } catch {}
+    if(!built || built.length===0){ built = seedPaletteFor({ brand:'SW' }) }
+  } catch {}
+  let normalizedPalette = await normalizePaletteOrRepair(built as any, vibe)
+  if(!normalizedPalette){
+    normalizedPalette = await normalizePaletteOrRepair([], vibe)
+  }
+  if(!normalizedPalette){
+    console.error('CREATE_STORY_PALETTE_FINAL_FAIL', { inputs: { vibe, brand } })
+    return NextResponse.json({ error:'PALETTE_INVALID' }, { status:422 })
   }
   // DB payload with safe defaults (no unknown columns like title)
   const payload = {
@@ -136,7 +118,8 @@ export async function POST(req: Request) {
   return NextResponse.json({ error: 'DB_INSERT_FAILED', detail: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ id: row.id }, { status: 201 });
+  console.log('CREATE_STORY_OK', { id: row.id, paletteCount: normalizedPalette.length })
+  return NextResponse.json({ id: row.id }, { status: 201 });
   } catch (e) {
     // final safety net so Next.js never throws a Digest error
     console.error('STORIES_POST:FATAL', { error: String(e), stack: (e as any)?.stack });
