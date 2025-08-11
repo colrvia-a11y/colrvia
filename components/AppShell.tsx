@@ -14,7 +14,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main className="container max-w-content py-5 md:py-8">{children}</main>
-      <footer className="container max-w-content py-10 text-center text-sm text-ink-subtle">Good-enough gorgeous, fast.</footer>
+  <footer className="container max-w-content py-10 text-center text-sm text-ink-subtle" aria-hidden>{/* tagline removed */}</footer>
     </div>
   )
 }
