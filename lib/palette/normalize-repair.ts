@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
+import { roleOrder } from '@/lib/palette'
+import type { PaletteRole } from '@/types/palette'
 
 export type RawSwatch = { brand?: string; code?: string; name?: string; hex?: string } | string
-export type NormalizedSwatch = { brand: 'sherwin_williams'; code: string; name: string; hex: `#${string}` }
+export type NormalizedSwatch = { brand: 'sherwin_williams'; code: string; name: string; hex: `#${string}`; role: PaletteRole }
 
 export function coerceSWCode(input: string): string {
   const s = input.trim().toUpperCase().replace(/[-_]/g,' ')
@@ -18,7 +20,7 @@ export async function normalizePaletteOrRepair(
   const arr = Array.isArray(raw)? raw : []
   const complete = arr.filter((x:any)=> x && /^sherwin_williams$/i.test(x.brand) && x.code && x.name && /^#/i.test(x.hex))
   if(complete.length===5){
-    return complete.map((x:any)=> ({ brand:'sherwin_williams', code: coerceSWCode(x.code), name:x.name, hex: x.hex.toUpperCase() as `#${string}` }))
+    return complete.map((x:any, i:number)=> ({ brand:'sherwin_williams', code: coerceSWCode(x.code), name:x.name, hex: x.hex.toUpperCase() as `#${string}`, role: roleOrder[i] ?? 'extra' }))
   }
   const wantedCodes = arr.map((x:any)=> typeof x==='string'? x : x?.code).filter(Boolean).map((c:string)=> coerceSWCode(c))
   const FALLBACK: Record<string,string[]> = {
@@ -29,7 +31,10 @@ export async function normalizePaletteOrRepair(
   }
   const seed = FALLBACK[(vibe||'').toLowerCase().replace(/[^a-z]+/g,'_')] || FALLBACK.default
   const targetCodes = Array.from(new Set([...wantedCodes, ...seed])).slice(0,5)
-  if(!supabaseUrl) return null
+  if(!supabaseUrl || !serviceKey){
+    console.error('PALETTE_REPAIR_ENV_MISSING', { url: !!supabaseUrl, key: !!serviceKey })
+    return null
+  }
   const sb = createClient(supabaseUrl, serviceKey, { auth:{ persistSession:false } })
   const { data, error } = await sb.from('catalog_sw').select('code,name,hex').in('code', targetCodes)
   if(error){ return null }
@@ -43,5 +48,5 @@ export async function normalizePaletteOrRepair(
     }
   }
   if(rows.length<5) return null
-  return rows.slice(0,5).map(d=> ({ brand:'sherwin_williams', code: coerceSWCode(d.code), name:d.name, hex: d.hex.toUpperCase() as `#${string}` }))
+  return rows.slice(0,5).map((d,i)=> ({ brand:'sherwin_williams', code: coerceSWCode(d.code), name:d.name, hex: d.hex.toUpperCase() as `#${string}`, role: roleOrder[i] ?? 'extra' }))
 }
