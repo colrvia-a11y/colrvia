@@ -1,7 +1,6 @@
 "use client"
 import { useEffect, useRef, useState } from 'react'
-import Card from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
+import { Card, Button } from '@/components/ui'
 import { track } from '@/lib/analytics'
 
 export default function NarrativeCard({ storyId }: { storyId: string }) {

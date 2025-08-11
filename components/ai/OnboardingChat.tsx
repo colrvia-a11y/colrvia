@@ -6,8 +6,7 @@ const ConfettiBurst = dynamic(()=>import('@/components/ux/ConfettiBurst'), { ssr
 import { motion } from 'framer-motion'
 // Minimal local type to satisfy TS in environments without DOM SpeechRecognition typings
 interface _SR extends Record<string, any> {}
-import Button from "@/components/ui/Button"
-import { Input } from "@/components/ui/Input"
+import { Button, Input } from '@/components/ui'
 import { Mic, MicOff, Send } from "lucide-react"
 import { VoiceToggle } from "./VoiceToggle"
 import { getFirstQuestion, getCurrentNode, mapAnswersToStoryInput, type InterviewState, type ChatMessage, startState, acceptAnswer } from "@/lib/ai/onboardingGraph"

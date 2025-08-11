@@ -1,10 +1,9 @@
 "use client"
 import * as React from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, Button } from '@/components/ui'
 import HowItWorksContent from './HowItWorksContent'
 import { track } from '@/lib/analytics'
 import { useEventTimer } from '@/lib/analytics/useEventTimer'
-import Button from '@/components/ui/Button'
 import { ArrowLeft } from 'lucide-react'
 
 type Props = { open: boolean; onOpenChange: (v: boolean) => void; origin?: string }

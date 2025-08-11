@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Chip from '@/components/ui/Chip'
+import { Chip } from '@/components/ui'
 import { track, initAnalytics } from '@/lib/analytics'
 
 interface Props { storyId:string; initialPalette:any[]; initialTitle:string; initialNarrative:string; baseMeta:{brand:string; vibe:string} }
