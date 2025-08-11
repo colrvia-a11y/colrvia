@@ -48,6 +48,16 @@
   --color-success: hsl(150 65% 40%);
   --color-success-fg: #fff;
 
+  /* Home palette */
+  --olive-900: #2d3328;
+  --olive-700: #404934;
+  --olive-600: #566049;
+  --olive-500: #6d7b5d;
+  --sage-200: #d1d9ce;
+  --peach-300: #f2b897;
+  --cream-50: #F7F7F2;
+  --slate-800: #1f2937;
+
   /* Typography */
   --font-sans: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -124,6 +134,16 @@
     --color-accent: hsl(var(--brand-hue) 84% 68%);
     --color-accent-hover: hsl(var(--brand-hue) 84% 62%);
     --color-accent-active: hsl(var(--brand-hue) 84% 56%);
+
+    /* Home palette */
+    --olive-900: #2d3328;
+    --olive-700: #404934;
+    --olive-600: #566049;
+    --olive-500: #6d7b5d;
+    --sage-200: #d1d9ce;
+    --peach-300: #f2b897;
+    --cream-50: #F7F7F2;
+    --slate-800: #1f2937;
+    }
   }
-}
 }
