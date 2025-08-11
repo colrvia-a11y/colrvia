@@ -7,6 +7,7 @@ import { supabaseServer } from '@/lib/supabase/server';
 import { normalizePalette } from '@/lib/palette';
 import { buildPalette, seedPaletteFor } from '@/lib/ai/palette';
 import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair';
+import { repairStoryPalette } from '@/lib/palette/repair';
 
 // --- normalization helpers ---
 const normalizeBrand = (b?: string) => {
@@ -119,7 +120,21 @@ export async function POST(req: Request) {
     }
 
   console.log('CREATE_STORY_OK', { id: row.id, paletteCount: normalizedPalette.length })
-  return NextResponse.json({ id: row.id }, { status: 201 });
+    // Re-read and repair if needed
+    let { data: full } = await supabase.from('stories').select('*').eq('id', row.id).single()
+    let valid = Array.isArray(full?.palette) && full.palette.length===5
+    if(!valid){
+      await repairStoryPalette({ id: row.id })
+      const { data: again } = await supabase.from('stories').select('*').eq('id', row.id).single()
+      full = again
+      valid = Array.isArray(full?.palette) && (full!.palette as any[]).length===5
+    }
+    if(!valid){
+      console.error('CREATE_STORY_FINAL_REPAIR_FAIL', { id: row.id })
+      return NextResponse.json({ error:'PALETTE_INVALID' }, { status:500 })
+    }
+    console.log('CREATE_STORY_OK', { id: row.id, paletteCount: (full!.palette as any[]).length })
+    return NextResponse.json({ id: row.id, palette: full!.palette }, { status: 201 });
   } catch (e) {
     // final safety net so Next.js never throws a Digest error
     console.error('STORIES_POST:FATAL', { error: String(e), stack: (e as any)?.stack });

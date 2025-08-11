@@ -6,12 +6,22 @@ import { POST } from '@/app/api/stories/route'
 
 // Mock supabase server client used in route
 vi.mock('@/lib/supabase/server', () => ({
-  supabaseServer: () => ({
-    auth: { getUser: async () => ({ data: { user: { id: 'user-1' } }, error: null }) },
-    from: () => ({
-      insert: () => ({ select: () => ({ single: async () => ({ data: { id: 'story-1' }, error: null }) }) })
-    })
-  })
+  supabaseServer: () => {
+    const swatches = [
+      { brand:'sherwin_williams', code:'SW 7008', name:'Alabaster', hex:'#FFFFFF' },
+      { brand:'sherwin_williams', code:'SW 7036', name:'Accessible Beige', hex:'#E5D8C8' },
+      { brand:'sherwin_williams', code:'SW 7043', name:'Worldly Gray', hex:'#D8D4CE' },
+      { brand:'sherwin_williams', code:'SW 6204', name:'Sea Salt', hex:'#CDD8D2' },
+      { brand:'sherwin_williams', code:'SW 7005', name:'Pure White', hex:'#FEFEFE' },
+    ]
+    return {
+      auth: { getUser: async () => ({ data: { user: { id: 'user-1' } }, error: null }) },
+      from: () => ({
+        insert: () => ({ select: () => ({ single: async () => ({ data: { id: 'story-1' }, error: null }) }) }),
+        select: () => ({ eq: () => ({ single: async () => ({ data: { id:'story-1', palette: swatches, vibe:'Cozy Neutral', brand:'sherwin_williams' }, error: null }) }) })
+      })
+    }
+  }
 }))
 
 // Mock palette builder to return empty swatches triggering fallback
