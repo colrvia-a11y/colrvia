@@ -16,6 +16,13 @@ Client PostHog init in `lib/analytics.ts` (lazy). Provide env `NEXT_PUBLIC_POSTH
 
 ## Variants
 ### Palette Normalization & Backfill
+#### Diagnostics
+```
+-- Empty palettes
+select count(*) from public.stories where jsonb_typeof(palette)='array' and jsonb_array_length(palette)=0;
+-- Sample rows
+select id, jsonb_array_length(palette) as len, brand, created_at from public.stories order by created_at desc limit 10;
+```
 Palettes now persist as a strict ordered array of 5 swatches (`walls, trim, cabinets, accent, extra`). Normalization logic in `lib/palette.ts` (`normalizePalette`) coerces legacy shapes (role-keyed objects, colorN keys, string arrays). Invalid inputs trigger 422 on creation.
 
 Backfill script:
@@ -167,6 +174,25 @@ Deployment Readiness
 | SUPABASE_SERVICE_ROLE | yes (server ops) | Service role key for privileged server tasks (never expose client-side) |
 | STRIPE_SECRET_KEY | yes (billing) | Server key for Stripe integration |
 | STRIPE_WEBHOOK_SECRET | yes (billing) | Webhook verification secret |
+
+## Seed Sherwin-Williams Catalog
+Seed the paint catalog into Supabase (table `public.catalog_sw`).
+
+1. Ensure `.env.local` contains:
+```
+NEXT_PUBLIC_SUPABASE_URL=<your-url>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role>
+```
+2. Run:
+```
+npm run seed:sw
+```
+3. Verify row count:
+```
+select count(*) from public.catalog_sw;
+```
+The script reads `db/seeds/catalog_sw.json` and upserts (on conflict code) in batches of 500. Hex values are validated (`#RRGGBB`). Non‑conforming rows are skipped and summarized. RLS allows public read (anon+authenticated) and blocks writes.
+
 
 ## Screenshots (Task 10)
 Add real PNGs (or compressed WebP) under `public/screenshots/` and embed here for quick visual QA. Suggested shots:
