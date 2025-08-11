@@ -1,106 +1,103 @@
-/* Travel Guide Design Tokens */
+/* Canonical design tokens: brand, semantics, typography, spacing, radii, shadows, and motion */
 :root {
-  /* Colors — Travel Guide */
-/* Canonical design tokens: brand, semantic colors, typography, spacing, radii, motion */
-:root {
-  /* Brand palette (HSL) */
-  --brand-hue: 262; /* core purple */
-  --brand-saturation: 84%;
-  --brand-light: 55%;
-  --brand: hsl(var(--brand-hue) var(--brand-saturation) var(--brand-light));
-  --brand-accent-hue: 20; /* warm accent */
-  --brand-accent: hsl(var(--brand-accent-hue) 90% 55%);
+  /* Brand palette */
+  --brand-hue: 262; /* base hue for primary brand color */
+  --brand-saturation: 84%; /* saturation for primary brand color */
+  --brand-light: 55%; /* lightness for primary brand color */
+  --brand: hsl(var(--brand-hue) var(--brand-saturation) var(--brand-light)); /* primary brand color for interactive elements */
+  --brand-accent-hue: 20; /* hue for secondary accent color */
+  --brand-accent: hsl(var(--brand-accent-hue) 90% 55%); /* warm accent used for highlights and warnings */
 
-  /* Neutral scale */
-  --gray-0: hsl(0 0% 100%);
-  --gray-50: hsl(240 5% 98%);
-  --gray-100: hsl(240 5% 96%);
-  --gray-200: hsl(240 5% 90%);
-  --gray-300: hsl(240 5% 82%);
-  --gray-400: hsl(240 4% 64%);
-  --gray-500: hsl(240 4% 46%);
-  --gray-600: hsl(240 5% 34%);
-  --gray-700: hsl(240 5% 26%);
-  --gray-800: hsl(240 5% 16%);
-  --gray-900: hsl(240 6% 10%);
-  --gray-950: hsl(240 8% 4%);
+  /* Neutral scale used for surfaces and text */
+  --gray-0: hsl(0 0% 100%); /* pure white */
+  --gray-50: hsl(240 5% 98%); /* default light background */
+  --gray-100: hsl(240 5% 96%); /* subtle background */
+  --gray-200: hsl(240 5% 90%); /* borders / dividers */
+  --gray-300: hsl(240 5% 82%); /* strong borders */
+  --gray-400: hsl(240 4% 64%); /* muted foreground */
+  --gray-500: hsl(240 4% 46%); /* subdued foreground */
+  --gray-600: hsl(240 5% 34%); /* tertiary text */
+  --gray-700: hsl(240 5% 26%); /* secondary text on dark */
+  --gray-800: hsl(240 5% 16%); /* dark surfaces */
+  --gray-900: hsl(240 6% 10%); /* primary text on dark */
+  --gray-950: hsl(240 8% 4%); /* almost black */
 
-  /* Semantic surface & text */
-  --color-bg: var(--gray-50);
-  --color-bg-alt: var(--gray-0);
-  --color-bg-inset: var(--gray-100);
-  --color-surface: var(--gray-0);
-  --color-border: var(--gray-200);
-  --color-border-strong: var(--gray-300);
-  --color-fg: var(--gray-900);
-  --color-fg-muted: var(--gray-600);
-  --color-fg-subtle: var(--gray-500);
+  /* Semantic colors */
+  --color-bg: var(--gray-50); /* page background */
+  --color-bg-alt: var(--gray-0); /* cards and raised surfaces */
+  --color-bg-inset: var(--gray-100); /* inset elements */
+  --color-surface: var(--gray-0); /* default surface background */
+  --color-border: var(--gray-200); /* standard border */
+  --color-border-strong: var(--gray-300); /* emphasized border */
+  --color-fg: var(--gray-900); /* primary foreground text */
+  --color-fg-muted: var(--gray-600); /* muted text */
+  --color-fg-subtle: var(--gray-500); /* subtle text */
 
-  --color-accent: var(--brand);
-  --color-accent-hover: hsl(var(--brand-hue) 84% 50%);
-  --color-accent-active: hsl(var(--brand-hue) 84% 44%);
-  --color-accent-fg: #fff;
+  --color-accent: var(--brand); /* primary accent background */
+  --color-accent-hover: hsl(var(--brand-hue) 84% 50%); /* hover state for accent */
+  --color-accent-active: hsl(var(--brand-hue) 84% 44%); /* active state for accent */
+  --color-accent-fg: #fff; /* text on accent backgrounds */
 
-  --color-warn: hsl(35 92% 54%);
-  --color-warn-fg: #000;
-  --color-danger: hsl(0 84% 60%);
-  --color-danger-fg: #fff;
-  --color-success: hsl(150 65% 40%);
-  --color-success-fg: #fff;
+  --color-warn: hsl(35 92% 54%); /* warning backgrounds */
+  --color-warn-fg: #000; /* text on warning backgrounds */
+  --color-danger: hsl(0 84% 60%); /* destructive backgrounds */
+  --color-danger-fg: #fff; /* text on destructive backgrounds */
+  --color-success: hsl(150 65% 40%); /* success backgrounds */
+  --color-success-fg: #fff; /* text on success backgrounds */
 
   /* Typography */
-  --font-sans: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
+  --font-sans: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif; /* default sans-serif stack */
+  --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace; /* monospaced stack for code */
+  --text-xs: 0.75rem; /* 12px small text */
+  --text-sm: 0.875rem; /* 14px body text */
+  --text-base: 1rem; /* 16px base text */
+  --text-lg: 1.125rem; /* 18px large text */
+  --text-xl: 1.25rem; /* 20px extra large text */
+  --text-2xl: 1.5rem; /* 24px heading */
+  --text-3xl: 1.875rem; /* 30px display heading */
 
   /* Spacing scale (4pt base) */
-  --space-0: 0px;
-  --space-1: 0.25rem; /*4*/
-  --space-2: 0.5rem;  /*8*/
-  --space-3: 0.75rem; /*12*/
-  --space-4: 1rem;    /*16*/
-  --space-5: 1.25rem; /*20*/
-  --space-6: 1.5rem;  /*24*/
-  --space-7: 1.75rem; /*28*/
-  --space-8: 2rem;    /*32*/
-  --space-10: 2.5rem; /*40*/
-  --space-12: 3rem;   /*48*/
-  --space-16: 4rem;   /*64*/
-  --space-20: 5rem;   /*80*/
+  --space-0: 0px; /* none */
+  --space-1: 0.25rem; /* 4px spacing */
+  --space-2: 0.5rem; /* 8px spacing */
+  --space-3: 0.75rem; /* 12px spacing */
+  --space-4: 1rem; /* 16px spacing */
+  --space-5: 1.25rem; /* 20px spacing */
+  --space-6: 1.5rem; /* 24px spacing */
+  --space-7: 1.75rem; /* 28px spacing */
+  --space-8: 2rem; /* 32px spacing */
+  --space-10: 2.5rem; /* 40px spacing */
+  --space-12: 3rem; /* 48px spacing */
+  --space-16: 4rem; /* 64px spacing */
+  --space-20: 5rem; /* 80px spacing */
 
   /* Radii */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 20px;
-  --radius-pill: 999px;
+  --radius-xs: 2px; /* subtle rounding for chips */
+  --radius-sm: 4px; /* small rounding for inputs */
+  --radius-md: 8px; /* medium rounding for cards */
+  --radius-lg: 12px; /* large rounding for modals */
+  --radius-xl: 20px; /* extra rounding for special elements */
+  --radius-pill: 999px; /* fully rounded pill */
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 hsl(240 6% 10% / 0.05);
-  --shadow-md: 0 4px 6px -1px hsl(240 6% 10% / 0.08), 0 2px 4px -2px hsl(240 6% 10% / 0.06);
-  --shadow-lg: 0 10px 15px -3px hsl(240 6% 10% / 0.12), 0 4px 6px -4px hsl(240 6% 10% / 0.08);
+  --shadow-sm: 0 1px 2px 0 hsl(240 6% 10% / 0.05); /* subtle elevation shadow */
+  --shadow-md: 0 4px 6px -1px hsl(240 6% 10% / 0.08), 0 2px 4px -2px hsl(240 6% 10% / 0.06); /* medium elevation shadow */
+  --shadow-lg: 0 10px 15px -3px hsl(240 6% 10% / 0.12), 0 4px 6px -4px hsl(240 6% 10% / 0.08); /* large elevation shadow */
 
   /* Motion */
-  --ease-standard: cubic-bezier(.4,0,.2,1);
-  --ease-emph: cubic-bezier(.4,0,.3,1);
-  --dur-50: 50ms;
-  --dur-100: 100ms;
-  --dur-150: 150ms;
-  --dur-200: 200ms;
-  --dur-250: 250ms;
-  --dur-300: 300ms;
-  --dur-500: 500ms;
-  --dur-700: 700ms;
-  --dur-1000: 1000ms;
+  --ease-standard: cubic-bezier(.4,0,.2,1); /* default easing for transitions */
+  --ease-emph: cubic-bezier(.4,0,.3,1); /* emphasized easing for entrances */
+  --dur-50: 50ms; /* extra-fast motion duration */
+  --dur-100: 100ms; /* fast motion duration */
+  --dur-150: 150ms; /* quick motion duration */
+  --dur-200: 200ms; /* standard motion duration */
+  --dur-250: 250ms; /* emphasized motion duration */
+  --dur-300: 300ms; /* slow motion duration */
+  --dur-500: 500ms; /* deliberate motion duration */
+  --dur-700: 700ms; /* gentle motion duration */
+  --dur-1000: 1000ms; /* extra-slow motion duration */
 
-  /* Legacy alias (temp) – remove after refactor */
+  /* Legacy aliases (deprecated; prefer semantic tokens above) */
   --paper: var(--color-bg);
   --surface: var(--color-surface);
   --linen: var(--color-bg-inset);
@@ -110,20 +107,21 @@
   --bg-surface: var(--color-surface);
 }
 
+/* Dark theme overrides */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: var(--gray-950);
-    --color-bg-alt: var(--gray-900);
-    --color-bg-inset: var(--gray-800);
-    --color-surface: var(--gray-900);
-    --color-border: var(--gray-800);
-    --color-border-strong: var(--gray-700);
-    --color-fg: var(--gray-0);
-    --color-fg-muted: var(--gray-400);
-    --color-fg-subtle: var(--gray-500);
-    --color-accent: hsl(var(--brand-hue) 84% 68%);
-    --color-accent-hover: hsl(var(--brand-hue) 84% 62%);
-    --color-accent-active: hsl(var(--brand-hue) 84% 56%);
+    --color-bg: var(--gray-950); /* page background in dark mode */
+    --color-bg-alt: var(--gray-900); /* cards and raised surfaces in dark mode */
+    --color-bg-inset: var(--gray-800); /* inset elements in dark mode */
+    --color-surface: var(--gray-900); /* default surface in dark mode */
+    --color-border: var(--gray-800); /* standard border in dark mode */
+    --color-border-strong: var(--gray-700); /* emphasized border in dark mode */
+    --color-fg: var(--gray-0); /* primary text in dark mode */
+    --color-fg-muted: var(--gray-400); /* muted text in dark mode */
+    --color-fg-subtle: var(--gray-500); /* subtle text in dark mode */
+    --color-accent: hsl(var(--brand-hue) 84% 68%); /* accent background in dark mode */
+    --color-accent-hover: hsl(var(--brand-hue) 84% 62%); /* accent hover in dark mode */
+    --color-accent-active: hsl(var(--brand-hue) 84% 56%); /* accent active in dark mode */
   }
 }
-}
+
