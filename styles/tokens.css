@@ -1,34 +1,120 @@
 /* Travel Guide Design Tokens */
 :root {
   /* Colors — Travel Guide */
-  --paper: #F7F5EF;          /* canvas background */
-  --surface: #FFFFFF;        /* card surfaces */
-  --linen: #E7E1D7;          /* soft borders/dividers */
-  --ink: #1E1B16;            /* primary text */
-  --ink-subtle: #5E5A53;     /* secondary text */
-  --brand: #2F5D50;          /* primary brand accent (teal-green) */
-  --brand-hover: #294F45;    /* hover/pressed */
-  --brand-contrast: #FFFFFF; /* text on brand surfaces */
-  --accent: #C07A5A;         /* warm terracotta accent */
-  --highlight: #F7BE58;      /* golden highlight */
-  --info: #3869D6;
-  --success: #2E7D32;
-  --warning: #DC6803;
-  --danger: #D92D20;
+/* Canonical design tokens: brand, semantic colors, typography, spacing, radii, motion */
+:root {
+  /* Brand palette (HSL) */
+  --brand-hue: 262; /* core purple */
+  --brand-saturation: 84%;
+  --brand-light: 55%;
+  --brand: hsl(var(--brand-hue) var(--brand-saturation) var(--brand-light));
+  --brand-accent-hue: 20; /* warm accent */
+  --brand-accent: hsl(var(--brand-accent-hue) 90% 55%);
+
+  /* Neutral scale */
+  --gray-0: hsl(0 0% 100%);
+  --gray-50: hsl(240 5% 98%);
+  --gray-100: hsl(240 5% 96%);
+  --gray-200: hsl(240 5% 90%);
+  --gray-300: hsl(240 5% 82%);
+  --gray-400: hsl(240 4% 64%);
+  --gray-500: hsl(240 4% 46%);
+  --gray-600: hsl(240 5% 34%);
+  --gray-700: hsl(240 5% 26%);
+  --gray-800: hsl(240 5% 16%);
+  --gray-900: hsl(240 6% 10%);
+  --gray-950: hsl(240 8% 4%);
+
+  /* Semantic surface & text */
+  --color-bg: var(--gray-50);
+  --color-bg-alt: var(--gray-0);
+  --color-bg-inset: var(--gray-100);
+  --color-surface: var(--gray-0);
+  --color-border: var(--gray-200);
+  --color-border-strong: var(--gray-300);
+  --color-fg: var(--gray-900);
+  --color-fg-muted: var(--gray-600);
+  --color-fg-subtle: var(--gray-500);
+
+  --color-accent: var(--brand);
+  --color-accent-hover: hsl(var(--brand-hue) 84% 50%);
+  --color-accent-active: hsl(var(--brand-hue) 84% 44%);
+  --color-accent-fg: #fff;
+
+  --color-warn: hsl(35 92% 54%);
+  --color-warn-fg: #000;
+  --color-danger: hsl(0 84% 60%);
+  --color-danger-fg: #fff;
+  --color-success: hsl(150 65% 40%);
+  --color-success-fg: #fff;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+
+  /* Spacing scale (4pt base) */
+  --space-0: 0px;
+  --space-1: 0.25rem; /*4*/
+  --space-2: 0.5rem;  /*8*/
+  --space-3: 0.75rem; /*12*/
+  --space-4: 1rem;    /*16*/
+  --space-5: 1.25rem; /*20*/
+  --space-6: 1.5rem;  /*24*/
+  --space-7: 1.75rem; /*28*/
+  --space-8: 2rem;    /*32*/
+  --space-10: 2.5rem; /*40*/
+  --space-12: 3rem;   /*48*/
+  --space-16: 4rem;   /*64*/
+  --space-20: 5rem;   /*80*/
 
   /* Radii */
-  --radius-sm: 8px;
-  --radius: 16px;     /* buttons/inputs/small cards */
-  --radius-lg: 24px;  /* large cards/containers */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
 
-  /* Spacing (4px scale) */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 hsl(240 6% 10% / 0.05);
+  --shadow-md: 0 4px 6px -1px hsl(240 6% 10% / 0.08), 0 2px 4px -2px hsl(240 6% 10% / 0.06);
+  --shadow-lg: 0 10px 15px -3px hsl(240 6% 10% / 0.12), 0 4px 6px -4px hsl(240 6% 10% / 0.08);
+
+  /* Motion */
+  --ease-standard: cubic-bezier(.4,0,.2,1);
+  --ease-emph: cubic-bezier(.4,0,.3,1);
+  --dur-50: 50ms;
+  --dur-100: 100ms;
+  --dur-150: 150ms;
+  --dur-200: 200ms;
+  --dur-250: 250ms;
+  --dur-300: 300ms;
+  --dur-500: 500ms;
+  --dur-700: 700ms;
+  --dur-1000: 1000ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: var(--gray-950);
+    --color-bg-alt: var(--gray-900);
+    --color-bg-inset: var(--gray-800);
+    --color-surface: var(--gray-900);
+    --color-border: var(--gray-800);
+    --color-border-strong: var(--gray-700);
+    --color-fg: var(--gray-0);
+    --color-fg-muted: var(--gray-400);
+    --color-fg-subtle: var(--gray-500);
+    --color-accent: hsl(var(--brand-hue) 84% 68%);
+    --color-accent-hover: hsl(var(--brand-hue) 84% 62%);
+    --color-accent-active: hsl(var(--brand-hue) 84% 56%);
+  }
+}
 }

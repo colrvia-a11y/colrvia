@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+  "test:e2e": "playwright test --reporter=list",
+  "test:e2e:ui": "playwright test --ui",
     "smoke:generate": "node -e \"fetch('http://localhost:3000/api/stories',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({designer:'Marisol',vibe:'Cozy Neutral',brand:'SW',lighting:'mixed',hasWarmWood:true,photoUrl:null})}).then(r=>r.text()).then(console.log).catch(console.error)\"",
     "db:migrate:print": "echo 'Run SQL in Supabase → SQL Editor → paste → Run'",
     "smoke:insert": "tsx scripts/smoke-insert.ts",
@@ -60,6 +62,7 @@
     "tailwindcss": "^4.1.11",
     "tsx": "^4.19.1",
     "typescript": "5.3.3",
-    "vitest": "^1.6.0"
+  "vitest": "^1.6.0",
+  "@playwright/test": "^1.46.0"
   }
 }

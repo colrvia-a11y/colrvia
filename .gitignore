@@ -1,3 +1,6 @@
+playwright-report/
+test-results/
+.playwright/
 node_modules/
 .next/
 .env*
