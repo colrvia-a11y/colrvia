@@ -11,18 +11,27 @@ export default async function StoriesPage(){
   if (user) {
     try { stories = await getIndexForUser(user.id) } catch {}
   }
+  const drafts = stories.filter(s=> !s.title)
+  const saved = stories.filter(s=> s.title)
   return (
-    <main className="max-w-5xl mx-auto px-4 py-10 space-y-10">
+    <main className="max-w-5xl mx-auto px-4 py-10 space-y-12">
       <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
         <div>
           <h1 className="font-display text-4xl leading-[1.05] mb-3">Your Stories</h1>
-          <p className="text-sm text-[var(--ink-subtle)] max-w-md">Drafts appear first. Save to keep and refine variants.</p>
+          <p className="text-sm text-[var(--ink-subtle)] max-w-md">Drafts are unsaved working palettes. Add a title to save.</p>
         </div>
         <div className="flex gap-3">
           <Link href="/start" className="btn btn-primary">Start new</Link>
         </div>
       </header>
-      <StoriesGrid stories={stories} />
+      <section className="space-y-5">
+        <h2 className="text-sm font-medium tracking-wide uppercase text-[var(--ink-subtle)]">Drafts</h2>
+        {drafts.length? <StoriesGrid stories={drafts} /> : <p className="text-xs text-[var(--ink-subtle)]">No drafts.</p>}
+      </section>
+      <section className="space-y-5">
+        <h2 className="text-sm font-medium tracking-wide uppercase text-[var(--ink-subtle)]">Saved</h2>
+        {saved.length? <StoriesGrid stories={saved} /> : <p className="text-xs text-[var(--ink-subtle)]">Nothing saved yet.</p>}
+      </section>
       {!user && (
         <p className="text-xs text-[var(--ink-subtle)]">Sign in later to save – no account needed to explore.</p>
       )}
