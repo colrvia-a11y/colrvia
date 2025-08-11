@@ -1,4 +1,5 @@
 import { supabaseServer } from '@/lib/supabase/server'
+export const runtime = 'nodejs'
 import Link from 'next/link'
 import VariantTabs from './variant-tabs'
 import { Metadata } from 'next'

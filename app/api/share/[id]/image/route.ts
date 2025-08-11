@@ -1,14 +1,17 @@
 import React from 'react'
 import { ImageResponse } from 'next/og'
-import { supabaseServer } from '../../../../../lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
 	const { searchParams } = new URL(req.url)
-	const supabase = supabaseServer()
+	const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+	const key = process.env.SUPABASE_SERVICE_ROLE_KEY!
+	if (!url || !key) return new Response('Server env missing', { status: 500 })
+	const admin = createClient(url, key, { auth: { persistSession: false } })
 	const variant = searchParams.get('variant') // reserved for future use
-	const { data, error } = await supabase.from('stories').select('*').eq('id', params.id).single()
+	const { data, error } = await admin.from('stories').select('*').eq('id', params.id).single()
 	if (error || !data) return new Response('Not found', { status: 404 })
 	const palette = (data.palette || []).slice(0, 5)
 	const title = data.title as string
