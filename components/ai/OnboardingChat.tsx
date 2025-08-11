@@ -16,6 +16,8 @@ export default function OnboardingChat({ designerId }: Props) {
   const router = useRouter()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [state, setState] = useState<InterviewState>(startState())
+  const [intakeReady, setIntakeReady] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [input, setInput] = useState("")
   const currentNode = getCurrentNode(state)
   const isMulti = currentNode.type === 'multi_select'
@@ -56,11 +58,36 @@ export default function OnboardingChat({ designerId }: Props) {
   }, [speechSupported])
 
   useEffect(()=>{
-    // greet
-    const first = getFirstQuestion()
-    const greet = `Hi! Let's build your palette. ${first.prompt}`
-    setMessages([{ role:'assistant', content: greet }])
-    if(voiceOn) speak(greet)
+    // Resume or start intake then greet if new
+    let ignore = false
+    ;(async () => {
+      setLoading(true)
+      try {
+        // attempt resume
+        const r0 = await fetch('/api/intakes/resume')
+        if(r0.ok){
+          const j = await r0.json().catch(()=>null)
+          if(j?.ok && j.intake && !ignore){
+            setMessages(j.intake.messages ?? [])
+            setState(j.intake.state ?? startState())
+            setIntakeReady(true)
+          }
+        }
+        if(!ignore && !intakeReady){
+          await fetch('/api/intakes/start',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ designerId }) })
+          setIntakeReady(true)
+        }
+        if(!ignore && messages.length === 0){
+          const first = getFirstQuestion()
+          const greet = `Hi! Let's build your palette. ${first.prompt}`
+          setMessages([{ role:'assistant', content: greet }])
+          if(voiceOn) speak(greet)
+        }
+      } finally {
+        if(!ignore) setLoading(false)
+      }
+    })()
+    return () => { ignore = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[designerId])
 
@@ -95,13 +122,20 @@ export default function OnboardingChat({ designerId }: Props) {
         const resp = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(storyInput) })
         if(resp.ok){
           const created = await resp.json()
-            if(created?.id) router.push(`/reveal/${created.id}`)
+            if(created?.id){
+              try { await fetch('/api/intakes/finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ storyId: created.id }) }) } catch {}
+              router.push(`/reveal/${created.id}`)
+            }
         }
       } catch(e){ console.warn(e) }
       return
     }
   const nextQ = getCurrentNode(newState).prompt
     setMessages(prev => [...prev, { role:'assistant', content: nextQ }])
+    // patch persistence
+    try {
+      await fetch('/api/intakes/patch',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ state: newState, messages: [...messages, { role:'user', content }, { role:'assistant', content: nextQ }], done: newState.done }) })
+    } catch {}
     if(voiceOn) speak(nextQ)
   }
 
