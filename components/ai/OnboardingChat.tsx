@@ -13,6 +13,8 @@ import { getFirstQuestion, getCurrentNode, mapAnswersToStoryInput, type Intervie
 import { track } from "@/lib/analytics"
 import { useRouter } from "next/navigation"
 
+const API_MODE = process.env.NEXT_PUBLIC_ONBOARDING_MODE === "api"
+
 type Props = { designerId: string }
 
 export default function PreferencesChat({ designerId }: Props) {
@@ -24,8 +26,10 @@ export default function PreferencesChat({ designerId }: Props) {
   const [finalizing, setFinalizing] = useState(false)
   const [celebrate, setCelebrate] = useState(false)
   const [input, setInput] = useState("")
-  const currentNode = getCurrentNode(state)
-  const isMulti = currentNode.type === 'multi_select'
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [remoteNode, setRemoteNode] = useState<any | null>(null)
+  const currentNode = API_MODE ? (remoteNode || { id:'done', type:'end', options:[] }) : getCurrentNode(state)
+  const isMulti = currentNode.type === 'multi_select' || currentNode.type === 'multi'
   const [multiTemp, setMultiTemp] = useState<string[]>([])
   const minSelect = (currentNode as any).min ?? 0
   const maxSelect = (currentNode as any).max ?? Infinity
@@ -63,6 +67,24 @@ export default function PreferencesChat({ designerId }: Props) {
   }, [speechSupported])
 
   useEffect(()=>{
+    if(API_MODE){
+      let ignore = false
+      ;(async () => {
+        setLoading(true)
+        try{
+          const r = await fetch('/api/intakes/start',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ designerId }) })
+          const j = await r.json().catch(()=>null)
+          if(!ignore && j){
+            setSessionId(j.sessionId)
+            setRemoteNode(j.step.node)
+            setMessages([{ role:'assistant', content: j.step.node.question }])
+          }
+        } finally {
+          if(!ignore) setLoading(false)
+        }
+      })()
+      return () => { ignore = true }
+    }
     // Resume or start intake then greet if new
     let ignore = false
     ;(async () => {
@@ -119,38 +141,57 @@ export default function PreferencesChat({ designerId }: Props) {
   async function submit(value?: string, source: 'chips' | 'text' | 'voice' = 'text') {
     const content = (value ?? input).trim()
     if (!content) return
-  setMessages(prev => [...prev, { role:'user', content }])
+    if(API_MODE){
+      setMessages(prev => [...prev, { role:'user', content }])
+      setInput("")
+      const r = await fetch('/api/intakes/step',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sessionId, answer: content }) })
+      const j = await r.json().catch(()=>null)
+      if(j?.step?.type === 'question'){
+        setRemoteNode(j.step.node)
+        setMessages(prev => [...prev, { role:'assistant', content: j.step.node.question }])
+        if(voiceOn) speak(j.step.node.question)
+      }else{
+        const closing = 'Great — generating your palette now.'
+        setMessages(prev => [...prev, { role:'assistant', content: closing }])
+        if(voiceOn) speak(closing)
+        setFinalizing(true)
+        try{ await fetch('/api/intakes/finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sessionId }) }) }catch{}
+        finally{ setFinalizing(false) }
+      }
+      return
+    }
+    setMessages(prev => [...prev, { role:'user', content }])
     setInput("")
-  const newState = acceptAnswer(state, content)
+    const newState = acceptAnswer(state, content)
     setState(newState)
-  if(newState.done){
+    if(newState.done){
       const closing = 'Great — generating your palette now.'
       setMessages(prev => [...prev, { role:'assistant', content: closing }])
       if(voiceOn) speak(closing)
       try {
         const storyInput = mapAnswersToStoryInput(newState.answers)
-    setFinalizing(true)
-    const resp = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(storyInput) })
+        setFinalizing(true)
+        const resp = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(storyInput) })
         if(resp.ok){
           const created = await resp.json()
-            if(created?.id){
-        setCelebrate(true)
-        await new Promise(r=>setTimeout(r,350))
-              try { await fetch('/api/intakes/finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ storyId: created.id }) }) } catch {}
-              track('preferences_complete',{ designerId, answers: Object.keys(newState.answers).length })
-              router.push(`/reveal/${created.id}`)
-            }
+          if(created?.id){
+            setCelebrate(true)
+            await new Promise(r=>setTimeout(r,350))
+            try { await fetch('/api/intakes/finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ storyId: created.id }) }) } catch {}
+            track('preferences_complete',{ designerId, answers: Object.keys(newState.answers).length })
+            router.push(`/reveal/${created.id}`)
+          }
         }
-    } catch(e){ console.warn(e) }
-    finally { setFinalizing(false) }
+      } catch(e){ console.warn(e) }
+      finally { setFinalizing(false) }
       return
     }
-  const nextQ = getCurrentNode(newState).prompt
+    const nextQ = getCurrentNode(newState).prompt
     setMessages(prev => [...prev, { role:'assistant', content: nextQ }])
     try {
       const node = getCurrentNode(newState)
-  track('preferences_answer', node.options? { designerId, key: node.key, type: node.type, source, hasOptions:true } : { designerId, key: node.key, type: node.type, source, len: content.length })
-  track('preferences_question',{ designerId, key: getCurrentNode(newState).key, type: getCurrentNode(newState).type })
+      track('preferences_answer', node.options? { designerId, key: node.key, type: node.type, source, hasOptions:true } : { designerId, key: node.key, type: node.type, source, len: content.length })
+      track('preferences_question',{ designerId, key: getCurrentNode(newState).key, type: getCurrentNode(newState).type })
     } catch {}
     // patch persistence
     try {
@@ -187,7 +228,7 @@ export default function PreferencesChat({ designerId }: Props) {
       {!speechSupported && <p className="text-xs text-[var(--ink-subtle)]">Voice works best in Chrome.</p>}
       {currentNode.options?.length ? (
         <div className="flex flex-wrap gap-2" aria-label="Quick choices">
-          {currentNode.options.map(opt => {
+            {currentNode.options.map((opt: string) => {
             const selected = isMulti ? multiTemp.includes(opt) : false
             return (
               <motion.button
