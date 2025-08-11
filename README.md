@@ -224,6 +224,13 @@ npm test      # vitest suite
 npm run build # production build
 ```
 
+### Micro-interactions & Motion
+- Route transitions: subtle fade/slide, respects reduced-motion.
+- Designers hover: soft lift/tilt.
+- Quick replies: tap/hover feedback.
+- “Mixing paints…” overlay during final handoff; tiny confetti burst on success.
+- All motion a11y-aware (aria-live where relevant, no perpetual loops).
+
 If modifying motion tokens, re-run Lighthouse to ensure no layout shift regressions (CLS). GitHub Action workflow (`.github/workflows/ci.yml`) now runs install, type-check, lint, test, and build on push / PR.
 
 ### Removed Legacy Endpoints (Projects → Stories Migration)

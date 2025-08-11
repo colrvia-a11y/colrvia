@@ -1,5 +1,9 @@
 "use client"
 import { useEffect, useMemo, useRef, useState } from "react"
+import dynamic from 'next/dynamic'
+const LoadingOverlay = dynamic(()=>import('@/components/ux/LoadingOverlay'), { ssr:false })
+const ConfettiBurst = dynamic(()=>import('@/components/ux/ConfettiBurst'), { ssr:false })
+import { motion } from 'framer-motion'
 // Minimal local type to satisfy TS in environments without DOM SpeechRecognition typings
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface _SR extends Record<string, any> {}
@@ -19,6 +23,8 @@ export default function OnboardingChat({ designerId }: Props) {
   const [state, setState] = useState<InterviewState>(startState())
   const [intakeReady, setIntakeReady] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [finalizing, setFinalizing] = useState(false)
+  const [celebrate, setCelebrate] = useState(false)
   const [input, setInput] = useState("")
   const currentNode = getCurrentNode(state)
   const isMulti = currentNode.type === 'multi_select'
@@ -118,22 +124,26 @@ export default function OnboardingChat({ designerId }: Props) {
     setInput("")
   const newState = acceptAnswer(state, content)
     setState(newState)
-    if(newState.done){
+  if(newState.done){
       const closing = 'Great — generating your palette now.'
       setMessages(prev => [...prev, { role:'assistant', content: closing }])
       if(voiceOn) speak(closing)
       try {
         const storyInput = mapAnswersToStoryInput(newState.answers)
-        const resp = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(storyInput) })
+    setFinalizing(true)
+    const resp = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(storyInput) })
         if(resp.ok){
           const created = await resp.json()
             if(created?.id){
+        setCelebrate(true)
+        await new Promise(r=>setTimeout(r,350))
               try { await fetch('/api/intakes/finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ storyId: created.id }) }) } catch {}
               track('onboarding_complete',{ designerId, answers: Object.keys(newState.answers).length })
               router.push(`/reveal/${created.id}`)
             }
         }
-      } catch(e){ console.warn(e) }
+    } catch(e){ console.warn(e) }
+    finally { setFinalizing(false) }
       return
     }
   const nextQ = getCurrentNode(newState).prompt
@@ -181,9 +191,11 @@ export default function OnboardingChat({ designerId }: Props) {
           {currentNode.options.map(opt => {
             const selected = isMulti ? multiTemp.includes(opt) : false
             return (
-              <button
+              <motion.button
                 key={opt}
                 type="button"
+                whileTap={{ scale:0.96 }}
+                whileHover={{ scale: isMulti? 1 : 1.02 }}
                 onClick={()=>{
                   if(!isMulti){
                     submit(opt,'chips')
@@ -198,19 +210,22 @@ export default function OnboardingChat({ designerId }: Props) {
                 }}
                 className={`px-3 py-1 rounded-full border text-sm transition ${selected? 'bg-brand text-brand-contrast':'bg-surface hover:bg-paper'}`}
                 aria-pressed={selected}
-              >{opt}</button>
+              >{opt}</motion.button>
             )
           })}
           {isMulti && (
-            <button
+            <motion.button
               type="button"
+              whileTap={{ scale:0.96 }}
               onClick={()=>{ if(multiTemp.length >= minSelect){ submit(multiTemp.join(', ')); setMultiTemp([]) } }}
               disabled={multiTemp.length < minSelect}
               className="px-3 py-1 rounded-full border text-sm bg-brand text-brand-contrast disabled:opacity-50"
-            >Continue</button>
+            >Continue</motion.button>
           )}
         </div>
       ): null}
+      {finalizing && <LoadingOverlay text="Mixing paints…" />}
+      {celebrate && <ConfettiBurst />}
     </div>
   )
 }

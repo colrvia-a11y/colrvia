@@ -9,6 +9,8 @@ import SupabaseListener from '@/components/providers/SupabaseListener'
 import { ThemeProvider } from 'next-themes'
 import { Analytics } from '@vercel/analytics/react'
 import { MotionProvider } from '@/components/theme/MotionSettings'
+import dynamic from 'next/dynamic'
+const RouteTransition = dynamic(() => import('@/components/ux/RouteTransition'), { ssr:false })
 
 export const metadata: Metadata = {
   title: {
@@ -71,7 +73,7 @@ export default function RootLayout({
     <MotionProvider>
       <RegisterSW />
   <AuthSyncBridge />
-  <AppShell>{children}</AppShell>
+  <AppShell><RouteTransition>{children}</RouteTransition></AppShell>
   <Analytics />
   <SupabaseListener />
     </MotionProvider>
