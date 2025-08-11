@@ -91,7 +91,8 @@ export default function OnboardingChat({ designerId }: Props) {
           const greet = `Hi! Let's build your palette. ${first.prompt}`
           setMessages([{ role:'assistant', content: greet }])
           const firstNode = getFirstQuestion()
-          track('onboarding_question',{ designerId, key: firstNode.key, type: firstNode.type })
+          // TODO: Rename component/file to PreferencesChat; events migrated from onboarding_* to preferences_*
+          track('preferences_question',{ designerId, key: firstNode.key, type: firstNode.type })
           if(voiceOn) speak(greet)
         }
       } finally {
@@ -138,7 +139,7 @@ export default function OnboardingChat({ designerId }: Props) {
         setCelebrate(true)
         await new Promise(r=>setTimeout(r,350))
               try { await fetch('/api/intakes/finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ storyId: created.id }) }) } catch {}
-              track('onboarding_complete',{ designerId, answers: Object.keys(newState.answers).length })
+              track('preferences_complete',{ designerId, answers: Object.keys(newState.answers).length })
               router.push(`/reveal/${created.id}`)
             }
         }
@@ -150,8 +151,8 @@ export default function OnboardingChat({ designerId }: Props) {
     setMessages(prev => [...prev, { role:'assistant', content: nextQ }])
     try {
       const node = getCurrentNode(newState)
-      track('onboarding_answer', node.options? { designerId, key: node.key, type: node.type, source, hasOptions:true } : { designerId, key: node.key, type: node.type, source, len: content.length })
-      track('onboarding_question',{ designerId, key: getCurrentNode(newState).key, type: getCurrentNode(newState).type })
+  track('preferences_answer', node.options? { designerId, key: node.key, type: node.type, source, hasOptions:true } : { designerId, key: node.key, type: node.type, source, len: content.length })
+  track('preferences_question',{ designerId, key: getCurrentNode(newState).key, type: getCurrentNode(newState).type })
     } catch {}
     // patch persistence
     try {
