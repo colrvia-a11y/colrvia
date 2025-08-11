@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render } from '@testing-library/react'
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/onboarding/abc',
+  usePathname: () => '/preferences/abc',
 }))
 
 vi.mock('@/components/ux/RouteTransition', () => ({ default: ({children}:{children:React.ReactNode}) => <>{children}</> }))

@@ -4,7 +4,7 @@ import RouteTransition from '@/components/ux/RouteTransition'
 const BottomNav = dynamic(()=> import('@/components/nav/BottomNav'), { ssr:false })
 import { usePathname } from 'next/navigation'
 
-const HIDE_NAV_PREFIXES = ['/start/preferences','/onboarding','/start/preview']
+const HIDE_NAV_PREFIXES = ['/start/preferences','/preferences','/start/preview']
 
 export default function ShellLayout({ children }: { children: React.ReactNode }){
   const pathname = usePathname() || '/'

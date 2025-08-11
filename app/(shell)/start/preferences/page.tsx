@@ -7,7 +7,7 @@ export default function PreferencesAlias(){
   const router = useRouter()
   useEffect(()=>{
     const d = sp.get('designerId')
-    if (d) router.replace(`/onboarding/${d}`)
+  if (d) router.replace(`/preferences/${d}`)
     else router.replace('/designers')
   },[sp, router])
   return <main className="px-4 py-12 text-sm text-[var(--ink-subtle)]">Loading preferences…</main>
