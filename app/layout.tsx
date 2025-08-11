@@ -12,6 +12,7 @@ import { MotionProvider } from '@/components/theme/MotionSettings'
 import dynamic from 'next/dynamic'
 const RouteTransition = dynamic(() => import('@/components/ux/RouteTransition'), { ssr:false })
 const BottomTabBar = dynamic(() => import('@/components/nav/BottomTabBar'), { ssr:false })
+const StartStoryPortalProvider = dynamic(()=> import('@/components/ux/StartStoryPortal').then(m=> m.StartStoryPortalProvider), { ssr:false })
 
 export const metadata: Metadata = {
   title: {
@@ -74,8 +75,10 @@ export default function RootLayout({
     <MotionProvider>
       <RegisterSW />
   <AuthSyncBridge />
-  <AppShell><RouteTransition>{children}</RouteTransition></AppShell>
-  <BottomTabBar />
+  <StartStoryPortalProvider>
+    <AppShell><RouteTransition>{children}</RouteTransition></AppShell>
+    <BottomTabBar />
+  </StartStoryPortalProvider>
   <Analytics />
   <SupabaseListener />
     </MotionProvider>

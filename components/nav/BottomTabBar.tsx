@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useStartStory } from '@/components/ux/StartStoryPortal'
 import { motion } from "framer-motion"
 import { Home, Sparkles, BookOpen } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -30,6 +31,8 @@ const NAV = [
 export default function BottomTabBar() {
   const pathname = usePathname() || "/"
   const reduced = useReducedMotionPref()
+  let startStory: (href:string)=>void = ()=>{}
+  try { startStory = useStartStory() } catch {}
 
   return (
     <nav
@@ -54,7 +57,7 @@ export default function BottomTabBar() {
                   <Link
                     href={href}
                     aria-current={active ? "page" : undefined}
-                    onClick={() => track("nav_click", { dest: href })}
+                    onClick={(e) => { track("nav_click", { dest: href }); if(href==='/designers'){ e.preventDefault(); startStory('/designers') } }}
                     className="flex flex-col items-center gap-0.5"
                   >
                     <Icon className={["h-5 w-5", active ? "text-[var(--brand)]" : "text-[var(--ink-subtle)]"].join(" ")} />
