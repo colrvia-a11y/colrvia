@@ -69,11 +69,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   // 6) Normalize base palette
+  const brand = (story.brand || 'sherwin_williams') as BrandName
   let base: PaletteArray
   try {
-    const brand = (story.brand || 'sherwin_williams') as BrandName
     const inputPalette = body.palette ?? story.palette
-    base = normalizePalette(Array.isArray(inputPalette) ? inputPalette : (inputPalette as any), brand)
+    base = normalizePalette(
+      Array.isArray(inputPalette) ? inputPalette : (inputPalette as any),
+      brand,
+    )
   } catch {
     console.warn('VARIANT_POST_BAD_PALETTE', { storyId })
   return NextResponse.json<VariantPostRes>({ error: 'INVALID_PALETTE' }, { status: 422 })
@@ -82,8 +85,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // 7) Build + decode variant
   const tweak = body.mode === 'recommended' ? 'softer' : body.mode
   const rawVariant = makeVariant(base as any, story.brand, tweak as any)
-  const variant = Array.isArray(rawVariant) ? rawVariant : decodePalette(rawVariant as any)
-  if (!Array.isArray(variant) || variant.length === 0) {
+  const decoded = Array.isArray(rawVariant) ? rawVariant : decodePalette(rawVariant as any)
+  let variant: PaletteArray
+  try {
+    variant = normalizePalette(decoded, brand)
+  } catch {
     console.error('VARIANT_POST_BUILD_FAIL', { storyId })
   return NextResponse.json<VariantPostRes>({ error: 'VARIANT_BUILD_FAILED' }, { status: 500 })
   }
