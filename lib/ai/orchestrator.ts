@@ -37,9 +37,124 @@ function assignRolesDeterministic(input: DesignInput, C: Candidates): Palette {
   return { swatches: [toSwatch('primary',primary), toSwatch('secondary',secondary), toSwatch('accent',accent), toSwatch('trim',trim), toSwatch('ceiling',ceiling)], placements:{ primary:60, secondary:30, accent:10, trim:5, ceiling:5 }, notes:[`${input.contrast || 'Balanced'} contrast`] }
 }
 
+function systemPrompt() {
+  return `You are a senior interior colorist. Stay within provided candidate colors only; do not invent colors.\nYour job: pick 5 swatches (primary, secondary, accent, trim, ceiling) from candidates and return strict JSON.\nRules:\n- Aim for 60/30/10 balance (primary/secondary/accent). Trim and ceiling whites should be neutral whites.\n- Respect contrast preference: Softer (low), Balanced (mid), Bolder (high).\n- Respect vibe words and lighting.\n- Never output prose; only JSON in the exact schema.`
+}
+
+function asKey(c: any) {
+  return `${(c.brand||'').toLowerCase()}|${(c.code||'').toLowerCase()}|${(c.hex||'').toLowerCase()}`
+}
+
+function makeAllowedSet(candidates: Candidates) {
+  const allowed = new Set<string>()
+  for (const list of [candidates.neutrals, candidates.whites, candidates.accents]) {
+    list.forEach(c => allowed.add(asKey(c)))
+  }
+  return allowed
+}
+
+function sanitizeLlmPalette(parsed: Palette | null, candidates: Candidates, fallback: Palette): Palette | null {
+  if (!parsed?.swatches?.length) return null
+  const allowed = makeAllowedSet(candidates)
+  const roleSeen = new Set<PaletteRole>()
+  const clean = parsed.swatches.filter((s: any) => {
+    const k = asKey(s)
+    if (roleSeen.has(s.role)) return false
+    if (!allowed.has(k)) return false
+    roleSeen.add(s.role)
+    return true
+  })
+  const final: Palette = {
+    swatches: clean,
+    placements: parsed.placements || fallback.placements,
+    notes: parsed.notes || fallback.notes
+  }
+  return final
+}
+
+async function tryLlmPick(input: DesignInput, candidates: Candidates): Promise<Palette | null> {
+  if (!process.env.OPENAI_API_KEY) return null
+  let OpenAIImpl: any
+  try {
+    const mod = await import('openai')
+    OpenAIImpl = (mod as any).OpenAI
+  } catch {
+    return null
+  }
+  const client = new OpenAIImpl({ apiKey: process.env.OPENAI_API_KEY })
+  const payload = {
+    input,
+    candidates: {
+      neutrals: candidates.neutrals.slice(0, 100),
+      whites: candidates.whites.slice(0, 100),
+      accents: candidates.accents.slice(0, 100)
+    }
+  }
+  const schema = {
+    type: 'object',
+    properties: {
+      swatches: {
+        type: 'array',
+        minItems: 5,
+        items: {
+          type: 'object',
+          properties: {
+            role: { type: 'string', enum: ['primary','secondary','accent','trim','ceiling'] },
+            brand: { type: 'string' },
+            code: { type: 'string' },
+            name: { type: 'string' },
+            hex: { type: 'string' }
+          },
+          required: ['role','brand','code','name','hex'],
+          additionalProperties: false
+        }
+      },
+      placements: {
+        type: 'object',
+        properties: {
+          primary: { type: 'number' },
+          secondary: { type: 'number' },
+          accent: { type: 'number' },
+          trim: { type: 'number' },
+          ceiling: { type: 'number' }
+        },
+        required: ['primary','secondary','accent','trim','ceiling'],
+        additionalProperties: false
+      },
+      notes: { type: 'array', items: { type: 'string' } }
+    },
+    required: ['swatches','placements'],
+    additionalProperties: false
+  }
+  try {
+    const resp = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0.2,
+      response_format: { type: 'json_schema', json_schema: { name: 'Palette', schema, strict: true } },
+      messages: [
+        { role: 'system', content: systemPrompt() },
+        { role: 'user', content: JSON.stringify(payload) }
+      ]
+    })
+    const raw = resp.choices?.[0]?.message?.content
+    let parsed: Palette | null = null
+    try { parsed = raw ? JSON.parse(raw) as Palette : null } catch { parsed = null }
+    const fallback = assignRolesDeterministic(input, candidates)
+    const cleaned = sanitizeLlmPalette(parsed, candidates, fallback)
+    return cleaned ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function designPalette(input: DesignInput): Promise<Palette> {
   const candidates = getCandidates(input)
   const fallback = assignRolesDeterministic(input, candidates)
-  // LLM selection disabled (optional dependency not installed); use deterministic fallback
-  return fallback
+  const assisted = await tryLlmPick(input, candidates).catch(()=>null)
+  if (!assisted || !assisted.swatches || assisted.swatches.length < 5) return fallback
+  const roleSet = new Set(assisted.swatches.map(s=>s.role))
+  if (roleSet.size < 5) return fallback
+  return assisted
 }
+
+export { getCandidates, assignRolesDeterministic }

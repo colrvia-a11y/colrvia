@@ -263,6 +263,7 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 - Env: set `OPENAI_API_KEY` (Vercel → Project → Settings → Environment Variables) to enable LLM assistance. Without it, the generator runs deterministically.
 - The `/api/stories` create route now calls the orchestrator if no `palette` is provided in the request body.
 - **Transitional compatibility**: Legacy roles (`walls`, `trim`, `cabinets`, `accent`, `extra`) are still stored. Server maps orchestrator roles (`primary`, `secondary`, `accent`, `trim`, `ceiling`) → legacy (primary→walls, secondary→cabinets, accent→accent, trim→trim, ceiling→extra). To accept a client palette in the new schema send it as `palette_v2` with `AI_ALLOW_CLIENT_PALETTE=true`; invalid palettes return 422.
+ - **Optional LLM assist**: Set `OPENAI_API_KEY` to let the model pick among pre-filtered candidate swatches via JSON schema output. The result is strictly sanitized (roles unique, colors must exist in candidates); on any violation or error we fall back to deterministic selection.
 
 #### Example `palette_v2` payload
 ```json
