@@ -95,5 +95,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   console.log('VARIANT_POST_OK', { storyId, mode: body.mode, ms: Date.now() - start })
-  return NextResponse.json<VariantPostRes>({ variant })
+  // Map DecodedSwatch[] to Swatch[] (PaletteArray) to satisfy type
+  const swatches = (variant as any[]).map(s => ({
+    name: s.name || '',
+    brand: s.brand || 'sherwin_williams',
+    code: s.code || '',
+    hex: s.hex || '#FFFFFF',
+    role: s.role || 'walls',
+  }))
+  return NextResponse.json<VariantPostRes>({ variant: swatches })
 }
