@@ -258,6 +258,11 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 - **Quick replies**: For questions with predefined options, chips appear under the chat. Single-select submits immediately; multi-select supports up to the shown max, then Continue.
  - **Prompt variety**: Seeded templates provide varied greetings, acknowledgements, and question transitions; with an OpenAI key we lightly rewrite while preserving deterministic structure fallback.
 
+### AI Design Orchestrator
+- Server-only palette generator that filters SW/Behr catalogs, assigns roles (60/30/10 + trim/ceiling), and **optionally** lets OpenAI pick among safe candidates.
+- Env: set `OPENAI_API_KEY` (Vercel → Project → Settings → Environment Variables) to enable LLM assistance. Without it, the generator runs deterministically.
+- The `/api/stories` create route now calls the orchestrator if no `palette` is provided in the request body.
+
 ### Onboarding persistence
 - Each onboarding run creates an `intakes` row keyed by a secure, httpOnly cookie token (no auth required).
 - Routes: `POST /api/intakes/start`, `GET /api/intakes/resume`, `POST /api/intakes/patch`, `POST /api/intakes/finalize`.
