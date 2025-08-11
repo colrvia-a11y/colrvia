@@ -1,12 +1,20 @@
 "use client";
 import { useEffect, useRef } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+let supabase: SupabaseClient | null = null
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+if (url && key) {
+  supabase = createClient(url, key)
+} else {
+  console.warn('AUTH_SYNC_SUPABASE_ENV_MISSING', { url: !!url, key: !!key })
+}
 
 export function useAuthSync(){
   const syncedRef = useRef<string | null>(null)
   useEffect(()=>{
+    if(!supabase) return
     let active = true
     async function syncIfNeeded(session: any){
       if(!active || !session?.user) return
