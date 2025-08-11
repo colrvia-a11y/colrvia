@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation"
 
 type Props = { designerId: string }
 
-export default function OnboardingChat({ designerId }: Props) {
+export default function PreferencesChat({ designerId }: Props) {
   const router = useRouter()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [state, setState] = useState<InterviewState>(startState())

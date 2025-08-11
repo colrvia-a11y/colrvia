@@ -87,10 +87,11 @@ export default function SaveStoryToProject() {
   }
 
   if (auth === false) {
+    const next = typeof window !== 'undefined' ? encodeURIComponent(window.location.pathname + window.location.search) : '/'
     return (
       <div className="mt-8 p-4 rounded-2xl border">
         <p className="text-sm mb-3">Sign in to save this Color Story to a project.</p>
-        <Link href="/sign-in" className="rounded-xl px-4 py-2 bg-black text-white inline-block text-sm">Sign in</Link>
+        <Link href={`/sign-in?next=${next}`} className="rounded-xl px-4 py-2 bg-black text-white inline-block text-sm">Sign in</Link>
       </div>
     )
   }
