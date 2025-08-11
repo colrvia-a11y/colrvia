@@ -4,18 +4,24 @@ import Link from 'next/link'
 import { getIndexForUser } from '@/lib/db/stories'
 import StoryHeroCard from '@/components/visual/StoryHeroCard'
 
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export default async function Dashboard() {
-  const supabase = supabaseServer();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/sign-in");
+  // Server-side guard (middleware handles fast-path). If Supabase misconfigured treat as unauthenticated.
+  let userId: string | null = null
+  try {
+    const supabase = supabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return redirect('/sign-in?next=/dashboard')
+    userId = user.id
+  } catch {
+    return redirect('/sign-in?next=/dashboard')
   }
 
   let stories: any[] = [];
   try {
-    stories = await getIndexForUser(user.id);
+    if (userId) stories = await getIndexForUser(userId);
   } catch {}
 
   return (

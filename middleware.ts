@@ -9,6 +9,7 @@ const billingOn =
 
 export function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl
+  const cookies = req.cookies
   const isBilling =
     pathname === '/billing' ||
     pathname.startsWith('/billing/') ||
@@ -25,9 +26,24 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Protect dashboard routes: redirect unauthenticated users to sign-in with next param
+  const dashboardPath = pathname === '/dashboard' || pathname.startsWith('/dashboard/')
+  if (dashboardPath) {
+    const hasSbAccess =
+      cookies.has('sb-access-token') ||
+      cookies.has('sb:token') ||
+      cookies.has('supabase-access-token')
+    if (!hasSbAccess) {
+      const url = req.nextUrl.clone()
+      url.pathname = '/sign-in'
+      url.searchParams.set('next', pathname)
+      return NextResponse.redirect(url)
+    }
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/billing/:path*', '/pricing/:path*', '/subscribe/:path*'],
+  matcher: ['/billing/:path*', '/pricing/:path*', '/subscribe/:path*', '/dashboard/:path*'],
 }
