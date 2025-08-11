@@ -14,15 +14,13 @@ beforeAll(()=>{
     }
   }
 })
+// Legacy BottomTabBar test retained only to ensure component still loads until removed.
 import BottomTabBar from '@/components/nav/BottomTabBar'
 vi.mock('framer-motion', () => ({ motion: { div: (p:any)=> <div {...p} /> } }))
 
-// Basic smoke test for tab labels
-
-describe('BottomTabBar', () => {
-  it('renders Home, New, Stories', () => {
-    // @ts-ignore testing as client component
-  const { getByText } = render(<BottomTabBar /> as any)
+describe('BottomTabBar (legacy)', () => {
+  it('renders legacy labels Home, New, Stories', () => {
+    const { getByText } = render(<BottomTabBar /> as any)
     expect(getByText('Home')).toBeTruthy()
     expect(getByText('New')).toBeTruthy()
     expect(getByText('Stories')).toBeTruthy()
