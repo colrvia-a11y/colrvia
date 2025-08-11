@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { Upload } from '@/components/upload'
 
 export default function TestUploadPage() {

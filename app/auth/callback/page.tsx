@@ -1,10 +1,11 @@
 // Auth callback landing page for Supabase OAuth / Magic links
 'use client'
-import { useEffect, useState } from 'react'
+export const dynamic = 'force-dynamic';
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabaseBrowser } from '@/lib/supabase/client'
 
-export default function AuthCallbackPage(){
+function Inner(){
   const router = useRouter()
   const params = useSearchParams()
   const [status,setStatus] = useState<'working'|'error'|'done'>('working')
@@ -43,4 +44,7 @@ export default function AuthCallbackPage(){
       {status==='done' && <div>Redirecting…</div>}
     </div>
   )
+}
+export default function AuthCallbackPage(){
+  return <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-[var(--ink-subtle)]">Preparing…</div>}><Inner/></Suspense>
 }

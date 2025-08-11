@@ -37,6 +37,7 @@ export async function generateMetadata({ params, searchParams }:{ params:{id:str
 }
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function RevealStoryPage({ params }:{ params:{ id:string }}) {
   const id = params.id

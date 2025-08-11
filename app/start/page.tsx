@@ -1,4 +1,5 @@
-"use client"
+"use client";
+export const dynamic = 'force-dynamic';
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { z } from 'zod'
@@ -9,7 +10,7 @@ import Chip from '@/components/ui/Chip'
 import { Upload } from '@/components/upload'
 import { useReducedMotion } from '@/components/theme/MotionSettings'
 
-export const dynamic = 'force-dynamic'
+// dynamic declared at top
 
 // Simplified flow: vibe, brand, photo. Hidden defaults for other required fields.
 const Schema = z.object({
