@@ -258,6 +258,7 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 - **Quick replies**: For questions with predefined options, chips appear under the chat. Single-select submits immediately; multi-select supports up to the shown max, then Continue.
  - **Prompt variety**: Seeded templates provide varied greetings, acknowledgements, and question transitions; with an OpenAI key we lightly rewrite while preserving deterministic structure fallback.
  - **Narrative on create**: Stories get a short deterministic explanation of the palette when created; with `OPENAI_API_KEY` we lightly polish tone (facts unchanged) and store it in `stories.narrative`.
+ - **Reveal → Narrative**: The reveal page fetches a story's stored narrative via `/api/stories/:id/narrative` and shows a short explanation card with Copy & Listen controls. Analytics events: `explanation_view`, `explanation_copy`, `explanation_listen`.
 
 ### AI Design Orchestrator
 - Server-only palette generator that filters SW/Behr catalogs, assigns roles (60/30/10 + trim/ceiling), and **optionally** lets OpenAI pick among safe candidates.

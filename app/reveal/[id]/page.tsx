@@ -12,6 +12,8 @@ import PdfButton from './pdf-button'
 import { normalizePalette } from '@/lib/palette'
 import { repairStoryPalette } from '@/lib/palette/repair'
 import RevealPaletteClient from './RevealPaletteClient'
+import NextDynamic from 'next/dynamic'
+const NarrativeCard = NextDynamic(() => import('@/components/reveal/NarrativeCard'), { ssr:false })
 export async function generateMetadata({ params, searchParams }:{ params:{id:string}; searchParams:Record<string,string|undefined> }): Promise<Metadata> {
   const id = params.id
   const v = searchParams?.v
@@ -101,13 +103,16 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
         </div>
       </div>
       <VariantTabs storyId={data.id} initialPalette={palette} initialTitle={data.title} initialNarrative={data.narrative} baseMeta={{ brand:data.brand, vibe:data.vibe }} />
-  {palette.length>0 ? (
+      {palette.length>0 ? (
         <>
           <SwatchRibbon swatches={palette.slice(0,5).filter(p=>p.hex).map(p=>({ hex:p.hex!, name:p.name }))} />
           <section className="relative" id="palette">
             <RevealPaletteClient palette={palette as any} />
             <CopyToast />
           </section>
+          <div className="mt-6">
+            <NarrativeCard storyId={data.id} />
+          </div>
         </>
       ) : (
         <div className="rounded-xl border border-dashed border-[var(--border)] p-8 text-center space-y-4 bg-[var(--bg-surface)]">
@@ -119,7 +124,6 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
           </div>
         </div>
       )}
-      <section className="prose prose-sm max-w-none text-neutral-800" aria-label="Narrative description"><p>{data.narrative}</p></section>
       <StoryActionBar storyId={data.id} palette={palette as any} />
     </main>
   )
