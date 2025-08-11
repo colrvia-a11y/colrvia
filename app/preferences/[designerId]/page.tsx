@@ -1,16 +1,36 @@
 import PreferencesChat from '@/components/ai/OnboardingChat'
-import { DESIGNERS } from '@/data/designers'
-import type { DesignerProfile } from '@/types/colorStory'
+import { getDesigner, DEFAULT_DESIGNER_ID, isDesignerLocked } from '@/lib/ai/designers'
+import { getUserTier } from '@/lib/profile'
+import Link from 'next/link'
+import { UpgradeButton } from '@/components/paywall/UpgradeButton'
 
 export const dynamic = 'force-dynamic'
 
-export default function PreferencesPage({ params }: { params:{ designerId:string } }){
-  const designer: DesignerProfile | undefined = DESIGNERS.find(d=> d.id===params.designerId)
+export default async function PreferencesPage({ params }: { params:{ designerId:string } }){
+  const id = (params.designerId || '').toLowerCase()
+  const designer = getDesigner(id)
   if(!designer) return <div className="p-10">Designer not found.</div>
+  const { tier, user } = await getUserTier()
+  const locked = isDesignerLocked(tier, designer.id)
   return (
     <main className="max-w-3xl mx-auto px-4 py-10 space-y-6">
-      <h1 className="font-display text-3xl leading-tight">Preferences</h1>
-      <PreferencesChat designerId={designer.id} />
+      <header className="space-y-2">
+        <h1 className="font-display text-3xl leading-tight">Preferences</h1>
+        <p className="text-sm text-[var(--ink-subtle)]">Guided by <span className="font-medium">{designer.name}</span>{designer.pro ? ' · Pro' : ''}</p>
+      </header>
+      {locked ? (
+        <div className="rounded-2xl border bg-[var(--bg-surface)] p-6 space-y-4">
+          <p className="text-sm">This designer is a <strong>Pro</strong> feature.</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href={`/preferences/${DEFAULT_DESIGNER_ID}`} className="btn btn-secondary flex-1">Continue with default</Link>
+            <UpgradeButton className="btn btn-primary flex-1" />
+          </div>
+          {!user && <p className="text-[11px] text-[var(--ink-subtle)]">You’ll need to sign in during checkout.</p>}
+        </div>
+      ) : (
+        <PreferencesChat designerId={designer.id} />
+      )}
     </main>
   )
 }
+
