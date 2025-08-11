@@ -8,6 +8,10 @@ import { normalizePalette } from '@/lib/palette';
 import { buildPalette, seedPaletteFor } from '@/lib/ai/palette';
 import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair';
 import { repairStoryPalette } from '@/lib/palette/repair';
+import { designPalette } from '@/lib/ai/orchestrator';
+import { mapV2ToLegacy } from '@/lib/ai/mapRoles';
+import { assertValidPalette } from '@/lib/ai/validate';
+import type { DesignInput, Palette as V2Palette } from '@/lib/ai/schema';
 
 // --- normalization helpers ---
 const normalizeBrand = (b?: string) => {
@@ -25,6 +29,7 @@ const sanitizeTitle = (t?: string) => {
   return trimmed.slice(0,120); // enforce max length
 };
 
+// Extend strict schema to explicitly allow palette_v2 (new schema) and seed (optional deterministic hint)
 const BodySchema = z.object({
   brand: z.string().transform(normalizeBrand).optional(),
   designerKey: z.enum(['marisol','emily','zane']).default('marisol'),
@@ -32,7 +37,9 @@ const BodySchema = z.object({
   vibe: z.string().optional(),
   lighting: z.enum(['daylight','evening','mixed']).optional(),
   room: z.string().optional(),
-  inputs: z.record(z.any()).optional()
+  inputs: z.record(z.any()).optional(),
+  palette_v2: z.any().optional(), // validated separately when flag enabled
+  seed: z.string().optional()
 }).strict();
 
 export async function POST(req: Request) {
@@ -69,14 +76,39 @@ export async function POST(req: Request) {
   const brand = 'sherwin_williams'
   const vibe = parsed.vibe
   let built: any[] | undefined
-  try {
-    const aiInput = { designer: parsed.designerKey==='marisol'?'Marisol':'Emily', vibe: vibe || 'Cozy Neutral', brand:'SW', lighting:(parsed.lighting as any)||'mixed', hasWarmWood: !!(parsed.inputs as any)?.hasWarmWood, photoUrl:null }
-    try { built = buildPalette(aiInput as any).swatches } catch {}
-    if(!built || built.length===0){ built = seedPaletteFor({ brand:'SW' }) }
-  } catch {}
-  let normalizedPalette = await normalizePaletteOrRepair(built as any, vibe)
-  if(!normalizedPalette){
-    normalizedPalette = await normalizePaletteOrRepair([], vibe)
+  const allowClient = String(process.env.AI_ALLOW_CLIENT_PALETTE || 'false').toLowerCase()==='true'
+  const body: any = raw || {}
+  if (allowClient && body.palette_v2) {
+    try {
+      assertValidPalette(body.palette_v2 as V2Palette)
+      built = mapV2ToLegacy(body.palette_v2 as V2Palette).swatches
+    } catch (e:any) {
+      return NextResponse.json({ error: 'Invalid palette: ' + e.message }, { status: 422 })
+    }
+  }
+  if (!built) {
+    try {
+      const v2 = await designPalette({ space: parsed.room, lighting: parsed.lighting, vibe: parsed.vibe, contrast: 'Balanced', brand: 'Sherwin-Williams', seed: 'story-seed' })
+      built = mapV2ToLegacy(v2).swatches
+    } catch {}
+  }
+  // Legacy fallback if still empty
+  if (!built || built.length===0) {
+    try {
+      const aiInput = { designer: parsed.designerKey==='marisol'?'Marisol':'Emily', vibe: vibe || 'Cozy Neutral', brand:'SW', lighting:(parsed.lighting as any)||'mixed', hasWarmWood: !!(parsed.inputs as any)?.hasWarmWood, photoUrl:null }
+      try { built = buildPalette(aiInput as any).swatches } catch {}
+      if(!built || built.length===0){ built = seedPaletteFor({ brand:'SW' }) }
+    } catch {}
+  }
+  let normalizedPalette: any[] | null = null
+  if (built && built.length === 5 && built.every(s=> s && s.hex && s.code && s.name)) {
+    // Fast-path accept already complete legacy-mapped palette (e.g., from palette_v2)
+    normalizedPalette = built.map((s,i)=> ({ ...s, role: ['walls','trim','cabinets','accent','extra'][i] }))
+  } else {
+    normalizedPalette = await normalizePaletteOrRepair(built as any, vibe)
+    if(!normalizedPalette){
+      normalizedPalette = await normalizePaletteOrRepair([], vibe)
+    }
   }
   if(!normalizedPalette){
     console.error('CREATE_STORY_PALETTE_FINAL_FAIL', { inputs: { vibe, brand } })

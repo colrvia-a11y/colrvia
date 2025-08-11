@@ -262,6 +262,23 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 - Server-only palette generator that filters SW/Behr catalogs, assigns roles (60/30/10 + trim/ceiling), and **optionally** lets OpenAI pick among safe candidates.
 - Env: set `OPENAI_API_KEY` (Vercel → Project → Settings → Environment Variables) to enable LLM assistance. Without it, the generator runs deterministically.
 - The `/api/stories` create route now calls the orchestrator if no `palette` is provided in the request body.
+- **Transitional compatibility**: Legacy roles (`walls`, `trim`, `cabinets`, `accent`, `extra`) are still stored. Server maps orchestrator roles (`primary`, `secondary`, `accent`, `trim`, `ceiling`) → legacy (primary→walls, secondary→cabinets, accent→accent, trim→trim, ceiling→extra). To accept a client palette in the new schema send it as `palette_v2` with `AI_ALLOW_CLIENT_PALETTE=true`; invalid palettes return 422.
+
+#### Example `palette_v2` payload
+```json
+{
+	"palette_v2": {
+		"swatches": [
+			{ "role": "primary",  "brand": "Sherwin-Williams", "code": "XXXX", "name": "Some Name", "hex": "#dde0e3" },
+			{ "role": "secondary","brand": "Sherwin-Williams", "code": "YYYY", "name": "Other",     "hex": "#aab0b5" },
+			{ "role": "accent",   "brand": "Sherwin-Williams", "code": "ZZZZ", "name": "Pop",       "hex": "#223344" },
+			{ "role": "trim",     "brand": "Sherwin-Williams", "code": "WWWW", "name": "White",     "hex": "#f7f7f5" },
+			{ "role": "ceiling",  "brand": "Sherwin-Williams", "code": "VVVV", "name": "Ceiling",   "hex": "#f4f4f2" }
+		],
+		"placements": { "primary":60, "secondary":30, "accent":10, "trim":5, "ceiling":5 }
+	}
+}
+```
 
 ### Onboarding persistence
 - Each onboarding run creates an `intakes` row keyed by a secure, httpOnly cookie token (no auth required).
