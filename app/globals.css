@@ -116,3 +116,55 @@ a, button, [role="button"] { outline-offset: 3px; }
     scroll-behavior: auto !important;
   }
 }
+
+/* Ambient Edge Glow — brand-aware, motion-safe */
+@keyframes ambient-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Container element; we draw with a ::before so we can mask the center out */
+[data-ambient-edge]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+
+  /* Animated conic gradient using brand tokens (shadcn variables) */
+  background:
+    conic-gradient(
+      from 0deg at 50% 50%,
+      hsl(var(--primary)) 0deg 90deg,
+      hsl(var(--accent)) 90deg 180deg,
+      hsl(var(--muted)) 180deg 270deg,
+      hsl(var(--ring)) 270deg 360deg
+    );
+
+  /* Soft glow + spin */
+  opacity: var(--ambient-opacity, 0.6);
+  filter: blur(var(--ambient-blur, 24px));
+  animation: ambient-spin var(--ambient-speed, 18s) linear infinite;
+
+  /* Make it only the edges: mask center out using the content-box trick */
+  padding: var(--ambient-thickness, 24px);
+  border-radius: calc(var(--radius, 0.5rem) + var(--ambient-thickness, 24px));
+
+  /* Two masks: full box minus content-box => a frame */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;      /* Safari/Chrome */
+          mask-composite: exclude;  /* Firefox */
+
+  /* Respect iOS safe areas a bit more without overcomplicating */
+  /* (optional) uncomment if you want thicker top/bottom around notches:
+  padding-top: calc(var(--ambient-thickness, 24px) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--ambient-thickness, 24px) + env(safe-area-inset-bottom));
+  */
+}
+
+/* Motion safety */
+@media (prefers-reduced-motion: reduce) {
+  [data-ambient-edge]::before {
+    animation: none;
+    opacity: 0.35;
+  }
+}
