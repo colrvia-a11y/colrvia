@@ -9,6 +9,7 @@ import { buildPalette, seedPaletteFor } from '@/lib/ai/palette';
 import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair';
 import { repairStoryPalette } from '@/lib/palette/repair';
 import { designPalette } from '@/lib/ai/orchestrator';
+import { buildDeterministicNarrative, polishWithLLM } from '@/lib/ai/narrative';
 import { mapV2ToLegacy } from '@/lib/ai/mapRoles';
 import { assertValidPalette } from '@/lib/ai/validate';
 import type { DesignInput, Palette as V2Palette } from '@/lib/ai/schema';
@@ -73,8 +74,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'AUTH_MISSING' }, { status: 401 });
   }
 
-  // Force brand to sherwin_williams temporarily (SW-only mode)
-  const brand = 'sherwin_williams'
+  // Respect user-provided brand (already normalized earlier if present)
+  const brand = parsed.brand
   const vibe = parsed.vibe
   let built: any[] | undefined
   const allowClient = String(process.env.AI_ALLOW_CLIENT_PALETTE || 'false').toLowerCase()==='true'
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
   }
   if (!built) {
     try {
-      const v2 = await designPalette({ space: parsed.room, lighting: parsed.lighting, vibe: parsed.vibe, contrast: 'Balanced', brand: 'Sherwin-Williams', seed: 'story-seed' })
+      const v2 = await designPalette({ space: parsed.room, lighting: parsed.lighting, vibe: parsed.vibe, contrast: 'Balanced', brand: /behr/i.test(String(brand)) ? 'Behr' : 'Sherwin-Williams', seed: 'story-seed' })
       built = mapV2ToLegacy(v2).swatches
       if (analyticsEnabled()) await capture('stories_create_source', { source: 'orchestrator' })
     } catch {}
@@ -119,6 +120,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error:'PALETTE_INVALID' }, { status:422 })
   }
   // DB payload with safe defaults (no unknown columns like title)
+  const narrativeBase = buildDeterministicNarrative({ input: { lighting: parsed.lighting, vibe: parsed.vibe, brand, contrast: (parsed.inputs as any)?.contrast }, palette: normalizedPalette })
+  const narrative = await polishWithLLM(narrativeBase, parsed.designerKey)
+
   const payload = {
     user_id: user.id,
     designer_key: parsed.designerKey,
@@ -131,7 +135,7 @@ export async function POST(req: Request) {
       ...(parsed.inputs ?? {})
     },
   palette: normalizedPalette,
-    narrative: null,
+    narrative,
     has_variants: false,
     status: 'new'
   } as const;

@@ -1,20 +1,62 @@
-import type { GenerateInput, ColorStory } from '@/types/story';
-export function buildTitle(input: GenerateInput) {
-  const t = {
-    'Cozy Neutral':'Modern Rustic Serenity',
-    'Airy Coastal':'Air & Light',
-    'Earthy Organic':'Grounded Calm',
-    'Modern Warm':'Warm Modern',
-    'Soft Pastels':'Soft Nest',
-    'Moody Blue-Green':'Evening Grove'
-  } as const;
-  return t[input.vibe] ?? 'Your Color Story';
+import { getDesigner } from '@/lib/ai/designers'
+
+type LegacySwatch = { role: string; brand: string; code: string; name: string; hex: string }
+
+function pick<T>(arr: T[], role: string): T | undefined {
+  const roles = Array.isArray(arr) ? (arr as any[]) : []
+  return roles.find((s: any) => s.role === role) as any
 }
-export function buildNarrative(input: GenerateInput, s: Pick<ColorStory,'palette'|'placements'>) {
-  const walls = s.placements.walls; const trim = s.placements.trim;
-  const acc = s.placements.accent;
-  const vibe = input.vibe.toLowerCase();
-  return `A ${vibe} palette that feels intentional: walls in ${walls} to ground the room, ${trim} on trim for clean edges,` +
-         (acc ? ` and ${acc} as a confident accent` : ``) +
-         `. Tuned for your ${input.lighting} light` + (input.hasWarmWood? ` and warm wood tones.`:`.`);
+
+export function buildDeterministicNarrative(opts: {
+  input: { contrast?: string; lighting?: string; vibe?: string | string[]; brand?: string }
+  palette: Array<LegacySwatch | any>
+}) {
+  const { input, palette } = opts
+  const vibe = Array.isArray(input.vibe) ? input.vibe.join(' + ') : (input.vibe || 'Balanced')
+  const contrast = input.contrast || 'Balanced'
+  const lighting = input.lighting || 'Mixed'
+  const brand = input.brand || (palette?.[0] as any)?.brand || 'Sherwin-Williams'
+
+  const primary: any = pick(palette as any, 'primary') || pick(palette as any, 'walls')
+  const secondary: any = pick(palette as any, 'secondary') || pick(palette as any, 'cabinets')
+  const accent: any = pick(palette as any, 'accent')
+  const trim: any = pick(palette as any, 'trim')
+  const ceiling: any = pick(palette as any, 'ceiling') || pick(palette as any, 'extra')
+
+  const lines = [
+    `We targeted a ${contrast.toLowerCase()} contrast for ${lighting.toLowerCase()} light and your “${vibe}” vibe.`,
+    primary ? `Walls lead with ${primary.name} (${primary.code}) for an easy, livable base.` : '',
+    secondary ? `Secondary surfaces get ${secondary.name} (${secondary.code}) to add depth.` : '',
+    accent ? `${accent.name} (${accent.code}) is your accent—kept intentional so it doesn’t overpower.` : '',
+    trim ? `Trim stays crisp in ${trim.name} (${trim.code}).` : '',
+    ceiling ? `Ceilings lighten the room with ${ceiling.name} (${ceiling.code}).` : '',
+    `All from ${brand} for simple touch-ups.`,
+  ].filter(Boolean)
+
+  const out = lines.join(' ')
+  const sentences = out.split(/\.\s+/).filter(Boolean)
+  return sentences.slice(0, 3).join('. ') + '.'
+}
+
+export async function polishWithLLM(text: string, designerId?: string) {
+  if (!process.env.OPENAI_API_KEY) return text
+  const d = getDesigner(designerId || '')
+  const system = `${d?.style || ''}\nConstraints: 2–3 short sentences, warm and specific. Keep facts.`
+  try {
+    const { OpenAI } = await import('openai')
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    const resp = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0.3,
+      max_tokens: 120,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: `Rewrite more naturally, keep facts: ${text}` },
+      ],
+    })
+    const t = resp.choices[0]?.message?.content?.trim()
+    return t?.length ? t : text
+  } catch {
+    return text
+  }
 }
