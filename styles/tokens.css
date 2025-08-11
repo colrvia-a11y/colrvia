@@ -99,6 +99,15 @@
   --dur-500: 500ms;
   --dur-700: 700ms;
   --dur-1000: 1000ms;
+
+  /* Legacy alias (temp) – remove after refactor */
+  --paper: var(--color-bg);
+  --surface: var(--color-surface);
+  --linen: var(--color-bg-inset);
+  --ink: var(--color-fg);
+  --ink-subtle: var(--color-fg-muted);
+  --border: var(--color-border);
+  --bg-surface: var(--color-surface);
 }
 
 @media (prefers-color-scheme: dark) {

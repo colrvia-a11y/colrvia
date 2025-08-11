@@ -2,6 +2,8 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: 'e2e',
+  // Include *.pw.ts files as Playwright test specs (kept distinct from unit tests)
+  testMatch: /.*\.pw\.(ts|js)/,
   fullyParallel: true,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? 'github' : 'list',

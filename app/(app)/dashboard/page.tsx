@@ -23,7 +23,7 @@ export default async function Dashboard() {
       <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
         <div>
           <h1 className="font-display text-4xl leading-[1.05] mb-3">Your Color Stories</h1>
-          <p className="text-sm text-[var(--ink-subtle)] max-w-md">Saved palettes and variants. Open any to view placements and export.</p>
+          <p className="text-sm text-[var(--color-fg-muted)] max-w-md">Saved palettes and variants. Open any to view placements and export.</p>
         </div>
         <div className="flex gap-3">
           <Link href="/designers" className="btn btn-primary">New Story</Link>
@@ -31,7 +31,7 @@ export default async function Dashboard() {
         </div>
       </header>
       <StoriesGrid stories={stories} />
-      <div className="text-xs text-[var(--ink-subtle)]">Dev: <Link href="/test-upload" className="underline">Test upload</Link></div>
+  <div className="text-xs text-[var(--color-fg-muted)]">Dev: <Link href="/test-upload" className="underline">Test upload</Link></div>
     </main>
   );
 }
@@ -42,7 +42,7 @@ function StoriesGrid({ stories }: { stories:any[] }) {
       <div className="flex flex-col items-center justify-center text-center py-24 border border-dashed rounded-2xl border-[var(--border)] bg-[var(--bg-surface)]">
         <div className="w-48 h-32 rounded-2xl bg-gradient-to-br from-linen to-paper mb-8 shadow-soft" aria-hidden />
         <h2 className="font-display text-2xl mb-2">No stories yet</h2>
-        <p className="text-sm text-[var(--ink-subtle)] mb-6 max-w-xs">Start your first palette to see it appear here.</p>
+  <p className="text-sm text-[var(--color-fg-muted)] mb-6 max-w-xs">Start your first palette to see it appear here.</p>
   <Link href="/designers" className="btn btn-primary">Start a Color Story</Link>
       </div>
     );
