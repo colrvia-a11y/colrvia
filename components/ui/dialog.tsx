@@ -16,5 +16,5 @@ export function Dialog({ open, onOpenChange, children }: DialogProps){
 export function DialogContent({ className='', children }: { className?: string; children: React.ReactNode }){
   return <div className={["w-full max-w-lg rounded-2xl bg-[var(--bg-surface)] p-6 shadow-soft border", className].join(' ')}>{children}</div>
 }
-export function DialogHeader({ children }: { children: React.ReactNode }){ return <div className="mb-4 space-y-1">{children}</div> }
+export function DialogHeader({ children, className='' }: { children: React.ReactNode; className?: string }){ return <div className={["mb-4 space-y-1", className].join(' ')}>{children}</div> }
 export function DialogTitle({ children }: { children: React.ReactNode }){ return <h2 className="text-xl font-semibold tracking-tight">{children}</h2> }

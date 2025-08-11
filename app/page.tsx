@@ -21,11 +21,11 @@ export default function Home(){
           <Link href="/designers" className="inline-flex items-center rounded-2xl bg-[var(--brand)] px-6 py-3 text-white text-sm font-medium shadow-soft hover:bg-[var(--brand-hover)] transition-colors">Start Color Story</Link>
         </div>
         <div className="mt-4">
-          <button type="button" className="text-sm underline underline-offset-4 text-[var(--ink-subtle)] hover:text-[var(--ink)]" onClick={()=>{ setOpen(true); try { const { track } = require('@/lib/analytics'); track('howitworks_open',{ where:'home' }) } catch {} }}>See how it works (1 min)</button>
+          <button type="button" className="text-sm underline underline-offset-4 text-[var(--ink-subtle)] hover:text-[var(--ink)]" onClick={()=>{ setOpen(true) }}>See how it works (1 min)</button>
           <span className="ml-2 text-xs text-[var(--ink-subtle)]"><Link href="/how-it-works" className="hover:underline">(full page)</Link></span>
         </div>
       </section>
-      <HowItWorksModal open={open} onOpenChange={setOpen} />
+  <HowItWorksModal open={open} onOpenChange={setOpen} origin="home" />
     </div>
   )
 }
