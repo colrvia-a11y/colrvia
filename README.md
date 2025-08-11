@@ -193,6 +193,12 @@ select count(*) from public.catalog_sw;
 ```
 The script reads `db/seeds/catalog_sw.json` and upserts (on conflict code) in batches of 500. Hex values are validated (`#RRGGBB`). Non‑conforming rows are skipped and summarized. RLS allows public read (anon+authenticated) and blocks writes.
 
+### Feature Flags
+- `NEXT_PUBLIC_FEATURE_BILLING` — when `true`/`1`/`on`, billing/pricing routes are enabled. When off, `/billing`, `/pricing`, and `/subscribe` redirect to `/start?billing=soon`.
+
+### Health Endpoint
+- `GET /api/health/catalog` — auth required. Returns table counts (RLS-visible), request timestamp, and current commit SHA.
+
 
 ## Screenshots (Task 10)
 Add real PNGs (or compressed WebP) under `public/screenshots/` and embed here for quick visual QA. Suggested shots:
