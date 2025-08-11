@@ -1,7 +1,9 @@
 export const runtime = "nodejs"
 import { NextResponse } from "next/server"
 import { designers } from "@/lib/ai/designers"
-import { startState, acceptAnswer, getCurrentNode, type InterviewState } from "@/lib/ai/onboardingGraph"
+import { startState, acceptAnswer, getCurrentNode, type InterviewState, getNode } from "@/lib/ai/onboardingGraph"
+import { buildStartUtterance, buildNextUtterance, ackFor, askFor } from "@/lib/ai/phrasing"
+import crypto from 'crypto'
 
 // augment designers with systemPrompt
 const designerPrompts: Record<string,string> = {
@@ -24,24 +26,36 @@ export async function POST(req: Request) {
   let utterance = ''
   if(body.step === 'start'){
     state = startState()
-  const q = getCurrentNode(state)
-  utterance = await phrase(systemPrompt, `Greet briefly, then ask: "${q.prompt}"`, useLLM)
+    state.rngSeed = state.rngSeed || crypto.randomUUID()
+    const q = getCurrentNode(state)
+    const base = buildStartUtterance(designer.id, state.rngSeed!, q.prompt)
+    utterance = await phrase(systemPrompt, base, useLLM)
     return NextResponse.json({ state, utterance })
   }
   state = acceptAnswer(body.state, body.content)
+  state.rngSeed = state.rngSeed || body.state.rngSeed || crypto.randomUUID()
   if(state.done){
-    utterance = await phrase(systemPrompt, 'Thank them and confirm you have enough to design their palette. Be concise.', useLLM)
+    const closing = 'Perfect—that’s enough to design your palette.'
+    utterance = await phrase(systemPrompt, closing, useLLM)
     return NextResponse.json({ state, utterance })
   }
+  const prevKey = body.state.currentKey || getCurrentNode(body.state).key
   const next = getCurrentNode(state)
-  utterance = await phrase(systemPrompt, `Acknowledge in ~5 words, then ask: "${next.prompt}"`, useLLM)
+  const ack = ackFor(prevKey, body.content, state.rngSeed || 'x')
+  const ask = askFor(next, state.rngSeed || 'x')
+  const base = buildNextUtterance(ack, ask)
+  utterance = await phrase(systemPrompt, base, useLLM)
   return NextResponse.json({ state, utterance })
 }
 
-async function phrase(systemPrompt: string, userAsk: string, useLLM: boolean): Promise<string>{
-  if(!useLLM){
-    return userAsk.replace(/^.*then ask:\s*/i,'').replace(/^"|"$/g,'')
-  }
+function clampWords(s: string, maxWords = 28){
+  const w = s.split(/\s+/)
+  if(w.length <= maxWords) return s
+  return w.slice(0,maxWords).join(' ') + '…'
+}
+
+async function phrase(systemPrompt: string, base: string, useLLM: boolean): Promise<string>{
+  if(!useLLM) return clampWords(base)
   try{
     if(!process.env.OPENAI_API_KEY) throw new Error('NO_KEY')
     const modName = 'openai'
@@ -52,15 +66,15 @@ async function phrase(systemPrompt: string, userAsk: string, useLLM: boolean): P
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
     const resp = await client.chat.completions.create({
       model: 'gpt-4o-mini',
-      temperature: 0.4,
-      max_tokens: 120,
+      temperature: 0.3,
+      max_tokens: 80,
       messages: [
-        { role:'system', content: systemPrompt },
-        { role:'user', content: userAsk }
+        { role:'system', content: systemPrompt + '\nConstraints: one short acknowledgment then one question; concise.' },
+        { role:'user', content: `Rewrite more naturally: "${base}"` }
       ]
     })
-    return resp.choices[0]?.message?.content?.trim() || userAsk
+    return clampWords(resp.choices[0]?.message?.content?.trim() || base)
   } catch {
-    return userAsk
+    return clampWords(base)
   }
 }

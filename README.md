@@ -256,6 +256,7 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 - Voice input/output uses the browser Web Speech APIs. Works best in Chrome. Gracefully falls back to typing.
 - To enable designer phrasing via LLM, add `OPENAI_API_KEY` in Vercel → Project → Settings → Environment Variables. If unset, onboarding still works deterministically.
 - **Quick replies**: For questions with predefined options, chips appear under the chat. Single-select submits immediately; multi-select supports up to the shown max, then Continue.
+ - **Prompt variety**: Seeded templates provide varied greetings, acknowledgements, and question transitions; with an OpenAI key we lightly rewrite while preserving deterministic structure fallback.
 
 ### Onboarding persistence
 - Each onboarding run creates an `intakes` row keyed by a secure, httpOnly cookie token (no auth required).

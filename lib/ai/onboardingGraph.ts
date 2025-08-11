@@ -13,7 +13,7 @@ export interface QuestionNode {
   when?: (answers: AnswerMap) => boolean
 }
 
-export interface InterviewState { answers: AnswerMap; currentKey?: string; done: boolean }
+export interface InterviewState { answers: AnswerMap; currentKey?: string; done: boolean; rngSeed?: string }
 export interface ChatMessage { role: 'assistant' | 'user'; content: string }
 
 export const nodes: QuestionNode[] = [
