@@ -8,7 +8,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="max-w-content container flex items-center justify-between py-3">
           <Link href="/" className="font-display text-2xl">Colrvia</Link>
           <nav className="flex gap-3">
-            <Link className="text-sm text-ink-subtle hocus:underline" href="/start">Start</Link>
+            <Link className="text-sm text-ink-subtle hocus:underline" href="/designers">Start</Link>
             <Link className="text-sm text-ink-subtle hocus:underline" href="/dashboard">My Stories</Link>
           </nav>
         </div>

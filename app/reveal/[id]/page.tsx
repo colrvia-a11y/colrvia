@@ -120,7 +120,7 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
           <p className="text-sm text-[var(--ink-subtle)]">We couldn't parse a palette for this story. Try generating again or start a new one.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href={`/start?regenerate=${id}`} className="btn btn-primary">Regenerate</Link>
-            <Link href="/start" className="btn btn-secondary">New Story</Link>
+            <Link href="/designers" className="btn btn-secondary">New Story</Link>
           </div>
         </div>
       )}

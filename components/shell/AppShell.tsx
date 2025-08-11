@@ -43,7 +43,7 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
             <Link href="/" className="font-display tracking-tight text-lg">COLRVIA</Link>
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm" aria-label="Primary">
-            <Link href="/start" className="hover:underline">Start</Link>
+            <Link href="/designers" className="hover:underline">Start</Link>
             {user && <Link href="/dashboard" className="hover:underline">My Stories</Link>}
             <Link href="/designers" className="hover:underline">Designers</Link>
             {!checking && !user && <Link href="/sign-in" className="hover:underline">Sign in / Sign up</Link>}
@@ -58,7 +58,7 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
         {menuOpen && (
           <div className="md:hidden px-4 pb-4 animate-fadeIn" aria-label="Mobile menu">
             <div className="flex flex-col gap-2 text-sm">
-              <Link href="/start" className="py-2">Start</Link>
+              <Link href="/designers" className="py-2">Start</Link>
               {user && <Link href="/dashboard" className="py-2">My Stories</Link>}
               <Link href="/designers" className="py-2">Designers</Link>
               {!user && <Link href="/sign-in" className="py-2">Sign in / Sign up</Link>}
@@ -73,7 +73,7 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
         <div className="max-w-6xl mx-auto px-4 py-10 text-sm text-[var(--ink-subtle)] flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Colrvia</p>
           <div className="flex gap-5">
-            <Link href="/start" className="hover:underline">Start</Link>
+            <Link href="/designers" className="hover:underline">Start</Link>
             <Link href="/dashboard" className="hover:underline">Stories</Link>
             <Link href="/designers" className="hover:underline">Designers</Link>
           </div>

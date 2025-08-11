@@ -21,7 +21,7 @@ export default async function Home(){
           <h1 className="font-display text-5xl leading-[1.05] tracking-tight">Design your color story.</h1>
           <p className="text-lg text-[var(--ink-subtle)] max-w-md">Large, legible palettes. Real paint codes. Placement clarity you can trust.</p>
           <div className="flex flex-wrap gap-4 pt-2">
-            <Button as={Link} href="/start" variant="primary">Start a Color Story</Button>
+            <Button as={Link} href="/designers" variant="primary">Start a Color Story</Button>
             <Button as={Link} href="#your-stories" variant="outline">Your Stories</Button>
           </div>
           <div className="relative w-full max-w-sm pt-4">

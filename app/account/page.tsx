@@ -32,7 +32,7 @@ export default async function AccountPage() {
         <header className="flex items-center justify-between"><h2 className="font-medium">Plan & Billing</h2><span className="text-xs uppercase tracking-wide px-2 py-1 rounded-full bg-linen/70">{tier}</span></header>
         <p className="text-sm text-[var(--ink-subtle)]">Manage your subscription and access palette exports.</p>
         {tier === 'free' ? (
-          <Button as={Link} href="/start" variant="primary">Create a Story to Upgrade</Button>
+          <Button as={Link} href="/designers" variant="primary">Create a Story to Upgrade</Button>
         ) : (
           <form action={async () => { 'use server'; }}>
             <Button type="submit" variant="outline">Manage Billing</Button>
