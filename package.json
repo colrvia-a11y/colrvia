@@ -12,7 +12,8 @@
     "db:migrate:print": "echo 'Run SQL in Supabase → SQL Editor → paste → Run'",
     "smoke:insert": "tsx scripts/smoke-insert.ts",
     "backfill:palettes": "tsx scripts/backfill-missing-palettes.ts"
-  ,"seed:sw": "tsx scripts/seed-sw.ts"
+    ,"seed:sw": "tsx scripts/seed-sw.ts"
+    ,"inspect:sw": "tsx scripts/inspect-sw.ts"
   ,"diag:palettes": "tsx scripts/diag-palettes.ts"
   },
   "dependencies": {
