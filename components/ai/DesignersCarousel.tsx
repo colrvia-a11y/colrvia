@@ -87,7 +87,15 @@ export default function DesignersCarousel(){
                     <p className="text-sm md:text-base text-[var(--ink-subtle)] mt-1">{d.tagline}</p>
                     <div className="mt-auto flex items-center justify-between">
                       <div className="text-xs text-[var(--ink-subtle)]">{idx+1} / {designers.length}</div>
-                      <Button as={Link} href={`/onboarding/${d.id}`} className="rounded-full" onClick={()=> track('designer_select',{ designerId:d.id })} aria-label={`Start with ${d.name}`}>Start with {d.short}</Button>
+                      <Button
+                        as={Link}
+                        href={`/start/preferences?designerId=${d.id}`}
+                        className="rounded-full"
+                        onClick={()=> track('designer_select',{ designerId:d.id })}
+                        aria-label={`Choose ${d.name}`}
+                      >
+                        Choose {d.short}
+                      </Button>
                     </div>
                   </div>
                   <div className="absolute right-4 top-4 h-8 w-8 rounded-lg bg-[var(--bg-surface)]/60 backdrop-blur-sm border" aria-hidden />
