@@ -16,7 +16,7 @@ export default function DesignersGrid(){
           <h2 className="text-xl font-medium">{d.name}</h2>
           <p className="text-sm text-[var(--ink-subtle)] mb-4">{d.tagline}</p>
           <div className="mt-auto">
-            <Button as={Link} href={`/onboarding/${d.id}`} className="w-full" onClick={()=> track('designer_select',{ designerId: d.id })} aria-label={`Start with ${d.name}`}>
+            <Button as={Link} href={`/start/preferences?designerId=${d.id}`} className="w-full" onClick={()=> track('designer_select',{ designerId: d.id })} aria-label={`Start with ${d.name}`}>
               Start with {d.short}
             </Button>
           </div>
