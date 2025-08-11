@@ -251,3 +251,4 @@ Added `tests/og.test.ts` for OG text normalization.
 Console hints:
 If you want PostHog: set NEXT_PUBLIC_POSTHOG_KEY (and optional NEXT_PUBLIC_POSTHOG_HOST).
 Run Lighthouse in Chrome DevTools → check PWA + performance.
+\n+### Voice & AI\n+- Voice input/output uses the browser Web Speech APIs. Works best in Chrome. Gracefully falls back to typing.\n+- To enable designer phrasing via LLM, add `OPENAI_API_KEY` in Vercel → Project → Settings → Environment Variables. If unset, onboarding still works deterministically.\n*** End Patch

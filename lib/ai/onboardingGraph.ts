@@ -1,5 +1,6 @@
 // Deterministic finite state graph for onboarding conversation
 // Provides: next(state, userInput) and initial state nodes with prompts
+export type OnboardingKey = 'vibe' | 'room' | 'lighting' | 'brand'
 export type OnboardingStateId =
   | 'start'
   | 'ask-goal'
@@ -17,11 +18,19 @@ export interface OnboardingState {
 }
 
 export interface OnboardingAnswers {
-  goal?: string;
+  goal?: string; // maps to vibe
   room?: string;
   lighting?: string;
   brand?: 'SW' | 'Behr';
 }
+
+export interface InterviewState {
+  answers: OnboardingAnswers;
+  currentKey?: OnboardingKey; // which answer we are collecting next
+  done: boolean;
+}
+
+export interface ChatMessage { role: 'assistant' | 'user'; content: string }
 
 export interface Turn {
   state: OnboardingStateId;
@@ -86,3 +95,46 @@ export function nextState(current: OnboardingStateId, answer: string, a: Onboard
 }
 
 export function isTerminal(id: OnboardingStateId) { return id === 'done'; }
+
+// New structured helpers for API route
+const order: { key: OnboardingKey; state: OnboardingStateId }[] = [
+  { key: 'vibe', state: 'ask-goal' },
+  { key: 'room', state: 'ask-room' },
+  { key: 'lighting', state: 'ask-light' },
+  { key: 'brand', state: 'ask-brand' }
+]
+
+export function startState(): InterviewState {
+  return { answers: {}, currentKey: order[0].key, done: false }
+}
+
+export function getNode(stateId: OnboardingStateId) { return states[stateId] }
+export function getFirstQuestion(){ return states['ask-goal'] }
+
+export function acceptAnswer(prev: InterviewState, content: string): InterviewState {
+  if (prev.done) return prev
+  const nextAnswers = { ...prev.answers }
+  if (prev.currentKey === 'vibe') nextAnswers.goal = content
+  if (prev.currentKey === 'room') nextAnswers.room = content
+  if (prev.currentKey === 'lighting') nextAnswers.lighting = content
+  if (prev.currentKey === 'brand') nextAnswers.brand = /behr/i.test(content) ? 'Behr' : 'SW'
+  const answeredCount = ['vibe','room','lighting','brand'].filter(k => {
+    if (k==='vibe') return !!nextAnswers.goal
+    // @ts-ignore
+    return !!nextAnswers[k]
+  }).length
+  if (answeredCount >= order.length) {
+    return { answers: nextAnswers, currentKey: undefined, done: true }
+  }
+  return { answers: nextAnswers, currentKey: order[answeredCount].key, done: false }
+}
+
+export function mapAnswersToStoryInput(a: OnboardingAnswers){
+  return {
+    brand: (a.brand === 'Behr' ? 'behr' : 'sherwin_williams'),
+    designerKey: 'marisol',
+    vibe: a.goal || 'Cozy Neutral',
+    lighting: a.lighting || 'daylight',
+    room: a.room
+  }
+}
