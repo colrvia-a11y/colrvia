@@ -88,7 +88,8 @@ function StartInner(){
   }
   return (
     <form onSubmit={handleSubmit(submit)} className="pb-36 md:pb-10">
-      <h1 className="font-display text-4xl leading-[1.05] px-4 pt-10 mb-8">Create your color story</h1>
+  <h1 className="font-display text-4xl leading-[1.05] px-4 pt-10 mb-3">Create your color story</h1>
+  <p className="px-4 mb-8 text-sm text-[var(--ink-subtle)]">Want a guide? <a href="/designers" className="underline hover:text-brand">Meet the AI designers</a>.</p>
       <div className="max-w-3xl mx-auto px-4 space-y-8">
         <section className="rounded-2xl border border-linen bg-surface p-6 shadow-soft space-y-5" aria-labelledby="vibe-heading">
           <div>

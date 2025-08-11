@@ -13,7 +13,11 @@ export async function POST(req: NextRequest) {
     const event = stripe.webhooks.constructEvent(body, sig!, secret)
     if (event.type === 'checkout.session.completed') {
       const session: any = event.data.object
-      const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE!, { auth:{ autoRefreshToken:false, persistSession:false } })
+      const admin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth:{ autoRefreshToken:false, persistSession:false } }
+      )
       async function setPro(userId:string, path:string){
         const { data } = await admin.from('profiles').select('tier').eq('user_id', userId).maybeSingle()
         if (data?.tier === 'pro') return { skipped:true }
