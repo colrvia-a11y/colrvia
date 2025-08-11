@@ -36,7 +36,7 @@ export default function BottomTabBar() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t bg-[var(--bg-surface)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--bg-surface)]/70"
+      className="fixed inset-x-0 bottom-0 z-40 bg-[var(--bg-surface)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--bg-surface)]/70"
       role="navigation"
       aria-label="Primary"
     >

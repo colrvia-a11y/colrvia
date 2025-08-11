@@ -233,6 +233,12 @@ npm run build # production build
 
 If modifying motion tokens, re-run Lighthouse to ensure no layout shift regressions (CLS). GitHub Action workflow (`.github/workflows/ci.yml`) now runs install, type-check, lint, test, and build on push / PR.
 
+### Home background image
+- Replace `/public/marketing/home-bg.svg` with your own asset (recommended: WebP for compression quality balance).
+- Sizing: provide at least 1920×1200 (desktop). A single 2400×1600 WebP ( < 400 KB ) generally covers standard breakpoints.
+- Mobile: if you later want a portrait crop, add a media query or conditional `src` swap.
+- Keep hero text readable; adjust the gradient overlay opacity in `app/page.tsx` if your artwork is darker or lighter.
+
 ### Removed Legacy Endpoints (Projects → Stories Migration)
 Legacy project endpoints (`/api/projects/*`) and related UI (project dashboard, project detail page, save-to-project widget, project sharing & image upload routes) were fully retired in favor of a simpler, story‑centric model.
 

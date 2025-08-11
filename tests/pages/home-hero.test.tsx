@@ -11,7 +11,7 @@ describe('Home hero', () => {
     const { getByText } = render(<Home />)
     expect(getByText('instant color confidence')).toBeTruthy()
     expect(getByText('from vibe to walls in minutes.')).toBeTruthy()
-    expect(getByText('real paint codes. clear placements. confidence now.')).toBeTruthy()
+  expect(getByText('real paint codes. clear placements.')).toBeTruthy()
     expect(getByText('Start Color Story')).toBeTruthy()
   })
 })
