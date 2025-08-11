@@ -2,8 +2,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import GradientOverlay from '@/components/ui/GradientOverlay'
-import Button from '@/components/ui/Button'
+import { GradientOverlay, Button } from '@/components/ui'
 import { useReducedMotion } from '@/components/theme/MotionSettings'
 import clsx from 'clsx'
 

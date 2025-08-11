@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest'
 import React, { useState } from 'react'
 import { render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import Chip from '@/components/ui/Chip'
-import Progress from '@/components/ui/Progress'
+import { Chip, Progress } from '@/components/ui'
 
 describe('Chip', ()=>{
   it('toggles aria-pressed when clicked', async ()=>{

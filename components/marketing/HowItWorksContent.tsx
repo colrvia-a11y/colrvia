@@ -3,7 +3,7 @@
 import { Palette, MessageSquare, CheckCircle } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import Button from '@/components/ui/Button'
+import { Button } from '@/components/ui'
 import { track } from '@/lib/analytics'
 import React from 'react'
 

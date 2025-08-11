@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { supabaseServer } from '@/lib/supabase/server'
 import Link from 'next/link'
-import Button from '@/components/ui/Button'
+import { Button } from '@/components/ui'
 import PWABadge from './pwa-badge'
 import { Suspense } from 'react'
 import ReducedMotionToggle from './reduced-motion-toggle'

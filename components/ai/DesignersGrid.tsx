@@ -1,6 +1,5 @@
 "use client"
-import Card from "@/components/ui/Card"
-import Button from "@/components/ui/Button"
+import { Card, Button } from '@/components/ui'
 import { designers } from "@/lib/ai/designers"
 import Link from "next/link"
 import { track } from "@/lib/analytics"

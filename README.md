@@ -9,7 +9,7 @@ Testing offline:
 3. Toggle offline → navigate → offline page appears.
 
 ## Dark Mode
-Using `next-themes` with class strategy. Light = `light`, dark = `theme-dark`. Toggle component: `components/ui/ThemeToggle.tsx` sets theme; tokens rely on Tailwind + custom classes.
+Using `next-themes` with class strategy. Light = `light`, dark = `theme-dark`. Toggle component `ThemeToggle` (exported from `components/ui`) sets theme; tokens rely on Tailwind + custom classes.
 
 ## Analytics
 Client PostHog init in `lib/analytics.ts` (lazy). Provide env `NEXT_PUBLIC_POSTHOG_KEY` (optional) & `NEXT_PUBLIC_POSTHOG_HOST` (defaults). Events used: `variant_open`, `share_image_download`, `cinematic_play`, `cinematic_exit` (more TBD). Vercel page analytics via `<Analytics />` in layout.

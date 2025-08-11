@@ -1,7 +1,7 @@
 "use client"
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import ThemeToggle from '@/components/ui/ThemeToggle'
+import { ThemeToggle } from '@/components/ui'
 import { Menu, User } from 'lucide-react'
 import TabBar from '@/components/nav/TabBar'
 import { supabaseBrowser } from '@/lib/supabase/client'
