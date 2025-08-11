@@ -15,6 +15,9 @@
     ,"seed:sw": "tsx scripts/seed-sw.ts"
     ,"inspect:sw": "tsx scripts/inspect-sw.ts"
   ,"diag:palettes": "tsx scripts/diag-palettes.ts"
+  ,"diag:invalid": "tsx scripts/diag-invalid-stories.ts"
+  ,"migrate:sw": "tsx scripts/migrate-sw-only.ts"
+  ,"fix:invalid": "tsx scripts/force-fix-invalid-stories.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

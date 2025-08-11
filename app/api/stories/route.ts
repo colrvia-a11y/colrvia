@@ -5,6 +5,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { supabaseServer } from '@/lib/supabase/server';
 import { normalizePalette } from '@/lib/palette';
+import { buildPalette, seedPaletteFor } from '@/lib/ai/palette';
+import { getSWSeedPalette } from '@/lib/seed/sw_fallback';
 
 // --- normalization helpers ---
 const normalizeBrand = (b?: string) => {
@@ -23,7 +25,7 @@ const sanitizeTitle = (t?: string) => {
 };
 
 const BodySchema = z.object({
-  brand: z.string().transform(normalizeBrand).refine(v => v === 'sherwin_williams' || v === 'behr', { message: 'brand must be sherwin_williams or behr' }),
+  brand: z.string().transform(normalizeBrand).optional(),
   designerKey: z.enum(['marisol','emily','zane']).default('marisol'),
   title: z.string().max(120).optional().transform(sanitizeTitle),
   vibe: z.string().optional(),
@@ -62,21 +64,46 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'AUTH_MISSING' }, { status: 401 });
   }
 
-  // Build initial (empty) palette structure; if user supplied something in inputs.palette normalize it.
-  let normalizedPalette: any = []
+  // Force brand to sherwin_williams temporarily (SW-only mode)
+  const brand = 'sherwin_williams'
+  // Build initial (empty) palette structure; always attempt AI then fallback to SW seed(s)
+  let normalizedPalette: any[] = []
   try {
-    if((raw as any)?.palette) {
-      normalizedPalette = normalizePalette((raw as any).palette, parsed.brand as any)
+    const aiInput = {
+      designer: parsed.designerKey === 'marisol' ? 'Marisol' : 'Emily', // lightweight mapping
+      vibe: (parsed.vibe as any) || 'Cozy Neutral',
+      brand: 'SW',
+      lighting: (parsed.lighting as any) || 'mixed',
+      hasWarmWood: !!(parsed.inputs as any)?.hasWarmWood,
+      photoUrl: null
+    }
+    let candidate: any = null
+    try { candidate = buildPalette(aiInput as any).swatches } catch {}
+    if(!candidate || candidate.length===0){
+      candidate = seedPaletteFor({ brand: 'SW' })
+    }
+    try {
+      normalizedPalette = normalizePalette(candidate, brand as any)
+    } catch {
+      // fallback to catalog seed palette
+      const seed = await getSWSeedPalette(parsed.vibe)
+      normalizedPalette = normalizePalette(seed, brand as any)
     }
   } catch (e) {
-    console.warn('CREATE_STORY_PALETTE_INVALID', { message: (e as any)?.message })
-    return NextResponse.json({ error: 'PALETTE_INVALID' }, { status: 422 })
+    // final fallback attempt with seed
+    try {
+      const seed = await getSWSeedPalette(parsed.vibe)
+      normalizedPalette = normalizePalette(seed, brand as any)
+    } catch (err){
+      console.error('CREATE_STORY_PALETTE_INVALID', { message: (err as any)?.message })
+      return NextResponse.json({ error: 'PALETTE_INVALID' }, { status: 422 })
+    }
   }
   // DB payload with safe defaults (no unknown columns like title)
   const payload = {
     user_id: user.id,
     designer_key: parsed.designerKey,
-    brand: parsed.brand,
+  brand,
     title: parsed.title ?? null,
     inputs: {
       vibe: parsed.vibe ?? null,

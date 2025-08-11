@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic'
 const Schema = z.object({
   designer: z.enum(['Emily','Zane','Marisol']).default('Emily'),
   vibe: z.enum(['Cozy Neutral','Airy Coastal','Earthy Organic','Modern Warm','Soft Pastels','Moody Blue-Green']),
-  brand: z.enum(['SW','Behr']),
+  brand: z.enum(['SW']).default('SW'),
   lighting: z.enum(['day','evening','mixed']).default('day'),
   hasWarmWood: z.boolean().default(false),
   roomType: z.string().optional().nullable(),
@@ -33,7 +33,7 @@ function StartInner(){
   const { handleSubmit, setValue, watch, formState:{ isSubmitting } } = useForm<FormData>({
     resolver:zodResolver(Schema),
     mode:'onChange',
-    defaultValues:{ designer:'Emily', vibe:'Cozy Neutral', brand:'SW', lighting:'day', hasWarmWood:false }
+  defaultValues:{ designer:'Emily', vibe:'Cozy Neutral', brand:'SW', lighting:'day', hasWarmWood:false }
   })
   const values = watch()
   function normalizeBrandForPost(b:string){
@@ -101,10 +101,10 @@ function StartInner(){
         <section className="rounded-2xl border border-linen bg-surface p-6 shadow-soft space-y-5" aria-labelledby="brand-heading">
           <div>
             <h2 id="brand-heading" className="font-display text-2xl mb-1">Brand</h2>
-            <p className="text-sm text-[var(--ink-subtle)]">Select your preferred paint catalog (more coming soon).</p>
+            <p className="text-sm text-[var(--ink-subtle)]">Sherwin-Williams only for now. <span className="italic opacity-80">Behr coming soon.</span></p>
           </div>
           <div className="flex gap-3">
-            {['SW','Behr'].map(b=> <Chip key={b} active={values.brand===b} onClick={()=>setValue('brand', b as any,{shouldValidate:true})} className="text-sm px-5 py-2">{b}</Chip> )}
+            <Chip active className="text-sm px-5 py-2 cursor-default">SW</Chip>
           </div>
         </section>
         <section className="rounded-2xl border border-linen bg-surface p-6 shadow-soft space-y-5" aria-labelledby="photo-heading">

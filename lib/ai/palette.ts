@@ -42,3 +42,20 @@ export function buildPalette(input: GenerateInput) {
   };
   return { swatches, placements };
 }
+
+// Deterministic seed palette based on brand + vibe fallback
+export function seedPaletteFor(args: { brand: string; vibe?: string }) {
+  const cat = getCatalog(args.brand as any)
+  // pick first neutral for walls, first trim tag, first accent tag etc.
+  const walls = findByTag(args.brand as any,'walls')[0] || cat[0]
+  const trim = cat.find(p=>p.tags?.includes('trim')) || walls
+  const accent = cat.find(p=>p.tags?.includes('accent')) || walls
+  const cabinets = cat.find(p=>p.tags?.includes('neutral') && p.name!==walls.name) || walls
+  return [
+    { ...walls, role:'walls' },
+    { ...trim, role:'trim' },
+    { ...cabinets, role:'cabinets' },
+    { ...accent, role:'accent' },
+    { ...(accent||walls), role:'extra' }
+  ]
+}
