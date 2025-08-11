@@ -384,3 +384,9 @@ npm run test:e2e:ui
 ```
 
 The smoke spec (`e2e/smoke.pw.ts`) covers: home render, start CTA, sign-in reachability, and unauthenticated dashboard redirect. Extend with additional journeys as needed.
+
+### API-driven onboarding (interactive AI)
+- Set `NEXT_PUBLIC_ONBOARDING_MODE=api` to route the onboarding chat through live server APIs with editable rules.
+- Tables: `intake_flows` (rules), `intake_sessions` (progress), `palette_guidelines` (design constraints).
+- Rules DSL: minimal JSON-logic (`==`, `!=`, `>=`, `<=`, `in`, `and`, `or`, `!`, `var` on `answers.*`).
+- You can edit rules & guidelines in the DB without redeploy; make a row `is_active=true` to switch.
