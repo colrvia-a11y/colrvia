@@ -21,14 +21,14 @@ export async function getIndexForUser(userId: string){
 
 export async function markHasVariants(parentId: string){
   try {
-    const admin = createClient(requireEnv('NEXT_PUBLIC_SUPABASE_URL'), requireEnv('SUPABASE_SERVICE_ROLE'), { auth:{ autoRefreshToken:false, persistSession:false } })
+  const admin = createClient(requireEnv('NEXT_PUBLIC_SUPABASE_URL'), requireEnv('SUPABASE_SERVICE_ROLE_KEY'), { auth:{ autoRefreshToken:false, persistSession:false } })
     await admin.from('stories').update({ has_variants:true }).eq('id', parentId)
   } catch {}
 }
 
 export async function recomputeHasVariants(parentId: string){
   try {
-    const admin = createClient(requireEnv('NEXT_PUBLIC_SUPABASE_URL'), requireEnv('SUPABASE_SERVICE_ROLE'), { auth:{ autoRefreshToken:false, persistSession:false } })
+  const admin = createClient(requireEnv('NEXT_PUBLIC_SUPABASE_URL'), requireEnv('SUPABASE_SERVICE_ROLE_KEY'), { auth:{ autoRefreshToken:false, persistSession:false } })
     const { count } = await admin.from('stories').select('id',{ count:'exact', head:true }).eq('parent_id', parentId)
     await admin.from('stories').update({ has_variants: (count??0) > 0 }).eq('id', parentId)
   } catch {}

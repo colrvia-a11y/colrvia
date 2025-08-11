@@ -16,7 +16,7 @@ export async function getUserTier() {
 }
 
 export async function setUserTierAdmin(userId: string, tier: 'free'|'pro') {
-  const admin = createClient(requireEnv('NEXT_PUBLIC_SUPABASE_URL'), requireEnv('SUPABASE_SERVICE_ROLE'), { auth: { autoRefreshToken:false, persistSession:false } })
+  const admin = createClient(requireEnv('NEXT_PUBLIC_SUPABASE_URL'), requireEnv('SUPABASE_SERVICE_ROLE_KEY'), { auth: { autoRefreshToken:false, persistSession:false } })
   const { error } = await admin.from('profiles').update({ tier }).eq('user_id', userId)
   if (error) throw new Error('Failed updating tier: ' + error.message)
   return true
