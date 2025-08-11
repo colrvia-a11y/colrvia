@@ -70,8 +70,42 @@ Account page shows simple installable badge (`app/account/pwa-badge.tsx`).
 ## Copy Codes
 Reveal page “Copy all codes” copies full lines: `Brand — Name (CODE) #hex [role]`.
 
-## Stripe Billing
-Checkout session sets `client_reference_id`, `metadata.user_id`, and reuses/creates a Stripe Customer with `metadata.user_id`. Webhook (`/api/stripe/webhook`) resolves user via layered fallbacks (client_reference_id -> session metadata -> customer metadata -> email) and is idempotent (skips if already pro). Replay helper: `scripts/replay-webhook.ts`.
+## Stripe Billing & Webhooks
+Stripe integration emphasizes verified signatures, idempotency, and minimal state.
+
+Key pieces:
+- Checkout route (server) creates a Session with `client_reference_id` + `metadata.user_id`, reusing/creating a Customer keyed by `metadata.user_id`.
+- Webhook: `POST /api/stripe/webhook` (Node runtime, force-dynamic).
+  1. Read raw body text before JSON.parse for signature verification.
+  2. Verify with `STRIPE_WEBHOOK_SECRET` (`stripe-signature` header) using Stripe `constructEvent`.
+  3. If event id already exists in `stripe_events`, short-circuit (idempotent).
+  4. Run `handleEvent` (TODO: subscription/tier sync) only on first receipt.
+  5. Persist event: (`id`, `type`, `created`, `raw_payload`).
+- Supabase admin: `lib/supabase/admin.ts` centralizes service-role client; never import client-side.
+- Stripe client: `lib/stripe.ts` fixes `apiVersion` and uses Fetch.
+
+`stripe_events` schema excerpt:
+```
+id text primary key,
+type text,
+created timestamptz,
+raw_payload jsonb,
+inserted_at timestamptz default now()
+```
+
+Testing: `tests/api/stripe-webhook.test.ts` covers missing secret (500) + accepted event (200). Add a duplicate event test later.
+
+Replay: Use Stripe dashboard replay or local helper `scripts/replay-webhook.ts`; safe due to idempotency guard.
+
+Security & Ops:
+- Fast failure when secrets absent.
+- Raw event stored for audit; consider retention policy as volume grows.
+- Offload future heavy work (entitlement sync) to background jobs.
+
+Future:
+- Implement subscription entitlement propagation on `checkout.session.completed` / `customer.subscription.updated`.
+- Add duplicate-event and subscription update tests.
+- Optional metrics endpoint for billing health.
 
 ## Brand Assets & OG
 Icons under `public/icons/` (replace the provided SVG & generate PNGs). OG share image endpoint gracefully falls back to system fonts if local font files are absent.
@@ -144,7 +178,7 @@ Copy & Tone
 
 PWA
 - ✓ Manifest + service worker offline fallbacks
-- ✓ Theme-color meta (light/dark)
+- ✓ Theme-color meta (light & dark)
 - △ Real production icon assets (currently placeholders)
 - ○ iOS splash screens (optional)
 
@@ -317,8 +351,36 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 	- `NEXT_PUBLIC_POSTHOG_KEY` (key)
 	- `NEXT_PUBLIC_POSTHOG_HOST` (optional host, defaults US cloud)
  - **Server telemetry (optional)**: set `POSTHOG_KEY` (and optional `POSTHOG_HOST`) to enable backend analytics. Events: `orch_start`, `orch_candidates`, `orch_llm_used`, `orch_fallback`, `orch_result`, `stories_create_source`, `stories_create_ok`, `stories_create_fail`, `stories_create_reject`. Only low‑cardinality props (counts, enums, booleans) are sent—no PII or free text.
-\n+### Bottom navigation
-\n+### How it works
+
+### Bottom navigation
+
+### How it works
 - The Home page includes a small **“See how it works”** link under the primary CTA. It opens a quick modal, and there’s also a full **/how-it-works** page.
  Modal lifecycle events: `howitworks_modal_open`, `howitworks_modal_close` (with `{ ms, origin, action }`), and modal `howitworks_start` includes `{ ms, origin }`.
-\n## Design Tokens\n\nAll brand tokens are single-sourced in `styles/tokens.css`. Do not redefine tokens in `app/globals.css` or components. Update values in `styles/tokens.css` only.\n\n## E2E Tests (Playwright)\n\nFirst time setup:\n\n```bash\nnpm i\nnpx playwright install --with-deps\n```\n\nRun smoke suite:\n\n```bash\nnpm run test:e2e\n```\n\nInteractive UI mode:\n\n```bash\nnpm run test:e2e:ui\n```\n\nThe smoke spec (`e2e/smoke.spec.ts`) covers: home render, start CTA, sign-in reachability, and unauthenticated dashboard redirect. Extend with additional journeys as needed.\n*** End Patch
+
+## Design Tokens
+
+All brand tokens are single-sourced in `styles/tokens.css`. Do not redefine tokens in `app/globals.css` or components. Update values in `styles/tokens.css` only.
+
+## E2E Tests (Playwright)
+
+First time setup:
+
+```bash
+npm i
+npx playwright install --with-deps
+```
+
+Run smoke suite:
+
+```bash
+npm run test:e2e
+```
+
+Interactive UI mode:
+
+```bash
+npm run test:e2e:ui
+```
+
+The smoke spec (`e2e/smoke.pw.ts`) covers: home render, start CTA, sign-in reachability, and unauthenticated dashboard redirect. Extend with additional journeys as needed.

@@ -1,11 +1,11 @@
 import Stripe from 'stripe'
-/**
- * Server-only Stripe client. API version can be configured via STRIPE_API_VERSION
- * (falls back to Stripe library default).
- */
+// lib/stripe.ts
 export function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY
-  if (!key) throw new Error('Missing STRIPE_SECRET_KEY')
-  const apiVersion = process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion | undefined
-  return apiVersion ? new Stripe(key, { apiVersion }) : new Stripe(key)
+  if (!key) throw new Error("STRIPE_SECRET_KEY is missing")
+  return new Stripe(key, {
+    // Cast to any to tolerate pinned version differing from types package snapshot
+    apiVersion: '2024-06-20' as any,
+    httpClient: Stripe.createFetchHttpClient(),
+  })
 }

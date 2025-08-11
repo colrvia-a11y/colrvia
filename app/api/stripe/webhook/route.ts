@@ -1,52 +1,80 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getStripe } from '@/lib/stripe'
-import { setUserTierAdmin } from '@/lib/profile'
-import { createClient } from '@supabase/supabase-js'
-export const runtime = 'nodejs'
-export async function POST(req: NextRequest) {
-  const body = await req.text()
-  const sig = req.headers.get('stripe-signature')
-  const secret = process.env.STRIPE_WEBHOOK_SECRET
-  if (!secret) return NextResponse.json({ error:'MISSING_WEBHOOK_SECRET' }, { status:500 })
-  try {
-    const stripe = getStripe()
-    const event = stripe.webhooks.constructEvent(body, sig!, secret)
-    if (event.type === 'checkout.session.completed') {
-      const session: any = event.data.object
-      const admin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        { auth:{ autoRefreshToken:false, persistSession:false } }
-      )
-      async function setPro(userId:string, path:string){
-        const { data } = await admin.from('profiles').select('tier').eq('user_id', userId).maybeSingle()
-        if (data?.tier === 'pro') return { skipped:true }
-        await setUserTierAdmin(userId,'pro')
-        console.log('WEBHOOK_UPGRADE', { userId, path })
-        return { skipped:false }
-      }
-      let userId: string | undefined
-      let path = ''
-      if (session.client_reference_id) { userId = session.client_reference_id; path='client_reference_id' }
-      if (!userId && session.metadata?.user_id) { userId = session.metadata.user_id; path='session_metadata' }
-      // fallback via customer metadata
-      if (!userId && session.customer) {
-        const cust = await getStripe().customers.retrieve(session.customer as string)
-        if (!('deleted' in cust)) {
-          // @ts-ignore
-          if (cust.metadata?.user_id) { userId = cust.metadata.user_id; path='customer_metadata' }
-        }
-      }
-      // fallback via email
-      if (!userId && session.customer_details?.email) {
-        const { data: prof } = await admin.from('profiles').select('user_id').limit(1) // naive; real impl: map email->auth user
-        if (prof && prof[0]) { userId = prof[0].user_id; path='email_fallback' }
-      }
-      if (userId) await setPro(userId, path)
-    }
-    return NextResponse.json({ received:true })
-  } catch (e:any) {
-    console.error('WEBHOOK_ERROR', e.message)
-    return NextResponse.json({ error:'WEBHOOK_ERROR' }, { status:400 })
+// app/api/stripe/webhook/route.ts
+import { NextResponse } from "next/server"
+import { supabaseAdmin } from "@/lib/supabase/admin"
+import { getStripe } from "@/lib/stripe"
+
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+
+type StripeEvent = {
+  id: string
+  type: string
+  data: { object: any }
+  created: number
+}
+
+async function alreadyProcessed(id: string) {
+  const admin = supabaseAdmin()
+  const { data } = await admin.from("stripe_events").select("id").eq("id", id).single()
+  return !!data
+}
+
+async function recordProcessed(evt: StripeEvent) {
+  const admin = supabaseAdmin()
+  await admin.from("stripe_events").insert({
+    id: evt.id,
+    type: evt.type,
+    created_at: new Date(evt.created * 1000).toISOString(),
+    raw: evt as any,
+    processed_at: new Date().toISOString(),
+  })
+}
+
+async function handleEvent(evt: StripeEvent) {
+  switch (evt.type) {
+    case "checkout.session.completed":
+    case "customer.subscription.created":
+    case "customer.subscription.updated":
+    case "customer.subscription.deleted":
+      // TODO: Implement subscription sync. Safe no-op for now.
+      break
+    default:
+      break
   }
+}
+
+export async function POST(req: Request) {
+  const stripe = getStripe()
+  const secret = process.env.STRIPE_WEBHOOK_SECRET
+  if (!secret) {
+    return NextResponse.json({ ok: false, error: "Webhook not configured" }, { status: 500 })
+  }
+  const rawBody = await req.text()
+  const sig = req.headers.get("stripe-signature") || ""
+
+  let evt: StripeEvent
+  try {
+    // @ts-ignore runtime alignment
+    evt = stripe.webhooks.constructEvent(rawBody, sig, secret) as StripeEvent
+  } catch (err: any) {
+    return NextResponse.json({ ok: false, error: `Invalid signature: ${err?.message || "unknown"}` }, { status: 400 })
+  }
+
+  if (await alreadyProcessed(evt.id)) {
+    return NextResponse.json({ ok: true, idempotent: true })
+  }
+
+  try {
+    await handleEvent(evt)
+  } catch (err: any) {
+    return NextResponse.json({ ok: false, error: "Handler failed" }, { status: 500 })
+  }
+
+  try {
+    await recordProcessed(evt)
+  } catch {
+    return NextResponse.json({ ok: true, recorded: false }, { status: 202 })
+  }
+
+  return NextResponse.json({ ok: true })
 }
