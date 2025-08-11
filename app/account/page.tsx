@@ -35,7 +35,7 @@ export default async function AccountPage() {
           <Button as={Link} href="/start" variant="primary">Create a Story to Upgrade</Button>
         ) : (
           <form action={async () => { 'use server'; }}>
-            <Button type="submit" variant="secondary">Manage Billing</Button>
+            <Button type="submit" variant="outline">Manage Billing</Button>
           </form>
         )}
       </section>

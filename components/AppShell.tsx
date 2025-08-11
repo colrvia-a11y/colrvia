@@ -1,36 +1,20 @@
-'use client'
+"use client"
 import Link from 'next/link'
-import MagneticHover from '@/components/motion/MagneticHover'
-import Button from '@/components/ui/Button'
-import ThemeToggle from '@/components/ui/ThemeToggle'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-white text-neutral-900">
-      <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white border-b">
-        <div className="container-xy h-14 flex items-center justify-between">
-          <Link href="/" className="font-semibold tracking-wider">COLRVIA</Link>
-          <nav className="hidden sm:flex items-center gap-4 text-sm">
-            <Link href="/designers" className="hover:underline">Designers</Link>
-            <Link href="/dashboard" className="hover:underline">Dashboard</Link>
-            <Link href="/sign-in" className="hover:underline">Sign in</Link>
+    <div className="min-h-screen bg-paper text-ink">
+      <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-paper/70 bg-paper/90 border-b border-linen">
+        <div className="max-w-content container flex items-center justify-between py-3">
+          <Link href="/" className="font-display text-2xl">Colrvia</Link>
+          <nav className="flex gap-3">
+            <Link className="text-sm text-ink-subtle hocus:underline" href="/start">Start</Link>
+            <Link className="text-sm text-ink-subtle hocus:underline" href="/dashboard">My Stories</Link>
           </nav>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <MagneticHover><Button as={Link} href="/designers">Get started</Button></MagneticHover>
-          </div>
         </div>
       </header>
-      <main>{children}</main>
-      <footer className="mt-20 border-t">
-        <div className="container-xy py-8 text-sm text-neutral-500 flex items-center justify-between">
-          <span>© {new Date().getFullYear()} Colrvia</span>
-          <div className="flex gap-4">
-            <Link href="/designers" className="hover:underline">Start</Link>
-            <Link href="/dashboard" className="hover:underline">Dashboard</Link>
-          </div>
-        </div>
-      </footer>
+      <main className="container max-w-content py-5 md:py-8">{children}</main>
+      <footer className="container max-w-content py-10 text-center text-sm text-ink-subtle">Good-enough gorgeous, fast.</footer>
     </div>
   )
 }

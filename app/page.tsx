@@ -22,7 +22,7 @@ export default async function Home(){
           <p className="text-lg text-[var(--ink-subtle)] max-w-md">Large, legible palettes. Real paint codes. Placement clarity you can trust.</p>
           <div className="flex flex-wrap gap-4 pt-2">
             <Button as={Link} href="/start" variant="primary">Start a Color Story</Button>
-            <Button as={Link} href="#your-stories" variant="secondary">Your Stories</Button>
+            <Button as={Link} href="#your-stories" variant="outline">Your Stories</Button>
           </div>
           <div className="relative w-full max-w-sm pt-4">
             <input type="search" placeholder="Search saved stories" className="w-full rounded-xl border border-linen bg-surface px-4 py-3 text-sm shadow-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40" aria-label="Search stories" />

@@ -8,45 +8,38 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        paper: '#F7F5EF',
-        surface: '#FFFFFF',
-        linen: '#E7E1D7',
-        ink: '#1E1B16',
-        taupe: '#5E5A53',
-        brand: {
-          DEFAULT: '#2F5D50',
-          500: '#2F5D50',
-          600: '#284E43',
-          700: '#213F37'
-        },
-        accent: {
-          DEFAULT: '#C07A5A',
-          500: '#C07A5A'
-        },
-        highlight: '#F7BE58',
-        info: '#3869D6',
-        success: '#2E7D32',
-        warning: '#DC6803',
-        danger: '#D92D20'
+        paper: "var(--paper)",
+        surface: "var(--surface)",
+        linen: "var(--linen)",
+        ink: "var(--ink)",
+        "ink-subtle": "var(--ink-subtle)",
+        brand: "var(--brand)",
+        "brand-hover": "var(--brand-hover)",
+        "brand-contrast": "var(--brand-contrast)",
+        accent: "var(--accent)",
+        highlight: "var(--highlight)",
+        info: "var(--info)",
+        success: "var(--success)",
+        warning: "var(--warning)",
+        danger: "var(--danger)",
       },
       borderRadius: {
-        xl: '16px',
-        '2xl': '24px'
+        DEFAULT: "var(--radius)",
+        lg: "var(--radius-lg)",
+        sm: "var(--radius-sm)",
+      },
+      container: { center: true, padding: "16px" },
+      maxWidth: { content: "72rem" }, // ~1152px
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["Fraunces", "Inter", "ui-serif", "serif"],
       },
       boxShadow: {
-        lift: '0 6px 18px rgba(15,14,12,0.10)',
-        soft: '0 2px 8px rgba(15,14,12,0.06)'
+        card: "0 6px 24px rgba(0,0,0,0.06)",
       },
       transitionTimingFunction: {
-        colrvia: 'cubic-bezier(0.2,0.8,0.2,1)'
+        springy: "cubic-bezier(0.2, 0.8, 0.2, 1)",
       },
-      transitionDuration: {
-        swatch: '400ms'
-      },
-      fontFamily: {
-        display: ['var(--font-display)','Fraunces','serif'],
-        sans: ['var(--font-sans)','Inter','system-ui','sans-serif']
-      }
     }
   },
   plugins: []
