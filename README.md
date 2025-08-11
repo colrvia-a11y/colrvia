@@ -261,3 +261,10 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 - Each onboarding run creates an `intakes` row keyed by a secure, httpOnly cookie token (no auth required).
 - Routes: `POST /api/intakes/start`, `GET /api/intakes/resume`, `POST /api/intakes/patch`, `POST /api/intakes/finalize`.
 - State (answers + chat messages) is saved after every turn; on finalize the created `story_id` is linked and the cookie cleared.
+
+### Analytics (optional)
+- PostHog instrumentation is gated by `NEXT_PUBLIC_POSTHOG_KEY` and never sends raw free‑text answers.
+- Events: `designer_select`, `intake_start`, `intake_resume`, `onboarding_question`, `onboarding_answer` (choices or length only), `voice_toggle`, `mic_toggle`, `tts_speak`, `onboarding_complete`.
+- Env vars:
+	- `NEXT_PUBLIC_POSTHOG_KEY` (key)
+	- `NEXT_PUBLIC_POSTHOG_HOST` (optional host, defaults US cloud)

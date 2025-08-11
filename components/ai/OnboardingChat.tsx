@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input"
 import { Mic, MicOff, Send } from "lucide-react"
 import { VoiceToggle } from "./VoiceToggle"
 import { getFirstQuestion, getCurrentNode, mapAnswersToStoryInput, type InterviewState, type ChatMessage, startState, acceptAnswer } from "@/lib/ai/onboardingGraph"
+import { track } from "@/lib/analytics"
 import { useRouter } from "next/navigation"
 
 type Props = { designerId: string }
@@ -38,7 +39,7 @@ export default function OnboardingChat({ designerId }: Props) {
     return ("webkitSpeechRecognition" in window) || ("SpeechRecognition" in window)
   }, [])
 
-  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem('colrvia_voiceOn', voiceOn? '1':'0') }, [voiceOn])
+  useEffect(() => { if (typeof window !== 'undefined') localStorage.setItem('colrvia_voiceOn', voiceOn? '1':'0'); track('voice_toggle',{ on: voiceOn }) }, [voiceOn])
 
   useEffect(() => {
     if (!speechSupported) return
@@ -71,16 +72,20 @@ export default function OnboardingChat({ designerId }: Props) {
             setMessages(j.intake.messages ?? [])
             setState(j.intake.state ?? startState())
             setIntakeReady(true)
+            track('intake_resume',{ designerId })
           }
         }
         if(!ignore && !intakeReady){
           await fetch('/api/intakes/start',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ designerId }) })
           setIntakeReady(true)
+          track('intake_start',{ designerId })
         }
         if(!ignore && messages.length === 0){
           const first = getFirstQuestion()
           const greet = `Hi! Let's build your palette. ${first.prompt}`
           setMessages([{ role:'assistant', content: greet }])
+          const firstNode = getFirstQuestion()
+          track('onboarding_question',{ designerId, key: firstNode.key, type: firstNode.type })
           if(voiceOn) speak(greet)
         }
       } finally {
@@ -106,10 +111,10 @@ export default function OnboardingChat({ designerId }: Props) {
     synthRef.current.speak(u)
   }
 
-  async function submit(value?: string) {
+  async function submit(value?: string, source: 'chips' | 'text' | 'voice' = 'text') {
     const content = (value ?? input).trim()
     if (!content) return
-    setMessages(prev => [...prev, { role:'user', content }])
+  setMessages(prev => [...prev, { role:'user', content }])
     setInput("")
   const newState = acceptAnswer(state, content)
     setState(newState)
@@ -124,6 +129,7 @@ export default function OnboardingChat({ designerId }: Props) {
           const created = await resp.json()
             if(created?.id){
               try { await fetch('/api/intakes/finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ storyId: created.id }) }) } catch {}
+              track('onboarding_complete',{ designerId, answers: Object.keys(newState.answers).length })
               router.push(`/reveal/${created.id}`)
             }
         }
@@ -132,6 +138,11 @@ export default function OnboardingChat({ designerId }: Props) {
     }
   const nextQ = getCurrentNode(newState).prompt
     setMessages(prev => [...prev, { role:'assistant', content: nextQ }])
+    try {
+      const node = getCurrentNode(newState)
+      track('onboarding_answer', node.options? { designerId, key: node.key, type: node.type, source, hasOptions:true } : { designerId, key: node.key, type: node.type, source, len: content.length })
+      track('onboarding_question',{ designerId, key: getCurrentNode(newState).key, type: getCurrentNode(newState).type })
+    } catch {}
     // patch persistence
     try {
       await fetch('/api/intakes/patch',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ state: newState, messages: [...messages, { role:'user', content }, { role:'assistant', content: nextQ }], done: newState.done }) })
@@ -141,8 +152,8 @@ export default function OnboardingChat({ designerId }: Props) {
 
   function toggleMic(){
     if(!speechSupported || !recogRef.current) return
-    if(recognizing){ recogRef.current.stop(); return }
-    try{ recogRef.current.start() }catch{}
+    if(recognizing){ recogRef.current.stop(); track('mic_toggle',{ on:false }); return }
+    try{ recogRef.current.start(); track('mic_toggle',{ on:true }) }catch{}
   }
 
   return (
@@ -175,7 +186,7 @@ export default function OnboardingChat({ designerId }: Props) {
                 type="button"
                 onClick={()=>{
                   if(!isMulti){
-                    submit(opt)
+                    submit(opt,'chips')
                     return
                   }
                   setMultiTemp(prev => {
