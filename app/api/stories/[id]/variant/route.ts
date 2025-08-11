@@ -1,3 +1,4 @@
+import type { VariantPostRes } from '@/types/api'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,7 @@ const VariantBodySchema = z.object({
 type VariantBody = z.infer<typeof VariantBodySchema>
 
 export async function GET() {
-  return NextResponse.json({ error: 'USE_POST' }, { status: 405 })
+  return NextResponse.json<VariantPostRes>({ error: 'USE_POST' }, { status: 405 })
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     raw = await req.json()
   } catch {
     console.warn('VARIANT_POST_INVALID_JSON', { storyId })
-    return NextResponse.json({ error: 'INVALID_JSON' }, { status: 400 })
+  return NextResponse.json<VariantPostRes>({ error: 'INVALID_JSON' }, { status: 400 })
   }
 
   // 2) Validate body
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   } catch (e) {
     const issues = (e as z.ZodError).issues?.map(i => ({ path: i.path.join('.'), message: i.message }))
     console.warn('VARIANT_POST_INVALID_INPUT', { storyId, issues })
-    return NextResponse.json({ error: 'INVALID_INPUT', issues }, { status: 422 })
+  return NextResponse.json<VariantPostRes>({ error: 'INVALID_INPUT', issues }, { status: 422 })
   }
 
   // 3) Auth
@@ -47,13 +48,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { data: { user }, error: userErr } = await supabase.auth.getUser()
   if (userErr || !user) {
     console.warn('VARIANT_POST_UNAUTH', { storyId })
-    return NextResponse.json({ error: 'UNAUTH' }, { status: 401 })
+  return NextResponse.json<VariantPostRes>({ error: 'UNAUTH' }, { status: 401 })
   }
 
   // 4) Rate limit
   const limit = limitVariant(user.id)
   if (!limit.ok) {
-    return NextResponse.json({ error: 'RATE_LIMIT', scope: limit.scope, retryAfter: limit.retryAfter }, { status: 429 })
+  return NextResponse.json<VariantPostRes>({ error: 'RATE_LIMIT', scope: limit.scope, retryAfter: limit.retryAfter } as any, { status: 429 })
   }
 
   // 5) Load story (RLS ensures ownership)
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .single()
   if (error || !story) {
     console.warn('VARIANT_POST_NOT_FOUND', { storyId })
-    return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404 })
+  return NextResponse.json<VariantPostRes>({ error: 'NOT_FOUND' }, { status: 404 })
   }
 
   // 6) Normalize base palette
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     base = normalizePalette(Array.isArray(inputPalette) ? inputPalette : (inputPalette as any), brand)
   } catch {
     console.warn('VARIANT_POST_BAD_PALETTE', { storyId })
-    return NextResponse.json({ error: 'INVALID_PALETTE' }, { status: 422 })
+  return NextResponse.json<VariantPostRes>({ error: 'INVALID_PALETTE' }, { status: 422 })
   }
 
   // 7) Build + decode variant
@@ -84,9 +85,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const variant = Array.isArray(rawVariant) ? rawVariant : decodePalette(rawVariant as any)
   if (!Array.isArray(variant) || variant.length === 0) {
     console.error('VARIANT_POST_BUILD_FAIL', { storyId })
-    return NextResponse.json({ error: 'VARIANT_BUILD_FAILED' }, { status: 500 })
+  return NextResponse.json<VariantPostRes>({ error: 'VARIANT_BUILD_FAILED' }, { status: 500 })
   }
 
   console.log('VARIANT_POST_OK', { storyId, mode: body.mode, ms: Date.now() - start })
-  return NextResponse.json({ variant })
+  return NextResponse.json<VariantPostRes>({ variant })
 }

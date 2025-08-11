@@ -34,9 +34,11 @@ describe('/api/stories validation', () => {
     expect(res.status).toBe(400)
   })
 
-  it('returns 422/400/500 on invalid input (empty object)', async () => {
-    const req = new Request('http://localhost/api/stories', { method: 'POST', body: JSON.stringify({}) })
-    const res = await storiesRoute.POST(req as any)
-    expect([422, 400, 500]).toContain(res.status)
+    it('returns 422 on invalid input (empty object)', async () => {
+      const req = new Request('http://localhost/api/stories', { method: 'POST', body: JSON.stringify({}) })
+      const res = await storiesRoute.POST(req as any)
+      expect(res.status).toBe(422)
+      const json = await res.json()
+      expect(json.error).toBe('INVALID_INPUT')
   })
 })
