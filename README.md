@@ -304,5 +304,5 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
  - **Server telemetry (optional)**: set `POSTHOG_KEY` (and optional `POSTHOG_HOST`) to enable backend analytics. Events: `orch_start`, `orch_candidates`, `orch_llm_used`, `orch_fallback`, `orch_result`, `stories_create_source`, `stories_create_ok`, `stories_create_fail`, `stories_create_reject`. Only low‑cardinality props (counts, enums, booleans) are sent—no PII or free text.
 \n+### Bottom navigation
 \n+### How it works
-- The Home page includes a small **“See how it works (1 min)”** link under the primary CTA. It opens a quick modal, and there’s also a full **/how-it-works** page.
+- The Home page includes a small **“See how it works”** link under the primary CTA. It opens a quick modal, and there’s also a full **/how-it-works** page.
  Modal lifecycle events: `howitworks_modal_open`, `howitworks_modal_close` (with `{ ms, origin, action }`), and modal `howitworks_start` includes `{ ms, origin }`.
