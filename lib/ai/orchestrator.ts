@@ -1,4 +1,6 @@
 import type { DesignInput, Palette, PaletteRole, Swatch, Color } from './schema'
+import { validatePalette } from './validate'
+import { PALETTE_GUIDELINES } from './guidelines'
 import { byBrand, isNearWhite, isNeutral, contrastScore, excludeByAvoid } from './catalog'
 import { makeRNG, pick } from '@/lib/utils/seededRandom'
 import { capture, enabled as analyticsEnabled } from '@/lib/analytics/server'
@@ -39,7 +41,12 @@ function assignRolesDeterministic(input: DesignInput, C: Candidates): Palette {
 }
 
 function systemPrompt() {
-  return `You are a senior interior colorist. Stay within provided candidate colors only; do not invent colors.\nYour job: pick 5 swatches (primary, secondary, accent, trim, ceiling) from candidates and return strict JSON.\nRules:\n- Aim for 60/30/10 balance (primary/secondary/accent). Trim and ceiling whites should be neutral whites.\n- Respect contrast preference: Softer (low), Balanced (mid), Bolder (high).\n- Respect vibe words and lighting.\n- Never output prose; only JSON in the exact schema.`
+  // Keep short, but include the centralized rules.
+  return [
+    'You are a senior interior colorist.',
+    'Stay within provided candidates.',
+    PALETTE_GUIDELINES.trim()
+  ].join('\n')
 }
 
 function asKey(c: any) {
@@ -127,23 +134,36 @@ async function tryLlmPick(input: DesignInput, candidates: Candidates): Promise<P
     required: ['swatches','placements'],
     additionalProperties: false
   }
-  try {
+  // helper to call model with optional "fix" note
+  async function callOnce(fixNote?: string) {
+    const sys = systemPrompt()
+    const user = {
+      role: 'user' as const,
+      content: JSON.stringify({ input, candidates: payload, schema })
+    }
+    const messages: any[] = [{ role: 'system', content: sys }, user]
+    if (fixNote) messages.push({ role: 'system', content: `Fix the prior output: ${fixNote}` })
     const resp = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0.2,
-      response_format: { type: 'json_schema', json_schema: { name: 'Palette', schema, strict: true } },
-      messages: [
-        { role: 'system', content: systemPrompt() },
-        { role: 'user', content: JSON.stringify(payload) }
-      ]
+      response_format: { type: 'json_object' },
+      messages
     })
-    const raw = resp.choices?.[0]?.message?.content
-    let parsed: Palette | null = null
-    try { parsed = raw ? JSON.parse(raw) as Palette : null } catch { parsed = null }
-    const fallback = assignRolesDeterministic(input, candidates)
-    const cleaned = sanitizeLlmPalette(parsed, candidates, fallback)
+    const parsed = JSON.parse(resp.choices[0]?.message?.content || '{}')
+    return sanitizeLlmPalette(parsed, candidates, fallback)
+  }
+  try {
+    // First attempt
+    let cleaned = await callOnce()
+    // If present but invalid, ask model to fix using our validator error
+    if (cleaned) {
+      const v = validatePalette(cleaned as any)
+      if (!v.ok) {
+        cleaned = await callOnce(`Validation error: ${v.error}. Use only provided candidates and include exactly one of each role.`)
+      }
+    }
     if (analyticsEnabled()) {
-      await capture('orch_llm_used', {
+      await capture('orch_llm', {
         ok: Boolean(cleaned && cleaned.swatches?.length >= 5),
         neutrals: candidates.neutrals.length,
         whites: candidates.whites.length,

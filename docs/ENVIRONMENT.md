@@ -12,6 +12,11 @@ Required runtime variables:
 Optional:
 - STRIPE_API_VERSION: Pin Stripe API version
 - OPENAI_API_KEY: Enables enhanced AI designer (otherwise deterministic local logic only)
+- AI_ALLOW_CLIENT_PALETTE: "true" to accept a client-provided palette_v2 payload (dev/testing only). Defaults to false.
+
+### AI Behavior
+- If `OPENAI_API_KEY` is **not** set, palette generation falls back to deterministic logic.
+- If set, we use a constrained LLM pass with a single automatic correction attempt when validation fails.
 
 Development only helpers (scripts/): none strictly required.
 
