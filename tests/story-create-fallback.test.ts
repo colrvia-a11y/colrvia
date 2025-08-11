@@ -26,7 +26,10 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 // Mock palette builder to return empty swatches triggering fallback
-vi.spyOn(orchestrator, 'designPalette').mockImplementation(() => ({ swatches: [] as any, placements: { primary:60, secondary:30, accent:10, trim:5, ceiling:5 } as any }))
+vi.spyOn(orchestrator, 'designPalette').mockResolvedValue({
+  swatches: [] as any,
+  placements: { primary:60, secondary:30, accent:10, trim:5, ceiling:5 } as any,
+})
 
 // Mock seedPaletteFor to return empty to force repair code path
 vi.spyOn(paletteModule, 'seedPaletteFor').mockImplementation(() => [])
