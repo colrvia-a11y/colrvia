@@ -5,32 +5,36 @@ export type Designer = {
   tagline: string;
   style: string; // prompt style or description
   short: string; // short CTA label
+  heroImage: string; // path to hero image asset
 };
 
 export const designers: Designer[] = [
   {
+    id: 'therapist',
+    name: 'Color Therapist',
+    avatar: '🛋️',
+    tagline: 'Warm, validating, gently curious.',
+    style: 'warm, validating, one sentence acknowledgement then one short question',
+    short: 'Therapist',
+    heroImage: '/designers/therapist.svg'
+  },
+  {
     id: 'minimalist',
-    name: 'Minimalist Mae',
+    name: 'Bold Minimalist',
     avatar: '🧊',
     tagline: 'Clean, calm, straight to the point.',
     style: 'succinct, structured, minimalist, offers 1 concise suggestion at a time',
-    short: 'Mae'
+    short: 'Mae',
+    heroImage: '/designers/minimalist.svg'
   },
   {
-    id: 'playful',
-    name: 'Playful Piper',
-    avatar: '🎈',
-    tagline: 'Upbeat, colorful metaphors, encouraging.',
-    style: 'cheerful, metaphorical, encouraging but still concise',
-    short: 'Piper'
-  },
-  {
-    id: 'pro',
-    name: 'Pro Reese',
-    avatar: '📐',
-    tagline: 'Seasoned interior pro. Practical & decisive.',
-    style: 'professional, decisive, grounded in interior design practice',
-    short: 'Reese'
+    id: 'naturalist',
+    name: 'Cozy Naturalist',
+    avatar: '🌿',
+    tagline: 'Friendly, calm, nature-inspired.',
+    style: 'friendly, calm, nature-inspired, simple and soothing',
+    short: 'Naturalist',
+    heroImage: '/designers/naturalist.svg'
   }
 ];
 
