@@ -10,6 +10,7 @@ import SupabaseListener from '@/components/providers/SupabaseListener'
 import { ThemeProvider } from 'next-themes'
 import { Analytics } from '@vercel/analytics/react'
 import { MotionProvider } from '@/components/theme/MotionSettings'
+import AmbientEdge from '@/components/ui/ambient-edge'
 import dynamic from 'next/dynamic'
 const RouteTransition = dynamic(() => import('@/components/ux/RouteTransition'), { ssr:false })
 const StartStoryPortalProvider = dynamic(()=> import('@/components/ux/StartStoryPortal').then(m=> m.StartStoryPortalProvider), { ssr:false })
@@ -93,6 +94,13 @@ export default function RootLayout({
   <SupabaseListener />
     </MotionProvider>
   </ThemeProvider>
+  {/* Animated ambient edge glow; reads brand tokens from CSS (shadcn) */}
+  <AmbientEdge
+    thickness={22}
+    blur={26}
+    speedSeconds={16}
+    opacity={0.55}
+  />
       </body>
     </html>
   )
