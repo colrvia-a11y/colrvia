@@ -302,3 +302,4 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 	- `NEXT_PUBLIC_POSTHOG_KEY` (key)
 	- `NEXT_PUBLIC_POSTHOG_HOST` (optional host, defaults US cloud)
  - **Server telemetry (optional)**: set `POSTHOG_KEY` (and optional `POSTHOG_HOST`) to enable backend analytics. Events: `orch_start`, `orch_candidates`, `orch_llm_used`, `orch_fallback`, `orch_result`, `stories_create_source`, `stories_create_ok`, `stories_create_fail`, `stories_create_reject`. Only low‑cardinality props (counts, enums, booleans) are sent—no PII or free text.
+\n+### Bottom navigation\n+- A simple bottom bar appears on all pages with **Home**, **New**, and **Stories**.\n+- **Home** → `/`, **New** → `/designers`, **Stories** → `/stories` (redirects to `/dashboard`).\n+- On Home, a small **Account** icon in the top-right links to `/account`.\n+- Button micro-animations respect reduced-motion.\n*** End Patch

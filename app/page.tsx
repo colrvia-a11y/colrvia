@@ -4,6 +4,8 @@ import HorizontalCarousel from '@/components/visual/HorizontalCarousel'
 import StoryHeroCard from '@/components/visual/StoryHeroCard'
 import { supabaseServer } from '@/lib/supabase/server'
 import { getIndexForUser } from '@/lib/db/stories'
+import nextDynamic from 'next/dynamic'
+const AccountIcon = nextDynamic(()=> import('@/components/nav/AccountIcon'), { ssr:false })
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +16,8 @@ export default async function Home(){
   if(user){ try { stories = await getIndexForUser(user.id) } catch {} }
   const recents = stories.slice(0,8)
   return (
-    <div className="space-y-20 pb-24">
+    <div className="space-y-20 pb-32 relative">
+      <div className="absolute right-4 top-4 z-30"><AccountIcon /></div>
       <section className="pt-20 px-4 max-w-6xl mx-auto">
         <div className="max-w-2xl space-y-8">
           <div className="inline-block text-[11px] tracking-[0.25em] font-medium text-[var(--ink-subtle)]">COLOR STORY DESIGN</div>
