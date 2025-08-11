@@ -1,49 +1,92 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { supabaseServer } from '@/lib/supabase/server'
 import { makeVariant } from '@/lib/ai/variants'
 import { decodePalette, normalizePalette } from '@/lib/palette'
 import { limitVariant } from '@/lib/rate-limit'
+import type { BrandName, PaletteArray } from '@/types/palette'
+
+const VariantBodySchema = z.object({
+  mode: z.enum(['recommended', 'softer', 'bolder']).default('recommended'),
+  palette: z.unknown().optional(),
+}).strict()
+type VariantBody = z.infer<typeof VariantBodySchema>
 
 export async function GET() {
-  console.warn('VARIANT_GET_DEPRECATED')
   return NextResponse.json({ error: 'USE_POST' }, { status: 405 })
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const storyId = params.id
   const start = Date.now()
-  console.log('VARIANT_POST_START', { storyId })
-  let body: any = null
-  try { body = await req.json() } catch {}
-  const variantMode: 'softer'|'bolder' = body?.mode === 'bolder' ? 'bolder' : 'softer'
-  const inputPalette = body?.palette
-  const supabase = supabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
-  if(!user) return NextResponse.json({ error:'UNAUTHENTICATED' }, { status:401 })
-  const { data: story, error } = await supabase.from('stories').select('*').eq('id', storyId).single()
-  if(error || !story) return NextResponse.json({ error:'NOT_FOUND' }, { status:404 })
-  if(story.user_id !== user.id) return NextResponse.json({ error:'FORBIDDEN' }, { status:403 })
-  // rate limiting (best-effort, in-memory)
-  const limited = limitVariant(user.id)
-  if(!limited.ok){
-    console.warn('VARIANT_POST_RATE_LIMIT', { storyId, scope: limited.scope })
-    return NextResponse.json({ error:'RATE_LIMITED', scope: limited.scope, retryAfter: limited.retryAfter }, { status:429, headers:{ 'Retry-After': String(limited.retryAfter) } })
-  }
-  let basePalette: any[] = []
+  const storyId = params.id
+
+  // 1) Parse JSON safely
+  let raw: unknown
   try {
-    basePalette = normalizePalette(Array.isArray(inputPalette)? inputPalette : story.palette, story.brand)
+    raw = await req.json()
+  } catch {
+    console.warn('VARIANT_POST_INVALID_JSON', { storyId })
+    return NextResponse.json({ error: 'INVALID_JSON' }, { status: 400 })
+  }
+
+  // 2) Validate body
+  let body: VariantBody
+  try {
+    body = VariantBodySchema.parse(raw ?? {})
   } catch (e) {
-    console.warn('VARIANT_POST_BAD_INPUT', { storyId, shape: typeof inputPalette })
-    return NextResponse.json({ error:'INVALID_PALETTE' }, { status:422 })
+    const issues = (e as z.ZodError).issues?.map(i => ({ path: i.path.join('.'), message: i.message }))
+    console.warn('VARIANT_POST_INVALID_INPUT', { storyId, issues })
+    return NextResponse.json({ error: 'INVALID_INPUT', issues }, { status: 422 })
   }
-  const raw = makeVariant(basePalette as any, story.brand, variantMode)
-  const variant = Array.isArray(raw)? raw : decodePalette(raw as any)
-  if(!Array.isArray(variant) || variant.length===0){
-    console.error('VARIANT_POST_FAIL', { storyId, reason:'EMPTY_RESULT' })
-    return NextResponse.json({ error:'VARIANT_BUILD_FAILED' }, { status:500 })
+
+  // 3) Auth
+  const supabase = supabaseServer()
+  const { data: { user }, error: userErr } = await supabase.auth.getUser()
+  if (userErr || !user) {
+    console.warn('VARIANT_POST_UNAUTH', { storyId })
+    return NextResponse.json({ error: 'UNAUTH' }, { status: 401 })
   }
-  console.log('VARIANT_POST_OK', { storyId, mode: variantMode, ms: Date.now()-start })
+
+  // 4) Rate limit
+  const limit = limitVariant(user.id)
+  if (!limit.ok) {
+    return NextResponse.json({ error: 'RATE_LIMIT', scope: limit.scope, retryAfter: limit.retryAfter }, { status: 429 })
+  }
+
+  // 5) Load story (RLS ensures ownership)
+  const { data: story, error } = await supabase
+    .from('stories')
+    .select('id, palette, brand')
+    .eq('id', storyId)
+    .single()
+  if (error || !story) {
+    console.warn('VARIANT_POST_NOT_FOUND', { storyId })
+    return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404 })
+  }
+
+  // 6) Normalize base palette
+  let base: PaletteArray
+  try {
+    const brand = (story.brand || 'sherwin_williams') as BrandName
+    const inputPalette = body.palette ?? story.palette
+    base = normalizePalette(Array.isArray(inputPalette) ? inputPalette : (inputPalette as any), brand)
+  } catch {
+    console.warn('VARIANT_POST_BAD_PALETTE', { storyId })
+    return NextResponse.json({ error: 'INVALID_PALETTE' }, { status: 422 })
+  }
+
+  // 7) Build + decode variant
+  const tweak = body.mode === 'recommended' ? 'softer' : body.mode
+  const rawVariant = makeVariant(base as any, story.brand, tweak as any)
+  const variant = Array.isArray(rawVariant) ? rawVariant : decodePalette(rawVariant as any)
+  if (!Array.isArray(variant) || variant.length === 0) {
+    console.error('VARIANT_POST_BUILD_FAIL', { storyId })
+    return NextResponse.json({ error: 'VARIANT_BUILD_FAILED' }, { status: 500 })
+  }
+
+  console.log('VARIANT_POST_OK', { storyId, mode: body.mode, ms: Date.now() - start })
   return NextResponse.json({ variant })
 }
