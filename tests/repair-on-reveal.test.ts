@@ -51,7 +51,7 @@ vi.mock('@/lib/palette/normalize-repair', () => ({ normalizePaletteOrRepair: asy
 // invoke repairStoryPalette via simulated invalid palette scenario.
 describe('repair on reveal', () => {
   it('invokes repairStoryPalette for invalid palette', async () => {
-    const mod = await import('@/app/reveal/[id]/page')
+    const mod = await import('@/app/(shell)/reveal/[id]/page')
     const Page = mod.default as any
     await Page({ params:{ id:'story-x' } })
     expect(repairStoryPalette).toHaveBeenCalled()
