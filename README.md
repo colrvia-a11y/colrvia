@@ -302,4 +302,12 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 	- `NEXT_PUBLIC_POSTHOG_KEY` (key)
 	- `NEXT_PUBLIC_POSTHOG_HOST` (optional host, defaults US cloud)
  - **Server telemetry (optional)**: set `POSTHOG_KEY` (and optional `POSTHOG_HOST`) to enable backend analytics. Events: `orch_start`, `orch_candidates`, `orch_llm_used`, `orch_fallback`, `orch_result`, `stories_create_source`, `stories_create_ok`, `stories_create_fail`, `stories_create_reject`. Only low‑cardinality props (counts, enums, booleans) are sent—no PII or free text.
+\n+### Bottom navigation
+- A simple bottom bar appears on all pages with **Home**, **New**, and **Stories**.
+- **Home** → `/`, **New** → `/designers`, **Stories** → `/stories` (redirects to `/dashboard`).
+- On Home, a small **Account** icon in the top-right links to `/account`.
+- Button micro-animations respect reduced-motion.
+\n+### How it works
+- The Home page includes a small **“See how it works (1 min)”** link under the primary CTA. It opens a quick modal, and there’s also a full **/how-it-works** page.
+- Analytics: `howitworks_open` on modal/page open and `howitworks_start` when users click the Start button inside the explainer.
 \n+### Bottom navigation\n+- A simple bottom bar appears on all pages with **Home**, **New**, and **Stories**.\n+- **Home** → `/`, **New** → `/designers`, **Stories** → `/stories` (redirects to `/dashboard`).\n+- On Home, a small **Account** icon in the top-right links to `/account`.\n+- Button micro-animations respect reduced-motion.\n*** End Patch

@@ -1,12 +1,15 @@
-import React from 'react'
+"use client"
+import React, { useState } from 'react'
 import Link from 'next/link'
 // Removed recommendations & stories logic
 import nextDynamic from 'next/dynamic'
 const AccountIcon = nextDynamic(()=> import('@/components/nav/AccountIcon'), { ssr:false })
+const HowItWorksModal = nextDynamic(()=> import('@/components/marketing/HowItWorksModal'), { ssr:false })
 
 export const dynamic = 'force-dynamic'
 
 export default function Home(){
+  const [open, setOpen] = useState(false)
   return (
     <div className="relative pb-32">
       <div className="absolute right-4 top-4 z-30"><AccountIcon /></div>
@@ -17,7 +20,12 @@ export default function Home(){
         <div className="mt-8">
           <Link href="/designers" className="inline-flex items-center rounded-2xl bg-[var(--brand)] px-6 py-3 text-white text-sm font-medium shadow-soft hover:bg-[var(--brand-hover)] transition-colors">Start Color Story</Link>
         </div>
+        <div className="mt-4">
+          <button type="button" className="text-sm underline underline-offset-4 text-[var(--ink-subtle)] hover:text-[var(--ink)]" onClick={()=>{ setOpen(true); try { const { track } = require('@/lib/analytics'); track('howitworks_open',{ where:'home' }) } catch {} }}>See how it works (1 min)</button>
+          <span className="ml-2 text-xs text-[var(--ink-subtle)]"><Link href="/how-it-works" className="hover:underline">(full page)</Link></span>
+        </div>
       </section>
+      <HowItWorksModal open={open} onOpenChange={setOpen} />
     </div>
   )
 }
