@@ -14,8 +14,10 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 vi.mock('@/lib/ai/palette', () => ({
-  buildPalette: () => ({ swatches: [] }),
   seedPaletteFor: () => [{ brand: 'sherwin_williams', code: 'SW 7005', name: 'Pure White', hex: '#FEFEFE' }],
+}))
+vi.mock('@/lib/ai/orchestrator', () => ({
+  designPalette: () => ({ swatches: [], placements: { primary: 60, secondary: 30, accent: 10, trim: 5, ceiling: 5 } }),
 }))
 vi.mock('@/lib/palette/normalize-repair', () => ({
   normalizePaletteOrRepair: async () => [

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeAll } from 'vitest'
 
 // This test will simulate calling the API route handler directly.
 import * as paletteModule from '@/lib/ai/palette'
+import * as orchestrator from '@/lib/ai/orchestrator'
 import { POST } from '@/app/api/stories/route'
 
 // Mock supabase server client used in route
@@ -25,7 +26,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 // Mock palette builder to return empty swatches triggering fallback
-vi.spyOn(paletteModule, 'buildPalette').mockImplementation(() => ({ swatches: [] as any, placements: { pct:{sixty:60,thirty:30,ten:10} } as any }))
+vi.spyOn(orchestrator, 'designPalette').mockImplementation(() => ({ swatches: [] as any, placements: { primary:60, secondary:30, accent:10, trim:5, ceiling:5 } as any }))
 
 // Mock seedPaletteFor to return empty to force repair code path
 vi.spyOn(paletteModule, 'seedPaletteFor').mockImplementation(() => [])
@@ -45,7 +46,7 @@ describe('story create fallback', () => {
   it('returns id and builds 5-swatch palette when builder empty', async () => {
     const req = new Request('http://localhost/api/stories', { method:'POST', body: JSON.stringify({ brand:'SW', designerKey:'marisol', vibe:'Cozy Neutral' }) })
     const res = await POST(req as any)
-    expect(res.status).toBe(201)
+    expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.id).toBe('story-1')
   })

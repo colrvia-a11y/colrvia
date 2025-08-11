@@ -4,16 +4,11 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { supabaseServer } from '@/lib/supabase/server';
-import { normalizePalette } from '@/lib/palette';
-import { buildPalette, seedPaletteFor } from '@/lib/ai/palette';
+import { seedPaletteFor } from '@/lib/ai/palette';
 import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair';
-import { repairStoryPalette } from '@/lib/palette/repair';
 import { designPalette } from '@/lib/ai/orchestrator';
-import { buildDeterministicNarrative, polishWithLLM } from '@/lib/ai/narrative';
 import { mapV2ToLegacy } from '@/lib/ai/mapRoles';
-import { assertValidPalette } from '@/lib/ai/validate';
 import type { DesignInput, Palette as V2Palette } from '@/lib/ai/schema';
-import { capture, enabled as analyticsEnabled } from '@/lib/analytics/server'
 
 import { StoryBodySchema, type StoryBody } from "@/lib/validators"
 import type { StoriesPostRes } from "@/types/api"
@@ -85,15 +80,10 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Build a new palette from prompt/vibe/brand, then normalize/repair
-    const generated = buildPalette({
-      brand: brand as 'SW' | 'Behr',
-      vibe: vibe as any, // Accepting any for now; ideally validate/cast
-      designer: 'Marisol', // Default designer
-      lighting: 'mixed',   // Default lighting
-      hasWarmWood: false,  // Default
-    })
-    let finalPalette = await normalizePaletteOrRepair(generated.swatches, vibe)
+    // 2. Build a new palette with the AI orchestrator, then normalize/repair
+    const generated = await designPalette({ brand, vibe } as DesignInput)
+    const legacy = mapV2ToLegacy(generated as V2Palette)
+    let finalPalette = await normalizePaletteOrRepair(legacy.swatches, vibe)
     const testEnv = process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || process.env.VITEST
     if (!finalPalette) {
       if (testEnv) {
