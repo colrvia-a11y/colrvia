@@ -1,140 +1,110 @@
-// Deterministic finite state graph for onboarding conversation
-// Provides: next(state, userInput) and initial state nodes with prompts
-export type OnboardingKey = 'vibe' | 'room' | 'lighting' | 'brand'
-export type OnboardingStateId =
-  | 'start'
-  | 'ask-goal'
-  | 'ask-room'
-  | 'ask-light'
-  | 'ask-brand'
-  | 'summary'
-  | 'done';
+// Richer structured interview graph with typed nodes & normalization
+export type NodeType = 'single_select' | 'multi_select' | 'text' | 'yesno'
+export type AnswerPrimitive = string | string[] | boolean | null
+export type AnswerMap = Record<string, AnswerPrimitive>
 
-export interface OnboardingState {
-  id: OnboardingStateId;
-  prompt: string; // what designer asks
-  field?: keyof OnboardingAnswers;
-  next?: (answers: OnboardingAnswers) => OnboardingStateId;
+export interface QuestionNode {
+  key: string
+  prompt: string
+  type: NodeType
+  options?: string[]
+  min?: number
+  max?: number
+  when?: (answers: AnswerMap) => boolean
 }
 
-export interface OnboardingAnswers {
-  goal?: string; // maps to vibe
-  room?: string;
-  lighting?: string;
-  brand?: 'SW' | 'Behr';
-}
-
-export interface InterviewState {
-  answers: OnboardingAnswers;
-  currentKey?: OnboardingKey; // which answer we are collecting next
-  done: boolean;
-}
-
+export interface InterviewState { answers: AnswerMap; currentKey?: string; done: boolean }
 export interface ChatMessage { role: 'assistant' | 'user'; content: string }
 
-export interface Turn {
-  state: OnboardingStateId;
-  prompt: string;
-  answer?: string;
-}
-
-export const states: Record<OnboardingStateId, OnboardingState> = {
-  start: {
-    id: 'start',
-    prompt: 'Hey! We will build a color story. Cool if I ask a few quick questions? (yes)'
-  },
-  'ask-goal': {
-    id: 'ask-goal',
-    prompt: 'What feeling or vibe are you after? (e.g. Cozy Neutral, Airy Coastal, Moody Blue-Green)',
-    field: 'goal'
-  },
-  'ask-room': {
-    id: 'ask-room',
-    prompt: 'Which room or space are we focusing on first?',
-    field: 'room'
-  },
-  'ask-light': {
-    id: 'ask-light',
-    prompt: 'How would you describe the natural light? (e.g. bright north, soft morning, low, mixed)',
-    field: 'lighting'
-  },
-  'ask-brand': {
-    id: 'ask-brand',
-    prompt: 'Paint brand preference? (SW or Behr)',
-    field: 'brand'
-  },
-  summary: {
-    id: 'summary',
-    prompt: 'Got it. Generating your starter palette...'
-  },
-  done: {
-    id: 'done',
-    prompt: 'All set. Opening your design.'
-  }
-};
-
-export function initialTurn(): Turn { return { state: 'start', prompt: states.start.prompt }; }
-
-export function nextState(current: OnboardingStateId, answer: string, a: OnboardingAnswers): { next: OnboardingStateId; update?: Partial<OnboardingAnswers> } {
-  switch (current) {
-    case 'start':
-      return { next: 'ask-goal' };
-    case 'ask-goal':
-      return { next: 'ask-room', update: { goal: answer } };
-    case 'ask-room':
-      return { next: 'ask-light', update: { room: answer } };
-    case 'ask-light':
-      return { next: 'ask-brand', update: { lighting: answer } };
-    case 'ask-brand':
-      return { next: 'summary', update: { brand: /behr/i.test(answer) ? 'Behr' : 'SW' } };
-    case 'summary':
-      return { next: 'done' };
-    default:
-      return { next: 'done' };
-  }
-}
-
-export function isTerminal(id: OnboardingStateId) { return id === 'done'; }
-
-// New structured helpers for API route
-const order: { key: OnboardingKey; state: OnboardingStateId }[] = [
-  { key: 'vibe', state: 'ask-goal' },
-  { key: 'room', state: 'ask-room' },
-  { key: 'lighting', state: 'ask-light' },
-  { key: 'brand', state: 'ask-brand' }
+export const nodes: QuestionNode[] = [
+  { key: 'space', type: 'single_select', prompt: 'Which space are we working on?', options: ['Living room','Bedroom','Kitchen','Bathroom','Whole home'] },
+  { key: 'lighting', type: 'single_select', prompt: 'How’s the natural light?', options: ['Low','Mixed','Bright'] },
+  { key: 'vibe', type: 'multi_select', prompt: 'Pick up to 2 vibe words.', options: ['Calm','Cozy','Airy','Moody','Crisp','Earthy'], min:1, max:2 },
+  { key: 'contrast', type: 'single_select', prompt: 'Contrast preference?', options: ['Softer','Balanced','Bolder'] },
+  { key: 'fixed', type: 'text', prompt: 'Any fixed finishes to consider (floors, cabinets, counters)?' },
+  { key: 'avoid', type: 'text', prompt: 'Any colors/undertones to avoid?' },
+  { key: 'trim', type: 'single_select', prompt: 'Trim & ceiling vibe?', options: ['Clean white','Creamy white','Same as walls','Darker trim'] },
+  { key: 'brand', type: 'single_select', prompt: 'Pick a paint brand.', options: ['Sherwin-Williams','Behr'] },
 ]
 
-export function startState(): InterviewState {
-  return { answers: {}, currentKey: order[0].key, done: false }
+const ORDER = nodes.map(n=>n.key)
+
+export function getNode(key: string){ return nodes.find(n=>n.key===key)! }
+export function getFirstQuestion(){ return nodes[0] }
+
+function normalizeToOption(input: string, options: string[]): string | null {
+  const s = input.trim().toLowerCase()
+  if(!s) return null
+  const exact = options.find(o=>o.toLowerCase()===s)
+  if(exact) return exact
+  const prefix = options.find(o=>o.toLowerCase().startsWith(s))
+  return prefix ?? null
 }
 
-export function getNode(stateId: OnboardingStateId) { return states[stateId] }
-export function getFirstQuestion(){ return states['ask-goal'] }
-
-export function acceptAnswer(prev: InterviewState, content: string): InterviewState {
-  if (prev.done) return prev
-  const nextAnswers = { ...prev.answers }
-  if (prev.currentKey === 'vibe') nextAnswers.goal = content
-  if (prev.currentKey === 'room') nextAnswers.room = content
-  if (prev.currentKey === 'lighting') nextAnswers.lighting = content
-  if (prev.currentKey === 'brand') nextAnswers.brand = /behr/i.test(content) ? 'Behr' : 'SW'
-  const answeredCount = ['vibe','room','lighting','brand'].filter(k => {
-    if (k==='vibe') return !!nextAnswers.goal
-    // @ts-ignore
-    return !!nextAnswers[k]
-  }).length
-  if (answeredCount >= order.length) {
-    return { answers: nextAnswers, currentKey: undefined, done: true }
+export function normalizeAnswer(userText: string, node: QuestionNode): AnswerPrimitive {
+  const raw = (userText ?? '').toString().trim()
+  if(!raw) return null
+  switch(node.type){
+    case 'yesno':
+      return /^y(es)?\b/i.test(raw) ? true : /^(n|no)\b/i.test(raw) ? false : null
+    case 'single_select':
+      return node.options ? normalizeToOption(raw, node.options) : raw
+    case 'multi_select': {
+      if(!node.options) return [raw]
+      const opts = node.options
+      const tokens = raw.split(/[\s,]+/).filter(Boolean)
+      const mapped = Array.from(new Set(tokens.map(t=>normalizeToOption(t, opts)).filter(Boolean))) as string[]
+      const max = node.max ?? mapped.length
+      return mapped.slice(0, max)
+    }
+    default:
+      return raw
   }
-  return { answers: nextAnswers, currentKey: order[answeredCount].key, done: false }
 }
 
-export function mapAnswersToStoryInput(a: OnboardingAnswers){
+export function nextKey(currentKey?: string, answers: AnswerMap = {}): string | undefined {
+  if(!currentKey) return ORDER[0]
+  const idx = ORDER.indexOf(currentKey)
+  for(let i=idx+1;i<ORDER.length;i++){
+    const k = ORDER[i]
+    const n = getNode(k)
+    if(!n.when || n.when(answers)) return k
+  }
+  return undefined
+}
+
+export function startState(): InterviewState { return { answers:{}, currentKey: ORDER[0], done:false } }
+
+export function acceptAnswer(state: InterviewState, userText: string): InterviewState {
+  const key = state.currentKey ?? ORDER[0]
+  const node = getNode(key)
+  const value = normalizeAnswer(userText, node)
+  const answers = { ...state.answers, [key]: value }
+  const k = nextKey(key, answers)
+  if(!k) return { answers, currentKey: undefined, done: true }
+  return { answers, currentKey: k, done: false }
+}
+
+export function mapAnswersToStoryInput(answers: AnswerMap){
   return {
-    brand: (a.brand === 'Behr' ? 'behr' : 'sherwin_williams'),
-    designerKey: 'marisol',
-    vibe: a.goal || 'Cozy Neutral',
-    lighting: a.lighting || 'daylight',
-    room: a.room
+    space: answers.space,
+    lighting: answers.lighting,
+    vibe: answers.vibe,
+    contrast: answers.contrast,
+    fixed: answers.fixed,
+    avoid: answers.avoid,
+    trim: answers.trim,
+    brand: answers.brand,
+    seed: `${answers.space}|${answers.vibe}|${answers.contrast}|${answers.brand}`
   }
 }
+
+export function getCurrentNode(state: InterviewState | undefined){
+  const key = state?.currentKey ?? ORDER[0]
+  return getNode(key)
+}
+
+// Backwards compatibility helpers (some legacy callers)
+export type OnboardingAnswers = AnswerMap
+export function isTerminalId(key?: string){ return !key }
+export function isTerminal(id: string | undefined){ return isTerminalId(id) }

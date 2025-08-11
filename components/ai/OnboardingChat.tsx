@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Mic, MicOff, Send } from "lucide-react"
 import { VoiceToggle } from "./VoiceToggle"
-import { getFirstQuestion, mapAnswersToStoryInput, type InterviewState, type ChatMessage, startState, acceptAnswer } from "@/lib/ai/onboardingGraph"
+import { getFirstQuestion, getCurrentNode, mapAnswersToStoryInput, type InterviewState, type ChatMessage, startState, acceptAnswer } from "@/lib/ai/onboardingGraph"
 import { useRouter } from "next/navigation"
 
 type Props = { designerId: string }
@@ -17,6 +17,11 @@ export default function OnboardingChat({ designerId }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [state, setState] = useState<InterviewState>(startState())
   const [input, setInput] = useState("")
+  const currentNode = getCurrentNode(state)
+  const isMulti = currentNode.type === 'multi_select'
+  const [multiTemp, setMultiTemp] = useState<string[]>([])
+  const minSelect = (currentNode as any).min ?? 0
+  const maxSelect = (currentNode as any).max ?? Infinity
   const [voiceOn, setVoiceOn] = useState<boolean>(() => {
     if (typeof window === "undefined") return false
     return localStorage.getItem("colrvia_voiceOn") === "1"
@@ -79,7 +84,7 @@ export default function OnboardingChat({ designerId }: Props) {
     if (!content) return
     setMessages(prev => [...prev, { role:'user', content }])
     setInput("")
-    const newState = acceptAnswer(state, content)
+  const newState = acceptAnswer(state, content)
     setState(newState)
     if(newState.done){
       const closing = 'Great — generating your palette now.'
@@ -95,7 +100,7 @@ export default function OnboardingChat({ designerId }: Props) {
       } catch(e){ console.warn(e) }
       return
     }
-    const nextQ = getFirstQuestion().prompt // reuse since simplified
+  const nextQ = getCurrentNode(newState).prompt
     setMessages(prev => [...prev, { role:'assistant', content: nextQ }])
     if(voiceOn) speak(nextQ)
   }
@@ -126,6 +131,41 @@ export default function OnboardingChat({ designerId }: Props) {
         <Button type="button" onClick={()=>submit()} aria-label="Send"><Send className="h-4 w-4" /></Button>
       </div>
       {!speechSupported && <p className="text-xs text-[var(--ink-subtle)]">Voice works best in Chrome.</p>}
+      {currentNode.options?.length ? (
+        <div className="flex flex-wrap gap-2" aria-label="Quick choices">
+          {currentNode.options.map(opt => {
+            const selected = isMulti ? multiTemp.includes(opt) : false
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={()=>{
+                  if(!isMulti){
+                    submit(opt)
+                    return
+                  }
+                  setMultiTemp(prev => {
+                    const has = prev.includes(opt)
+                    if(has) return prev.filter(v=>v!==opt)
+                    if(prev.length >= maxSelect) return prev
+                    return [...prev, opt]
+                  })
+                }}
+                className={`px-3 py-1 rounded-full border text-sm transition ${selected? 'bg-brand text-brand-contrast':'bg-surface hover:bg-paper'}`}
+                aria-pressed={selected}
+              >{opt}</button>
+            )
+          })}
+          {isMulti && (
+            <button
+              type="button"
+              onClick={()=>{ if(multiTemp.length >= minSelect){ submit(multiTemp.join(', ')); setMultiTemp([]) } }}
+              disabled={multiTemp.length < minSelect}
+              className="px-3 py-1 rounded-full border text-sm bg-brand text-brand-contrast disabled:opacity-50"
+            >Continue</button>
+          )}
+        </div>
+      ): null}
     </div>
   )
 }

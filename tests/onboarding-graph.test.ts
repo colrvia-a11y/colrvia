@@ -1,27 +1,30 @@
 import { describe, it, expect } from 'vitest'
-import { initialTurn, nextState, isTerminal } from '@/lib/ai/onboardingGraph'
+import { startState, acceptAnswer, getNode, normalizeAnswer } from '@/lib/ai/onboardingGraph'
 
 describe('onboardingGraph', () => {
-  it('walks through states deterministically', () => {
-    let turn = initialTurn()
-    expect(turn.state).toBe('start')
-    const answers: any = {}
-    const seq = [
-      { a: 'yes', expect: 'ask-goal' },
-      { a: 'Cozy Neutral', expect: 'ask-room' },
-      { a: 'Living Room', expect: 'ask-light' },
-      { a: 'bright north', expect: 'ask-brand' },
-      { a: 'SW', expect: 'summary' },
-      { a: '', expect: 'done' }
-    ]
-    let current = turn.state
-    for (const step of seq) {
-      const { next, update } = nextState(current, step.a, answers)
-      if (update) Object.assign(answers, update)
-      expect(next).toBe(step.expect)
-      current = next
+  it('walks through all nodes until done', () => {
+    let s = startState()
+    const inputs = {
+      space: 'Living room',
+      lighting: 'Bright',
+      vibe: 'Calm Cozy',
+      contrast: 'Balanced',
+      fixed: 'Oak floors',
+      avoid: 'Yellow',
+      trim: 'Clean white',
+      brand: 'Sherwin-Williams'
     }
-    expect(isTerminal(current)).toBe(true)
-    expect(answers.brand).toBe('SW')
+    Object.values(inputs).forEach(val => { s = acceptAnswer(s, val as string) })
+    expect(s.done).toBe(true)
+  })
+  it('normalizes single_select with fuzzy match', () => {
+    const n: any = getNode('lighting')
+    expect(normalizeAnswer('br', n)).toBe('Bright')
+    expect(normalizeAnswer('low', n)).toBe('Low')
+  })
+  it('respects multi_select max', () => {
+    const n: any = getNode('vibe')
+    const v = normalizeAnswer('Calm Cozy Airy', n) as string[]
+    expect(v.length).toBeLessThanOrEqual(n.max!)
   })
 })

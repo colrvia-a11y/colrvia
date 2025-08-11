@@ -1,7 +1,7 @@
 export const runtime = "nodejs"
 import { NextResponse } from "next/server"
 import { designers } from "@/lib/ai/designers"
-import { startState, acceptAnswer, getNode, type InterviewState } from "@/lib/ai/onboardingGraph"
+import { startState, acceptAnswer, getCurrentNode, type InterviewState } from "@/lib/ai/onboardingGraph"
 
 // augment designers with systemPrompt
 const designerPrompts: Record<string,string> = {
@@ -24,8 +24,8 @@ export async function POST(req: Request) {
   let utterance = ''
   if(body.step === 'start'){
     state = startState()
-    const q = getNode('ask-goal')
-    utterance = await phrase(systemPrompt, `Greet briefly, then ask: "${q.prompt}"`, useLLM)
+  const q = getCurrentNode(state)
+  utterance = await phrase(systemPrompt, `Greet briefly, then ask: "${q.prompt}"`, useLLM)
     return NextResponse.json({ state, utterance })
   }
   state = acceptAnswer(body.state, body.content)
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     utterance = await phrase(systemPrompt, 'Thank them and confirm you have enough to design their palette. Be concise.', useLLM)
     return NextResponse.json({ state, utterance })
   }
-  const next = getNode('ask-goal') // simplified reuse of prompt sequence
+  const next = getCurrentNode(state)
   utterance = await phrase(systemPrompt, `Acknowledge in ~5 words, then ask: "${next.prompt}"`, useLLM)
   return NextResponse.json({ state, utterance })
 }
