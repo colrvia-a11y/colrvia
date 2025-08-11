@@ -20,7 +20,18 @@ vi.mock("@/lib/palette/normalize-repair", () => ({
 }))
 vi.mock("@/lib/ai/palette", () => ({
   seedPaletteFor: async (_brand: string, _seed: string) => [{ hex: "#ffffff" }],
-  buildPalette: async (base: any) => base,
+}))
+vi.mock("@/lib/ai/orchestrator", () => ({
+  designPalette: async () => ({
+    swatches: [
+      { brand: 'sherwin_williams', code: 'SW 7005', name: 'Pure White', hex: '#FFFFFF', role: 'primary' },
+      { brand: 'sherwin_williams', code: 'SW 7008', name: 'Alabaster', hex: '#FEFEFE', role: 'secondary' },
+      { brand: 'sherwin_williams', code: 'SW 7043', name: 'Worldly Gray', hex: '#D8D4CE', role: 'accent' },
+      { brand: 'sherwin_williams', code: 'SW 7036', name: 'Accessible Beige', hex: '#E5D8C8', role: 'trim' },
+      { brand: 'sherwin_williams', code: 'SW 6204', name: 'Sea Salt', hex: '#CDD8D2', role: 'ceiling' },
+    ],
+    placements: { primary: 60, secondary: 30, accent: 10, trim: 5, ceiling: 5 },
+  }),
 }))
 
 describe("/api/stories happy path", () => {

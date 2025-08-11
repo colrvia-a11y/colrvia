@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import * as paletteModule from '@/lib/ai/palette'
+import * as orchestrator from '@/lib/ai/orchestrator'
 import { POST } from '@/app/api/stories/route'
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -30,14 +31,14 @@ vi.mock('@/lib/palette/normalize-repair', () => ({ normalizePaletteOrRepair: asy
   { brand:'sherwin_williams', code:'SW 7005', name:'Pure White', hex:'#FEFEFE' },
 ] }))
 
-vi.spyOn(paletteModule, 'buildPalette').mockImplementation(()=> ({ swatches: [], placements:{ pct:{sixty:60,thirty:30,ten:10} } as any }))
+vi.spyOn(orchestrator, 'designPalette').mockImplementation(()=> ({ swatches: [], placements:{ primary:60, secondary:30, accent:10, trim:5, ceiling:5 } as any }))
 vi.spyOn(paletteModule, 'seedPaletteFor').mockImplementation(()=> [])
 
 describe('repair on create', () => {
   it('repairs empty palette after insert', async () => {
     const req = new Request('http://localhost/api/stories', { method:'POST', body: JSON.stringify({ brand:'SW', designerKey:'marisol', vibe:'Cozy Neutral' }) })
     const res = await POST(req as any)
-    expect(res.status).toBe(201)
+    expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.id).toBe('story-x')
   })

@@ -21,6 +21,22 @@ vi.mock('@/lib/supabase/server', () => ({
   }
 }))
 
+vi.mock('@/lib/palette/normalize-repair', () => ({
+  normalizePaletteOrRepair: async (p: any) => p,
+}))
+vi.mock('@/lib/ai/orchestrator', () => ({
+  designPalette: async () => ({
+    swatches: [
+      { brand: 'sherwin_williams', code: 'SW 1', name: 'Color1', hex: '#111111', role: 'primary' },
+      { brand: 'sherwin_williams', code: 'SW 2', name: 'Color2', hex: '#222222', role: 'secondary' },
+      { brand: 'sherwin_williams', code: 'SW 3', name: 'Color3', hex: '#333333', role: 'accent' },
+      { brand: 'sherwin_williams', code: 'SW 4', name: 'Color4', hex: '#444444', role: 'trim' },
+      { brand: 'sherwin_williams', code: 'SW 5', name: 'Color5', hex: '#555555', role: 'ceiling' },
+    ],
+    placements: { primary: 60, secondary: 30, accent: 10, trim: 5, ceiling: 5 },
+  }),
+}))
+
 function makeValidV2Palette() {
   const list = sw as any[];
   const pick = (i: number) => {
@@ -58,7 +74,7 @@ describe('/api/stories accepts palette_v2 (flag on)', () => {
     (process as any).env.AI_ALLOW_CLIENT_PALETTE = 'true';
     const mod = await import('../../app/api/stories/route');
     const palette_v2 = makeValidV2Palette();
-    const r = await (mod as any).POST(req({ palette_v2, seed: 'test-accept-v2' }) as any);
+    const r = await (mod as any).POST(req({ palette_v2, seed: 'test-accept-v2', prompt: 'x' }) as any);
     const status = (r as Response).status;
     const body = await (r as Response).json().catch(() => ({}));
     if (body?.error) {
