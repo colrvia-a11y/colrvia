@@ -80,7 +80,7 @@ function sanitizeLlmPalette(parsed: Palette | null, candidates: Candidates, fall
   return final
 }
 
-async function tryLlmPick(input: DesignInput, candidates: Candidates): Promise<Palette | null> {
+async function tryLlmPick(input: DesignInput, candidates: Candidates, fallback: Palette): Promise<Palette | null> {
   if (!process.env.OPENAI_API_KEY) return null
   let OpenAIImpl: any
   try {
@@ -184,7 +184,7 @@ export async function designPalette(input: DesignInput): Promise<Palette> {
     await capture('orch_start', { brand: input.brand || 'mixed', contrast: input.contrast || 'balanced', lighting: input.lighting || 'unknown' })
     await capture('orch_candidates', { neutrals: candidates.neutrals.length, whites: candidates.whites.length, accents: candidates.accents.length })
   }
-  const assisted = await tryLlmPick(input, candidates).catch(()=>null)
+  const assisted = await tryLlmPick(input, candidates, fallback).catch(()=>null)
   if (!assisted || !assisted.swatches || assisted.swatches.length < 5) {
     if (analyticsEnabled()) {
       await capture('orch_fallback', { reason: process.env.OPENAI_API_KEY ? 'llm_invalid_or_error' : 'llm_disabled', ms: Date.now() - t0 })
