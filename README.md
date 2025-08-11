@@ -234,10 +234,13 @@ npm run build # production build
 If modifying motion tokens, re-run Lighthouse to ensure no layout shift regressions (CLS). GitHub Action workflow (`.github/workflows/ci.yml`) now runs install, type-check, lint, test, and build on push / PR.
 
 ### Home background image
-- Replace `/public/marketing/home-bg.svg` with your own asset (recommended: WebP for compression quality balance).
-- Sizing: provide at least 1920×1200 (desktop). A single 2400×1600 WebP ( < 400 KB ) generally covers standard breakpoints.
-- Mobile: if you later want a portrait crop, add a media query or conditional `src` swap.
-- Keep hero text readable; adjust the gradient overlay opacity in `app/page.tsx` if your artwork is darker or lighter.
+Responsive hero uses two placeholder SVGs swapped via the `.hero-bg` class in `app/globals.css` (mobile default → desktop at 768px).
+
+Replace with optimized WebP assets:
+- Mobile: `public/marketing/home-bg-mobile.webp` (target 1440×2560, ≤ 300 KB)
+- Desktop: `public/marketing/home-bg-desktop.webp` (target 2400×1600, ≤ 400–500 KB)
+
+You can keep the SVGs as fallback or rename them (`.svg.bak`). Keep hero text readable—tune the gradient overlay (in `app/page.tsx`) if your art is very bright or dark.
 
 ### Removed Legacy Endpoints (Projects → Stories Migration)
 Legacy project endpoints (`/api/projects/*`) and related UI (project dashboard, project detail page, save-to-project widget, project sharing & image upload routes) were fully retired in favor of a simpler, story‑centric model.

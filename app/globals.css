@@ -114,6 +114,17 @@ a, button, [role="button"] { outline-offset: 3px; }
   .animate-fadeIn { animation:fadeIn .5s ease both; }
 }
 
+/* Responsive hero background (mobile default, desktop override) */
+.hero-bg {
+  background-image: url("/marketing/home-bg-mobile.svg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+@media (min-width: 768px) {
+  .hero-bg { background-image: url("/marketing/home-bg-desktop.svg"); }
+}
+
 @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 
 @keyframes swatchIn { 0% { opacity:0; transform:translateY(14px) scale(.94); } 60% { opacity:1; transform:translateY(-2px) scale(1.02);} 100% { opacity:1; transform:translateY(0) scale(1);} }

@@ -1,7 +1,6 @@
 "use client"
 import React, { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 // Removed recommendations & stories logic
 import nextDynamic from 'next/dynamic'
 const AccountIcon = nextDynamic(()=> import('@/components/nav/AccountIcon'), { ssr:false })
@@ -17,9 +16,8 @@ export default function Home(){
   try { startStory = useStartStory() } catch {}
   return (
     <div className="relative pb-32">
-      {/* Background image with gradient overlay for readability */}
-      <div className="absolute inset-0 -z-10">
-        <Image src="/marketing/home-bg.svg" alt="" fill priority sizes="100vw" className="object-cover" />
+      {/* Responsive background layer (mobile/desktop swap via CSS) */}
+      <div className="hero-bg absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg)]/70 via-[var(--bg)]/40 to-[var(--bg)]/80" />
       </div>
       {/* Account icon now in header */}
