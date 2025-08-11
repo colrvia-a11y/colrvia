@@ -1,6 +1,7 @@
 import type { DesignInput, Palette, PaletteRole, Swatch, Color } from './schema'
 import { byBrand, isNearWhite, isNeutral, contrastScore, excludeByAvoid } from './catalog'
 import { makeRNG, pick } from '@/lib/utils/seededRandom'
+import { capture, enabled as analyticsEnabled } from '@/lib/analytics/server'
 
 type Candidates = { neutrals: Color[]; whites: Color[]; accents: Color[] }
 
@@ -141,6 +142,14 @@ async function tryLlmPick(input: DesignInput, candidates: Candidates): Promise<P
     try { parsed = raw ? JSON.parse(raw) as Palette : null } catch { parsed = null }
     const fallback = assignRolesDeterministic(input, candidates)
     const cleaned = sanitizeLlmPalette(parsed, candidates, fallback)
+    if (analyticsEnabled()) {
+      await capture('orch_llm_used', {
+        ok: Boolean(cleaned && cleaned.swatches?.length >= 5),
+        neutrals: candidates.neutrals.length,
+        whites: candidates.whites.length,
+        accents: candidates.accents.length
+      })
+    }
     return cleaned ?? null
   } catch {
     return null
@@ -150,10 +159,30 @@ async function tryLlmPick(input: DesignInput, candidates: Candidates): Promise<P
 export async function designPalette(input: DesignInput): Promise<Palette> {
   const candidates = getCandidates(input)
   const fallback = assignRolesDeterministic(input, candidates)
+  const t0 = Date.now()
+  if (analyticsEnabled()) {
+    await capture('orch_start', { brand: input.brand || 'mixed', contrast: input.contrast || 'balanced', lighting: input.lighting || 'unknown' })
+    await capture('orch_candidates', { neutrals: candidates.neutrals.length, whites: candidates.whites.length, accents: candidates.accents.length })
+  }
   const assisted = await tryLlmPick(input, candidates).catch(()=>null)
-  if (!assisted || !assisted.swatches || assisted.swatches.length < 5) return fallback
+  if (!assisted || !assisted.swatches || assisted.swatches.length < 5) {
+    if (analyticsEnabled()) {
+      await capture('orch_fallback', { reason: process.env.OPENAI_API_KEY ? 'llm_invalid_or_error' : 'llm_disabled', ms: Date.now() - t0 })
+      await capture('orch_result', { roles: 5, via: 'deterministic', ms: Date.now() - t0 })
+    }
+    return fallback
+  }
   const roleSet = new Set(assisted.swatches.map(s=>s.role))
-  if (roleSet.size < 5) return fallback
+  if (roleSet.size < 5) {
+    if (analyticsEnabled()) {
+      await capture('orch_fallback', { reason: 'duplicate_roles', ms: Date.now() - t0 })
+      await capture('orch_result', { roles: 5, via: 'deterministic', ms: Date.now() - t0 })
+    }
+    return fallback
+  }
+  if (analyticsEnabled()) {
+    await capture('orch_result', { roles: assisted.swatches.length, via: 'llm', ms: Date.now() - t0 })
+  }
   return assisted
 }
 

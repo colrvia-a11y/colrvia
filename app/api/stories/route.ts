@@ -12,6 +12,7 @@ import { designPalette } from '@/lib/ai/orchestrator';
 import { mapV2ToLegacy } from '@/lib/ai/mapRoles';
 import { assertValidPalette } from '@/lib/ai/validate';
 import type { DesignInput, Palette as V2Palette } from '@/lib/ai/schema';
+import { capture, enabled as analyticsEnabled } from '@/lib/analytics/server'
 
 // --- normalization helpers ---
 const normalizeBrand = (b?: string) => {
@@ -82,7 +83,9 @@ export async function POST(req: Request) {
     try {
       assertValidPalette(body.palette_v2 as V2Palette)
       built = mapV2ToLegacy(body.palette_v2 as V2Palette).swatches
+      if (analyticsEnabled()) await capture('stories_create_source', { source: 'palette_v2' })
     } catch (e:any) {
+      if (analyticsEnabled()) await capture('stories_create_reject', { reason: 'invalid_palette_v2' })
       return NextResponse.json({ error: 'Invalid palette: ' + e.message }, { status: 422 })
     }
   }
@@ -90,6 +93,7 @@ export async function POST(req: Request) {
     try {
       const v2 = await designPalette({ space: parsed.room, lighting: parsed.lighting, vibe: parsed.vibe, contrast: 'Balanced', brand: 'Sherwin-Williams', seed: 'story-seed' })
       built = mapV2ToLegacy(v2).swatches
+      if (analyticsEnabled()) await capture('stories_create_source', { source: 'orchestrator' })
     } catch {}
   }
   // Legacy fallback if still empty
@@ -148,7 +152,8 @@ export async function POST(req: Request) {
         brand: payload.brand,
         keys: Object.keys(payload)
       });
-  return NextResponse.json({ error: 'DB_INSERT_FAILED', detail: error.message }, { status: 400 });
+      if (analyticsEnabled()) await capture('stories_create_fail', { reason: 'db_insert', code: (error as any).code || 'db' })
+      return NextResponse.json({ error: 'DB_INSERT_FAILED', detail: error.message }, { status: 400 });
     }
 
   console.log('CREATE_STORY_OK', { id: row.id, paletteCount: normalizedPalette.length })
@@ -166,10 +171,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error:'PALETTE_INVALID' }, { status:500 })
     }
     console.log('CREATE_STORY_OK', { id: row.id, paletteCount: (full!.palette as any[]).length })
-    return NextResponse.json({ id: row.id, palette: full!.palette }, { status: 201 });
+  if (analyticsEnabled()) await capture('stories_create_ok', { via: built ? 'provided' : 'unknown' })
+  return NextResponse.json({ id: row.id, palette: full!.palette }, { status: 201 });
   } catch (e) {
     // final safety net so Next.js never throws a Digest error
     console.error('STORIES_POST:FATAL', { error: String(e), stack: (e as any)?.stack });
+  if (analyticsEnabled()) await capture('stories_create_fail', { reason: 'fatal' })
     return NextResponse.json({ error: 'FATAL', detail: String(e) }, { status: 500 });
   }
 }

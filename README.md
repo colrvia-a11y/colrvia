@@ -292,3 +292,4 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 - Env vars:
 	- `NEXT_PUBLIC_POSTHOG_KEY` (key)
 	- `NEXT_PUBLIC_POSTHOG_HOST` (optional host, defaults US cloud)
+ - **Server telemetry (optional)**: set `POSTHOG_KEY` (and optional `POSTHOG_HOST`) to enable backend analytics. Events: `orch_start`, `orch_candidates`, `orch_llm_used`, `orch_fallback`, `orch_result`, `stories_create_source`, `stories_create_ok`, `stories_create_fail`, `stories_create_reject`. Only low‑cardinality props (counts, enums, booleans) are sent—no PII or free text.
