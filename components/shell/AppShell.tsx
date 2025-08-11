@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import ThemeToggle from '@/components/ui/ThemeToggle'
-import { Menu } from 'lucide-react'
+import { Menu, User } from 'lucide-react'
 import TabBar from '@/components/nav/TabBar'
 import { supabaseBrowser } from '@/lib/supabase/client'
 
@@ -37,15 +37,15 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 z-[100] bg-white text-sm px-3 py-2 rounded shadow">Skip to content</a>
-  <header className="bg-[var(--bg-canvas)] sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-[color:rgba(247,245,239,0.85)]">
+  <header className="bg-[#404934] sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="font-display tracking-tight text-lg">COLRVIA</Link>
+            <Link href="/" className="font-display tracking-tight text-lg text-[#F7F7F2]">COLRVIA</Link>
           </div>
-          <nav className="hidden md:flex items-center gap-6 text-sm" aria-label="Primary">
+          <nav className="hidden md:flex items-center gap-6 text-sm text-[#F7F7F2]" aria-label="Primary">
             <Link href="/designers" className="hover:underline">Designers</Link>
             {!checking && !user && <Link href="/sign-in" className="hover:underline">Sign in / Sign up</Link>}
-            {user && <Link href="/account" className="hover:underline">Account</Link>}
+            {user && <Link href="/account" aria-label="Account" className="rounded-full border border-white/15 bg-white/5 p-2 hover:bg-white/10 transition-colors"><User size={18} /></Link>}
             {user && <button onClick={signOut} className="text-sm hover:underline" aria-label="Sign out">Sign out</button>}
           </nav>
           <div className="flex items-center gap-2">
@@ -58,16 +58,16 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
             <div className="flex flex-col gap-2 text-sm">
               <Link href="/designers" className="py-2">Designers</Link>
               {!user && <Link href="/sign-in" className="py-2">Sign in / Sign up</Link>}
-              {user && <Link href="/account" className="py-2">Account</Link>}
+              {user && <Link href="/account" aria-label="Account" className="py-2 flex items-center gap-2"><User size={16} /><span className="sr-only">Account</span></Link>}
               {user && <button onClick={signOut} className="py-2 text-left">Sign out</button>}
             </div>
           </div>
         )}
       </header>
       <main id="main" className="flex-1">{children}</main>
-      <footer className="mt-16 bg-[var(--bg-canvas)]">
+  <footer className="mt-16 bg-[#404934] text-[#F7F7F2]">
         <div className="max-w-6xl mx-auto px-4 py-10 text-sm text-[var(--ink-subtle)] flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Colrvia</p>
+          <p className="opacity-80">© {new Date().getFullYear()} Colrvia</p>
           <div className="flex gap-5">
             <Link href="/designers" className="hover:underline">Designers</Link>
             <Link href="/dashboard" className="hover:underline">Stories</Link>

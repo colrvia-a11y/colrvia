@@ -36,7 +36,7 @@ export default function BottomTabBar() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 bg-[var(--bg-surface)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--bg-surface)]/70"
+      className="fixed inset-x-0 bottom-0 z-40 bg-[#404934] text-[#F7F7F2] backdrop-blur"
       role="navigation"
       aria-label="Primary"
     >
@@ -51,7 +51,7 @@ export default function BottomTabBar() {
                   whileHover={reduced ? {} : { y: -1 }}
                   className={[
                     "w-full max-w-[160px] rounded-2xl px-2 py-1.5 text-center",
-                    active ? "bg-[var(--brand)]/10" : "hover:bg-[var(--color-linen)]/60"
+                    active ? "bg-white/10" : "hover:bg-white/5"
                   ].join(" ")}
                 >
                   <Link
@@ -60,8 +60,8 @@ export default function BottomTabBar() {
                     onClick={(e) => { track("nav_click", { dest: href }); if(href==='/designers'){ e.preventDefault(); startStory('/designers') } }}
                     className="flex flex-col items-center gap-0.5"
                   >
-                    <Icon className={["h-5 w-5", active ? "text-[var(--brand)]" : "text-[var(--ink-subtle)]"].join(" ")} />
-                    <span className={["text-[11px] leading-none", active ? "text-[var(--brand)]" : "text-[var(--ink-subtle)]"].join(" ")}>{label}</span>
+                    <Icon className="h-5 w-5" style={{ color: '#F7F7F2' }} />
+                    <span className="text-[11px] leading-none" style={{ color: '#F7F7F2' }}>{label}</span>
                   </Link>
                 </motion.div>
               </li>
