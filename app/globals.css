@@ -148,3 +148,29 @@ a, button, [role="button"] { outline-offset: 3px; }
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .pb-safe { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
 }
+
+@layer base {
+  /* Consistent, accessible focus rings across interactive elements */
+  :focus-visible { outline: none; }
+  a, button, [role="button"], input, select, textarea {
+    /* Brand token fallbacks */
+    --_ring-color: var(--ring, var(--brand));
+    --_ring-offset: var(--surface, var(--bg-surface));
+  }
+  a:focus-visible, button:focus-visible, [role="button"]:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--_ring-offset),
+      0 0 0 4px var(--_ring-color);
+  }
+}
+
+/* Respect reduced motion (CSS fallback in addition to Motion provider) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

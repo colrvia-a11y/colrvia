@@ -5,7 +5,6 @@ const LoadingOverlay = dynamic(()=>import('@/components/ux/LoadingOverlay'), { s
 const ConfettiBurst = dynamic(()=>import('@/components/ux/ConfettiBurst'), { ssr:false })
 import { motion } from 'framer-motion'
 // Minimal local type to satisfy TS in environments without DOM SpeechRecognition typings
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface _SR extends Record<string, any> {}
 import Button from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"

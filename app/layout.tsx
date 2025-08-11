@@ -1,4 +1,5 @@
 import './globals.css'
+import React from 'react'
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import AuthHashListener from '@/components/auth-hash-listener'
@@ -58,6 +59,13 @@ export default function RootLayout({
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
       </head>
       <body className="antialiased font-sans">
+        {/* Skip link for keyboard users */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-2xl focus:bg-[var(--surface,theme(colors.white))] focus:text-[var(--ink,#000)] focus:shadow"
+        >
+          Skip to content
+        </a>
         <Script id="supabase-hash-redirect" strategy="beforeInteractive">{`
     (function () {
       try {
@@ -77,7 +85,9 @@ export default function RootLayout({
   <AuthSyncBridge />
   <StartStoryPortalProvider>
   <FirstRunGate />
+  <main id="main" className="min-h-dvh">
   <AppShell><RouteTransition>{children}</RouteTransition></AppShell>
+  </main>
   </StartStoryPortalProvider>
   <Analytics />
   <SupabaseListener />
