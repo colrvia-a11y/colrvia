@@ -9,7 +9,7 @@ export default function OnboardingChat({ designerId }: { designerId: string }) {
   if (!API_MODE) return null
 
   return (
-    <div className="rounded-2xl border border-white/15 bg-white/5 p-4 text-white/95">
+    <div role="dialog" aria-label="Preferences chat" className="rounded-2xl border border-white/15 bg-white/5 p-4 text-white/95">
       <div className="min-h-[120px]">
         {currentNode?.question ? (
           <p className="text-base md:text-lg">{currentNode.question}</p>

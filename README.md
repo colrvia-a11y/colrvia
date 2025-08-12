@@ -122,6 +122,13 @@ Run `npm test` to execute vitest suite verifying contrast rules & variant shifts
 ## UI Component Tests
 Initial UI tests live in `tests/ui/`. Add new tests colocated under `tests/ui/your-component.test.tsx`. The test environment is jsdom (configured in `vite.config.ts`) with jest‑dom assertions (`tests/setup.ts`). Keep component APIs small and accessible (roles / aria-* used in assertions).
 
+## End-to-end Tests
+Playwright drives browser-based flows. Before running:
+- install browsers with `npx playwright install`
+- set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `NEXT_PUBLIC_ONBOARDING_MODE=api`
+
+Then run `npm run test:e2e`.
+
 ## Component Library Snapshot
 Key primitives: `Button`, `Chip`, `Progress`, `DesignerCard`, `SummaryCard`, `SwatchCard`, `PaletteGrid`, `StoryActionBar`, `CopyToast`. Each aims for:
 1. Minimal props surface
