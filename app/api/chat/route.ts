@@ -32,10 +32,17 @@ export async function POST(req: NextRequest) {
       progress: body.sessionState?.progress ?? 0,
     };
 
-    // Call the Responses API with Structured Outputs (strict JSON Schema)
+    // Call the Responses API using text.format JSON schema (updated API)
     const options: any = {
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       instructions: SYSTEM_PROMPT,
+      modalities: ["text"],
+      text: {
+        format: {
+          type: "json_schema",
+          json_schema: IntakeTurnJSONSchema
+        }
+      },
       input: [
         {
           role: "user",
@@ -54,10 +61,6 @@ export async function POST(req: NextRequest) {
           ],
         },
       ],
-      response_format: {
-        type: "json_schema",
-        json_schema: IntakeTurnJSONSchema,
-      },
     };
 
     const res = await client.responses.create(options);
