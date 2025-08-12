@@ -46,7 +46,7 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
             <Link href="/designers" className="hover:underline">Designers</Link>
             {!checking && !user && <Link href="/sign-in" className="hover:underline">Sign in / Sign up</Link>}
             {user && <Link href="/account" aria-label="Account" className="rounded-full border border-white/15 bg-white/5 p-2 hover:bg-white/10 transition-colors"><User size={18} /></Link>}
-            {user && <button onClick={signOut} className="text-sm hover:underline" aria-label="Sign out">Sign out</button>}
+            {user && <button onClick={signOut} className="text-sm hover:underline">Sign out</button>}
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -58,7 +58,7 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
             <div className="flex flex-col gap-2 text-sm">
               <Link href="/designers" className="py-2">Designers</Link>
               {!user && <Link href="/sign-in" className="py-2">Sign in / Sign up</Link>}
-              {user && <Link href="/account" aria-label="Account" className="py-2 flex items-center gap-2"><User size={16} /><span className="sr-only">Account</span></Link>}
+              {user && <Link href="/account" className="py-2 flex items-center gap-2"><User size={16} /><span className="sr-only">Account</span></Link>}
               {user && <button onClick={signOut} className="py-2 text-left">Sign out</button>}
             </div>
           </div>

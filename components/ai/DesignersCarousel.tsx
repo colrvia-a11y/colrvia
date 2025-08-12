@@ -60,16 +60,16 @@ export default function DesignersCarousel(){
     }
   },[updateActive])
   return (
-    <section aria-roledescription="carousel" aria-label="Available AI designers" className="relative">
+  <section aria-roledescription="carousel" aria-label="Available AI designers" className="relative">
       <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-[var(--bg-canvas)] to-transparent z-10" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[var(--bg-canvas)] to-transparent z-10" />
       <div className="absolute inset-y-0 left-0 z-20 flex items-center">
-        <button type="button" className="btn btn-secondary rounded-full shadow-sm h-10 w-10" aria-controls={id} aria-label="Previous" onClick={()=>scrollByDir(-1)}>
+  <button type="button" className="btn btn-secondary rounded-full shadow-sm h-10 w-10" aria-controls={id} aria-label="Previous" onClick={()=>scrollByDir(-1)}>
           <ChevronLeft className="h-5 w-5" />
         </button>
       </div>
       <div className="absolute inset-y-0 right-0 z-20 flex items-center">
-        <button type="button" className="btn btn-secondary rounded-full shadow-sm h-10 w-10" aria-controls={id} aria-label="Next" onClick={()=>scrollByDir(1)}>
+  <button type="button" className="btn btn-secondary rounded-full shadow-sm h-10 w-10" aria-controls={id} aria-label="Next" onClick={()=>scrollByDir(1)}>
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
@@ -106,13 +106,13 @@ export default function DesignersCarousel(){
         })}
       </div>
 
-      <div className="mt-4 flex items-center justify-center gap-2" aria-label="Slide position">
+    <div className="mt-4 flex items-center justify-center gap-2" aria-label="Slide position">
         {designers.map((_,i)=>(
-          <button key={i} type="button" aria-label={`Go to slide ${i+1}`} aria-current={active===i? 'true':'false'} onClick={()=>{
+      <button key={i} type="button" aria-label={`Go to slide ${i+1}`} aria-current={active===i? 'true':'false'} onClick={()=>{
             const el = listRef.current; if(!el) return
             const card = el.querySelector<HTMLElement>(`[data-card-index="${i}"]`)
             card?.scrollIntoView({ inline:'center', behavior:'smooth' })
-          }} className={[ 'h-2 rounded-full transition-all', active===i? 'w-6 bg-[var(--ink)]':'w-2 bg-[var(--ink-subtle)]', 'focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50' ].join(' ')} />
+      }} className={[ 'h-2 rounded-full transition-all', active===i? 'w-6 bg-[var(--ink)]':'w-2 bg-muted-foreground/40', 'focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50' ].join(' ')} />
         ))}
       </div>
     </section>

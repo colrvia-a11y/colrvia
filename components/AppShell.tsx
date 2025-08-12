@@ -10,7 +10,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="max-w-content container flex items-center justify-between py-3">
           <Link href="/" className="font-display text-2xl text-[#F7F7F2]">Colrvia</Link>
           <nav aria-label="Utility" className="flex gap-3">
-            <Link href="/account" aria-label="Account" className="rounded-full border border-white/15 bg-white/5 p-2 hover:bg-white/10 transition-colors">
+            <Link href="/account" className="rounded-full border border-white/15 bg-white/5 p-2 hover:bg-white/10 transition-colors" aria-label="Account">
               <User className="h-5 w-5" />
             </Link>
           </nav>

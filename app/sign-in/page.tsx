@@ -126,7 +126,7 @@ export default function SignInPage() {
       </div>
 
       {mode==='magic' && (
-        <form onSubmit={sendMagicLink} className="space-y-3 mb-6" aria-label="Magic link form">
+  <form onSubmit={sendMagicLink} className="space-y-3 mb-6">
           <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder={t('emailPlaceholder')} className="w-full rounded-xl border px-3 py-2" disabled={busy} required />
           <button type="submit" disabled={busy} className="w-full rounded-2xl py-3 bg-black text-white">{busy? t('sendMagicLinkBusy') : t('sendMagicLinkIdle')}</button>
         </form>
@@ -135,14 +135,14 @@ export default function SignInPage() {
       {mode==='password' && (
         <div className="mb-6">
           {pwPhase==='signin' && (
-            <form onSubmit={signInWithPassword} className="space-y-3" aria-label="Password sign in form">
+            <form onSubmit={signInWithPassword} className="space-y-3">
               <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder={t('emailPlaceholder')} className="w-full rounded-xl border px-3 py-2" disabled={busy} required />
               <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder={t('passwordPlaceholder')} className="w-full rounded-xl border px-3 py-2" disabled={busy} required />
               <button type="submit" disabled={busy} className="w-full rounded-2xl py-3 bg-black text-white">{busy? t('signInSubmitBusy') : t('signInSubmitIdle')}</button>
             </form>
           )}
           {pwPhase==='signup' && (
-            <form onSubmit={signUpWithPassword} className="space-y-3" aria-label="Password sign up form">
+            <form onSubmit={signUpWithPassword} className="space-y-3">
               <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder={t('emailPlaceholder')} className="w-full rounded-xl border px-3 py-2" disabled={busy} required />
               <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder={t('passwordMinPlaceholder')} className="w-full rounded-xl border px-3 py-2" disabled={busy} required minLength={6} />
               <input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} placeholder={t('confirmPasswordPlaceholder')} className="w-full rounded-xl border px-3 py-2" disabled={busy} required />
