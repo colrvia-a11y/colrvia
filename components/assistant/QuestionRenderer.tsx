@@ -15,15 +15,16 @@ type Props = {
 
 export default function QuestionRenderer({ turn, onAnswer, onComplete, completeBusy }: Props) {
   const [text, setText] = React.useState("");
+  const fieldId = turn?.field_id;
+
+  React.useEffect(() => {
+    if (!fieldId || fieldId === "_complete") return;
+    track('question_shown', { id: fieldId, priority: getQuestionPriority(fieldId) });
+  }, [fieldId]);
 
   if (!turn) return null;
 
-  React.useEffect(() => {
-    if (!turn || !turn.field_id || turn.field_id === "_complete") return;
-    track('question_shown', { id: turn.field_id, priority: getQuestionPriority(turn.field_id) });
-  }, [turn?.field_id]);
-
-  if (turn.field_id === "_complete") {
+  if (fieldId === "_complete") {
     return (
       <div className="p-4 rounded-2xl border bg-white/70 dark:bg-neutral-900/70 text-center">
         <div className="text-lg font-medium">{turn.next_question}</div>
