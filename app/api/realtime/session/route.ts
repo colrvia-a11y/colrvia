@@ -24,7 +24,11 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: rtModel,
         voice: rtVoice,
-        // You can pass other defaults here (instructions, modalities) if desired.
+        // Keep the agent quiet unless we send response.create over the data channel.
+        instructions:
+          "You are the voice of Colrvia. Do NOT ask your own questions. " +
+          "Only speak the exact text you receive via response.create events. " +
+          "Keep replies warm, brief, and natural. If no event arrives, stay silent."
       }),
     });
 

@@ -45,6 +45,7 @@ export default function IntakePage() {
   React.useEffect(() => { if (!turn) ask("INIT"); }, [turn, ask]);
 
   function resetAll() {
+    try { window.colrviaVoice?.stop(); } catch {}
     setSession({ answers: {}, photos: [], progress: 0, palette_hypotheses: [], constraints: {} });
     setTurn(null); setLog([]); setError(null); setHistory([]); localStorage.removeItem("colrvia_session");
   }
@@ -52,6 +53,26 @@ export default function IntakePage() {
     setHistory((h: { field_id: string; value: any }[]) => { const next=[...h]; const last=next.pop(); if(!last) return next; setSession(s=>{ const a={...s.answers}; delete a[last.field_id]; return { ...s, answers:a };}); ask("BACK"); return next; });
   }
   const total = countAllFields(session) || 1; const answered = Object.keys(session.answers||{}).length; const pct = Math.min(100, Math.round(answered/total*100));
+
+  // Speak on each new turn (question) when voice active and turn changes
+  const lastSpokenRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (!voiceActive) return;
+    if (!turn) return;
+    // Completion sentinel
+    if (turn.field_id === "_complete") {
+      if (lastSpokenRef.current !== "__done__") {
+        window.colrviaVoice?.speak("Thanks, that's everything I need. You can review or adjust answers and then proceed.");
+        lastSpokenRef.current = "__done__";
+      }
+      return;
+    }
+    if (turn.field_id && lastSpokenRef.current !== turn.field_id) {
+      const q = (turn as any).next_question || ""; // property defined on IntakeTurn
+      if (q) window.colrviaVoice?.speak(q);
+      lastSpokenRef.current = turn.field_id;
+    }
+  }, [turn, voiceActive]);
 
   return (
     <>
@@ -63,7 +84,7 @@ export default function IntakePage() {
             <div className="text-xs text-neutral-600">{pct}% complete</div>
             <button className="text-sm underline" onClick={goBack} disabled={!history.length}>Back</button>
             <button className="text-sm underline" onClick={resetAll}>Start over</button>
-            <VoiceMic onActiveChange={setVoiceActive} />
+            <VoiceMic onActiveChange={setVoiceActive} greet="Hi—I'll ask a few quick questions to understand your needs. Ready when you are." />
           </div>
         </div>
   {loading && <div className="text-xs text-neutral-500">Thinking…</div>}

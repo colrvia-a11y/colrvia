@@ -1,12 +1,51 @@
 "use client";
 import React from "react";
 
-type Props = { onActiveChange?: (active: boolean) => void };
+type Props = { onActiveChange?: (active: boolean) => void; greet?: string | null };
 
-export default function VoiceMic({ onActiveChange }: Props) {
+declare global {
+  interface Window {
+    colrviaVoice?: {
+      speak: (text: string) => void;
+      stop: () => void;
+      active: () => boolean;
+    };
+  }
+}
+
+export default function VoiceMic({ onActiveChange, greet }: Props) {
   const [active, setActive] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const pcRef = React.useRef<RTCPeerConnection | null>(null);
+  const dcRef = React.useRef<RTCDataChannel | null>(null);
+
+  function exposeBus() {
+    window.colrviaVoice = {
+      speak: (text: string) => {
+        const dc = dcRef.current;
+        if (!dc || dc.readyState !== "open") return;
+        const payload = {
+          type: "response.create",
+          response: {
+            modalities: ["audio"],
+            // We use 'instructions' as the speech body per Realtime docs
+            instructions: text,
+          },
+        };
+        dc.send(JSON.stringify(payload));
+      },
+      stop: () => {
+        try {
+          pcRef.current?.getSenders().forEach((s) => (s.track as MediaStreamTrack | undefined)?.stop());
+          pcRef.current?.close();
+        } catch {}
+        pcRef.current = null;
+        setActive(false);
+        onActiveChange?.(false);
+      },
+      active: () => active,
+    };
+  }
 
   async function start() {
     setError(null);
@@ -24,9 +63,19 @@ export default function VoiceMic({ onActiveChange }: Props) {
       audioEl.autoplay = true;
       pc.ontrack = (e) => { audioEl.srcObject = e.streams[0]; };
 
-      // Send mic / receive back
-      pc.addTrack(stream.getTracks()[0], stream);
+      // Send mic / receive back audio
       pc.addTransceiver("audio", { direction: "sendrecv" });
+      pc.addTrack(stream.getTracks()[0], stream);
+
+      // Data channel for Realtime events
+      const dc = pc.createDataChannel("oai-events");
+      dcRef.current = dc;
+      dc.onopen = () => {
+        exposeBus();
+        if (greet) {
+          window.colrviaVoice?.speak(greet);
+        }
+      };
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
@@ -44,14 +93,11 @@ export default function VoiceMic({ onActiveChange }: Props) {
         setTimeout(resolve, 1200);
       });
 
-      // Send to our server relay
+      // Use our server relay to start the Realtime call
       const res = await fetch("/api/realtime/offer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sdp: pc.localDescription?.sdp || "",
-          model: undefined, // use server default
-        }),
+        body: JSON.stringify({ sdp: pc.localDescription?.sdp || "" }),
       });
       if (!res.ok) throw new Error((await res.text()) || "Failed to start realtime call");
       const answerSDP = await res.text();
@@ -59,6 +105,7 @@ export default function VoiceMic({ onActiveChange }: Props) {
 
       setActive(true);
       onActiveChange?.(true);
+      exposeBus();
     } catch (e: any) {
       setError(e?.message || "Mic error");
       setActive(false);
@@ -67,13 +114,7 @@ export default function VoiceMic({ onActiveChange }: Props) {
   }
 
   function stop() {
-    try {
-      pcRef.current?.getSenders().forEach((s) => (s.track as MediaStreamTrack | undefined)?.stop());
-      pcRef.current?.close();
-    } catch {}
-    pcRef.current = null;
-    setActive(false);
-    onActiveChange?.(false);
+    window.colrviaVoice?.stop();
   }
 
   return (
