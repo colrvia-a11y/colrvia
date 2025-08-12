@@ -1,12 +1,14 @@
 import OpenAI from "openai";
 import { NextRequest } from "next/server";
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
     const { imageUrl } = await req.json();
     if (!imageUrl) return new Response(JSON.stringify({ error: "imageUrl required" }), { status: 400 });
 
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return new Response(JSON.stringify({ error: "missing OpenAI API key" }), { status: 500 });
+    const client = new OpenAI({ apiKey });
     const res = await client.responses.create({
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       input: [

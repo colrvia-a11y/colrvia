@@ -1,6 +1,11 @@
+let withNextIntl = (config) => config
+if (process.env.VITEST_WORKER_ID == null) {
+  const createNextIntlPlugin = require('next-intl/plugin')
+  withNextIntl = createNextIntlPlugin('./i18n/request.ts')
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  i18n: { locales: ['en', 'es'], defaultLocale: 'en' },
   reactStrictMode: true,
   async redirects() {
     return [
@@ -10,4 +15,4 @@ const nextConfig = {
   }
 }
 
-module.exports = nextConfig
+module.exports = withNextIntl(nextConfig)

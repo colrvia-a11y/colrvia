@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as Dialog from '@radix-ui/react-dialog'
 import { useReducedMotion } from '@/components/theme/MotionSettings'
@@ -15,7 +15,14 @@ export default function Cinematic({ open, onExit, story }: CinematicProps){
     const t = setInterval(()=>{ if(startRef.current) setElapsed((performance.now()-startRef.current)/1000) },500)
     return ()=>clearInterval(t)
   },[open, story.id])
-  function end(){ track('cinematic_exit',{ id:story.id, seconds:Number(elapsed.toFixed(1)) }); onExit() }
+  const end = useCallback(()=>{ track('cinematic_exit',{ id:story.id, seconds:Number(elapsed.toFixed(1)) }); onExit() },[elapsed, onExit, story.id])
+  useEffect(()=>{
+    function handleKey(e:KeyboardEvent){ if(e.key==='Escape') end() }
+    if(open){
+      window.addEventListener('keydown', handleKey)
+      return ()=> window.removeEventListener('keydown', handleKey)
+    }
+  },[open, end])
   const palette = story.palette || []
   const reduce = useReducedMotion()
   return (
