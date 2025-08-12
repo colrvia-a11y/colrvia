@@ -11,7 +11,7 @@ export default function Button({ className, variant='primary', as:Comp='button',
   const variants = {
     primary: 'bg-brand text-brand-contrast hover:bg-brand-hover',
     outline: 'bg-surface border border-linen text-ink hover:bg-paper',
-    ghost: 'text-ink hover:bg-paper'
+    ghost: 'text-foreground hover:bg-paper hover:text-foreground'
   } as const
   const styles = clsx(base, variants[variant], className)
   if (Comp !== 'button') return <Comp href={href} type={type} className={twMerge(styles)} {...rest} />

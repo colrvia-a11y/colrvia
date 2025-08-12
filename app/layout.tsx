@@ -66,7 +66,7 @@ export default async function RootLayout({
         <meta name="theme-color" content="#F7F5EF" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
       </head>
-      <body className="antialiased font-sans">
+      <body className="min-h-screen bg-background text-foreground antialiased font-sans">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {/* Skip link for keyboard users */}
           <a

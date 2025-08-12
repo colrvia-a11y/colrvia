@@ -39,6 +39,37 @@ a, button, [role="button"] { outline-offset: 3px; }
   *:focus-visible { outline:none; box-shadow:var(--focus-ring); }
 }
 
+@layer base {
+  :root {
+    /* Keep existing background tokens as-is (brand dark stays). 
+       We only correct foregrounds for readability. */
+    /* Light-on-dark default text for brand background */
+    --foreground: 0 0% 98%;
+    --muted-foreground: 210 16% 85%;
+    --secondary-foreground: 210 16% 92%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Cards/popovers stay light surfaces with dark text */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+  }
+
+  /* Ensure base text always honors our tokens */
+  body {
+    color: hsl(var(--foreground));
+  }
+
+  /* Typography helpers for long-form copy if prose is used */
+  .prose {
+    --tw-prose-body: hsl(var(--foreground));
+    --tw-prose-headings: hsl(var(--foreground));
+    --tw-prose-links: hsl(var(--accent-foreground));
+    --tw-prose-bold: hsl(var(--foreground));
+  }
+}
+
 /* Utilities */
 @layer components {
   .container-xy { margin-left:auto; margin-right:auto; max-width:var(--container); padding-left:1.5rem; padding-right:1.5rem; }
@@ -151,6 +182,7 @@ a, button, [role="button"] { outline-offset: 3px; }
 
   /* Two masks: full box minus content-box => a frame */
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;      /* Safari/Chrome */
           mask-composite: exclude;  /* Firefox */
 
