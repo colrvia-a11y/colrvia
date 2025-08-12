@@ -25,6 +25,13 @@ describe('deltaE', () => {
     expect(deltaEHex('#000000', '#ffffff')).toBeCloseTo(deltaEHex('#ffffff', '#000000'), 5)
     expect(far).toBeGreaterThan(near)
   })
+  it('detects very small differences', () => {
+    expect(deltaEHex('#000000', '#010101')).toBeLessThan(1)
+  })
+  it('matches reference values', () => {
+    expect(deltaEHex('#ff0000', '#00ff00')).toBeCloseTo(86.6, 1)
+    expect(deltaEHex('#000000', '#ffffff')).toBeCloseTo(100, 5)
+  })
 })
 
 describe('variants', () => {

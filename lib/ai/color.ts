@@ -38,10 +38,11 @@ export function hexToLab(hex: string): LAB {
   return { L, a, b: b2 }
 }
 
-const de00 = differenceCiede2000()
+// Precompute culori's ΔE2000 comparator
+const deltaE2000 = differenceCiede2000()
 
 export function deltaE(l1: LAB, l2: LAB): number {
-  return de00(
+  return deltaE2000(
     { mode: 'lab65', l: l1.L, a: l1.a, b: l1.b },
     { mode: 'lab65', l: l2.L, a: l2.a, b: l2.b }
   )
