@@ -39,6 +39,9 @@ test('cinematic traps focus and closes on escape', async () => {
   const exit = screen.getByRole('button', { name: /exit reveal/i })
   expect(exit).toHaveFocus()
 
+  const outside = screen.getByTestId('outside')
+  expect(outside.closest('[aria-hidden="true"]')).not.toBeNull()
+
   await user.tab()
   expect(exit).toHaveFocus()
 
