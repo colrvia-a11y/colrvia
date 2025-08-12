@@ -33,13 +33,13 @@ export async function POST(req: NextRequest) {
     };
 
     // Call the Responses API with Structured Outputs (strict JSON Schema)
-    const res = await client.responses.create({
+    const options: any = {
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       instructions: SYSTEM_PROMPT,
       input: [
         {
           role: "user",
-            content: [
+          content: [
             {
               type: "input_text",
               text:
@@ -58,8 +58,9 @@ export async function POST(req: NextRequest) {
         type: "json_schema",
         json_schema: IntakeTurnJSONSchema,
       },
-      // NOTE: We’ll upgrade to streaming in Step 5 to keep this step simple.
-    });
+    };
+
+    const res = await client.responses.create(options);
 
     // Extract JSON text safely
     const raw = (res as any).output_text ?? JSON.stringify((res as any).output?.[0]?.content?.[0]?.json ?? {});
