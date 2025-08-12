@@ -1,11 +1,16 @@
 import type { GenerateInput, Swatch, Placements, Role } from '@/types/story';
 import { getCatalog, findByTag, byName } from './catalog';
+
+function normalizeBrand(brand: string) {
+  return /behr/i.test(brand) ? 'Behr' : 'SW';
+}
 const pick = <T>(arr:T[], def?:T):T => arr[Math.floor(Math.random()*arr.length)] ?? (def ?? arr[0]);
 const role = (paint: any, r: Role) => ({ ...paint, role: r });
 export function buildPalette(input: GenerateInput) {
-  const cat = getCatalog(input.brand);
+  const brand = normalizeBrand(input.brand);
+  const cat = getCatalog(brand);
   // Walls candidates
-  let walls = findByTag(input.brand,'walls');
+  let walls = findByTag(brand,'walls');
   if (input.vibe === 'Cozy Neutral' || input.vibe==='Modern Warm') {
     walls = walls.length? walls : cat.filter(p => p.tags?.includes('neutral'));
   }
@@ -13,17 +18,17 @@ export function buildPalette(input: GenerateInput) {
     const airy = cat.filter(p => p.tags?.includes('coastal') || p.tags?.includes('light'));
     walls = airy.length ? airy : walls;
   }
-  const wallsPaint = pick(walls, byName(input.brand, input.brand==='SW'?'Accessible Beige':'Blank Canvas')!);
+  const wallsPaint = pick(walls, byName(brand, brand==='SW'?'Accessible Beige':'Blank Canvas')!);
   // Trim
   const trims = cat.filter(p => p.tags?.includes('trim')) ;
-  const trimPaint = pick(trims, byName(input.brand, input.brand==='SW'?'Pure White':'Ultra Pure White')!);
+  const trimPaint = pick(trims, byName(brand, brand==='SW'?'Pure White':'Ultra Pure White')!);
   // Accent
   let accents = cat.filter(p => p.tags?.includes('accent'));
   if (input.vibe === 'Moody Blue-Green') {
     const moody = cat.filter(p => /green|blue/i.test(p.tags?.join(' ')||''));
     accents = moody.length? moody : accents;
   }
-  const accentPaint = pick(accents, byName(input.brand, input.brand==='SW'?'Pewter Green':'Hawk Brown')!);
+  const accentPaint = pick(accents, byName(brand, brand==='SW'?'Pewter Green':'Hawk Brown')!);
   // Cabinets (optional support)
   const cabinetsPaint = input.vibe.includes('Coastal')
     ? pick(cat.filter(p => p.tags?.includes('coastal') || p.tags?.includes('light')), wallsPaint)
@@ -45,9 +50,10 @@ export function buildPalette(input: GenerateInput) {
 
 // Deterministic seed palette based on brand + vibe fallback
 export function seedPaletteFor(args: { brand: string; vibe?: string }) {
-  const cat = getCatalog(args.brand as any)
+  const brand = normalizeBrand(args.brand)
+  const cat = getCatalog(brand as any)
   // pick first neutral for walls, first trim tag, first accent tag etc.
-  const walls = findByTag(args.brand as any,'walls')[0] || cat[0]
+  const walls = findByTag(brand as any,'walls')[0] || cat[0]
   const trim = cat.find(p=>p.tags?.includes('trim')) || walls
   const accent = cat.find(p=>p.tags?.includes('accent')) || walls
   const cabinets = cat.find(p=>p.tags?.includes('neutral') && p.name!==walls.name) || walls
