@@ -7,6 +7,8 @@ import type { IntakeTurn, SessionState } from "@/lib/types";
 import { countAllFields } from "@/lib/engine";
 import { useRouter, useSearchParams } from "next/navigation";
 
+export const dynamic = 'force-dynamic'
+
 export default function IntakePage() {
   const [session, setSession] = React.useState<SessionState>({
     answers: {}, photos: [], progress: 0, palette_hypotheses: [], constraints: {}
