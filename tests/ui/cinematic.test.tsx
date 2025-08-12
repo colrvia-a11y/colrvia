@@ -13,7 +13,7 @@ describe('Cinematic reveal', ()=>{
     const onExit = vi.fn()
   render(<MotionProvider><Cinematic open onExit={onExit} story={story} /></MotionProvider>)
     expect(screen.getByRole('dialog', { name:/sample story/i })).toBeInTheDocument()
-    fireEvent.keyDown(window, { key:'Escape' })
+    fireEvent.keyDown(document, { key:'Escape' })
     await waitFor(() => expect(onExit).toHaveBeenCalled())
   })
 })

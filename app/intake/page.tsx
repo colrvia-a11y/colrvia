@@ -5,6 +5,7 @@ import VoiceMic from "@/components/assistant/VoiceMic";
 import GlowFrame from "@/components/assistant/GlowFrame";
 import type { IntakeTurn, SessionState } from "@/lib/types";
 import { countAllFields } from "@/lib/engine";
+import { useRouter } from "next/navigation";
 
 export default function IntakePage() {
   const [session, setSession] = React.useState<SessionState>({
@@ -15,7 +16,9 @@ export default function IntakePage() {
   const [voiceActive, setVoiceActive] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
+  const [revealing, setRevealing] = React.useState(false);
   const [history, setHistory] = React.useState<{ field_id: string; value: any }[]>([]);
+  const router = useRouter();
 
   const ask = React.useCallback(async (userMessage: string, saveUnder?: string) => {
     try {
@@ -43,6 +46,37 @@ export default function IntakePage() {
   }, [session]);
 
   React.useEffect(() => { if (!turn) ask("INIT"); }, [turn, ask]);
+
+  const handleReveal = React.useCallback(async () => {
+    try {
+      setError(null);
+      setRevealing(true);
+      const vibe = session.answers?.["desired_vibe"] as string | undefined;
+      const res = await fetch("/api/stories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand: "sherwin_williams",
+          vibe: vibe || "Custom",
+          source: "intake"
+        })
+      });
+      if (res.status === 401) {
+        router.push("/sign-in");
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok || !data?.id) {
+        setError(data?.error || "Could not create story");
+        return;
+      }
+      router.push(`/reveal/${data.id}`);
+    } catch (e: any) {
+      setError(e?.message || "Network error");
+    } finally {
+      setRevealing(false);
+    }
+  }, [router, session]);
 
   function resetAll() {
     try { window.colrviaVoice?.stop(); } catch {}
@@ -88,8 +122,14 @@ export default function IntakePage() {
           </div>
         </div>
   {loading && <div className="text-xs text-neutral-500">Thinking…</div>}
+  {revealing && <div className="text-xs text-neutral-500">Generating palette…</div>}
   {error && <div className="text-xs text-red-600">{error}</div>}
-  <QuestionRenderer turn={turn} onAnswer={(ans)=>{ if(!turn) return; ask(ans, turn.field_id); }} />
+  <QuestionRenderer
+    turn={turn}
+    onAnswer={(ans)=>{ if(!turn) return; ask(ans, turn.field_id); }}
+    onComplete={handleReveal}
+    completeBusy={revealing}
+  />
         {log.length > 0 && (
           <details className="mt-6 text-xs text-neutral-500">
             <summary className="cursor-pointer select-none">Log</summary>
