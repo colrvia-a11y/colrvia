@@ -13,7 +13,7 @@ export default function FirstRunWelcome(){
         <h1 className="font-display text-4xl leading-[1.05]">Design calmer, faster.</h1>
   <p className="text-sm text-muted-foreground">Turn a vibe into real paints with placement guidance. No account needed until you save.</p>
         <div className="space-y-3">
-          <Link href="/start" onClick={setDone} className="btn btn-primary w-full">Start color story</Link>
+          <Link href="/designers" onClick={setDone} className="btn btn-primary w-full">Start color story</Link>
           <Link href="/sign-in" onClick={()=>{ setDone(); }} className="btn btn-secondary w-full">Sign in</Link>
           <button onClick={()=>{ setDone(); router.push('/home') }} className="btn btn-ghost w-full">Skip for now</button>
         </div>
