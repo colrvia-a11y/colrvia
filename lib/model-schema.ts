@@ -7,7 +7,7 @@ export const InputTypeZ = z.enum([
 const ShowIfCondZ = z.object({
   field: z.string().min(1),
   op: z.enum(["==","!=",">=", "<=", ">", "<", "truthy", "falsy"]),
-  value: z.unknown().optional(),
+  value: z.union([z.string(), z.number(), z.boolean(), z.null()]).optional(),
 }).strict();
 
 const FollowupZ = z.object({
@@ -72,11 +72,8 @@ export const IntakeTurnJSONSchema = {
                     oneOf: [
                       { type: "string" },
                       { type: "number" },
-                      { type: "integer" },
                       { type: "boolean" },
-                      { type: "null" },
-                      { type: "array", items: {} },
-                      { type: "object", additionalProperties: false }
+                      { type: "null" }
                     ]
                   }
                 },
