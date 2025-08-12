@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import dynamic from 'next/dynamic'
 const LoadingOverlay = dynamic(()=>import('@/components/ux/LoadingOverlay'), { ssr:false })
 const ConfettiBurst = dynamic(()=>import('@/components/ux/ConfettiBurst'), { ssr:false })
@@ -13,11 +13,12 @@ import { getFirstQuestion, getCurrentNode, mapAnswersToStoryInput, type Intervie
 import { track } from "@/lib/analytics"
 import { useRouter } from "next/navigation"
 
-const API_MODE = process.env.NEXT_PUBLIC_ONBOARDING_MODE === "api"
 
 type Props = { designerId: string }
 
 export default function PreferencesChat({ designerId }: Props) {
+  // Read env at render time so tests can toggle before render (module-level const freezes value too early)
+  const API_MODE = process.env.NEXT_PUBLIC_ONBOARDING_MODE === 'api'
   const router = useRouter()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [state, setState] = useState<InterviewState>(startState())
@@ -28,6 +29,7 @@ export default function PreferencesChat({ designerId }: Props) {
   const [input, setInput] = useState("")
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [remoteNode, setRemoteNode] = useState<any | null>(null)
+  const startedRef = useRef(false)
   const currentNode = API_MODE ? (remoteNode || { id:'done', type:'end', options:[] }) : getCurrentNode(state)
   const isMulti = currentNode.type === 'multi_select' || currentNode.type === 'multi'
   const [multiTemp, setMultiTemp] = useState<string[]>([])
@@ -68,22 +70,26 @@ export default function PreferencesChat({ designerId }: Props) {
 
   useEffect(()=>{
     if(API_MODE){
-      let ignore = false
+      if(startedRef.current) return
+      startedRef.current = true
+      let alive = true
       ;(async () => {
         setLoading(true)
         try{
           const r = await fetch('/api/intakes/start',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ designerId }) })
           const j = await r.json().catch(()=>null)
-          if(!ignore && j){
-            setSessionId(j.sessionId)
-            setRemoteNode(j.step.node)
-            setMessages([{ role:'assistant', content: j.step.node.question }])
-          }
+            if(alive && j){
+              setSessionId(j.sessionId)
+              setRemoteNode(j.step?.node || null)
+              if(j.step?.type === 'question') {
+                setMessages([{ role:'assistant', content: j.step.node.question }])
+              }
+            }
         } finally {
-          if(!ignore) setLoading(false)
+          if(alive) setLoading(false)
         }
       })()
-      return () => { ignore = true }
+      return () => { alive = false }
     }
     // Resume or start intake then greet if new
     let ignore = false
@@ -142,6 +148,7 @@ export default function PreferencesChat({ designerId }: Props) {
     const content = (value ?? input).trim()
     if (!content) return
     if(API_MODE){
+      if(!sessionId || !remoteNode) return
       setMessages(prev => [...prev, { role:'user', content }])
       setInput("")
       const r = await fetch('/api/intakes/step',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sessionId, answer: content }) })
@@ -150,14 +157,15 @@ export default function PreferencesChat({ designerId }: Props) {
         setRemoteNode(j.step.node)
         setMessages(prev => [...prev, { role:'assistant', content: j.step.node.question }])
         if(voiceOn) speak(j.step.node.question)
-      }else{
-        const closing = 'Great — generating your palette now.'
-        setMessages(prev => [...prev, { role:'assistant', content: closing }])
-        if(voiceOn) speak(closing)
-        setFinalizing(true)
-        try{ await fetch('/api/intakes/finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sessionId }) }) }catch{}
-        finally{ setFinalizing(false) }
+        return
       }
+      // done -> finalize
+      const closing = 'Great — generating your palette now.'
+      setMessages(prev => [...prev, { role:'assistant', content: closing }])
+      if(voiceOn) speak(closing)
+      setFinalizing(true)
+      try{ await fetch('/api/intakes/finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sessionId }) }) }catch(e){ console.error('FINALIZE_FAIL', e) }
+      finally{ setFinalizing(false) }
       return
     }
     setMessages(prev => [...prev, { role:'user', content }])
