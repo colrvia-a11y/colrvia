@@ -7,50 +7,67 @@ export default function VoiceMic({ onActiveChange }: Props) {
   const [active, setActive] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const pcRef = React.useRef<RTCPeerConnection | null>(null);
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   async function start() {
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Get ephemeral client secret for Realtime
       const tokenRes = await fetch("/api/realtime/session", { method: "POST" });
-      const data = await tokenRes.json();
-      if (!tokenRes.ok) throw new Error(data?.error || "Could not create realtime session");
+      const session = await tokenRes.json();
+      if (!tokenRes.ok) throw new Error(session?.error || "Could not create realtime session");
+
+      const token = session?.client_secret?.value;
+      const model = session?.model || "gpt-4o-realtime-preview-2024-12-17";
+      if (!token) throw new Error("Missing realtime client token");
 
       const pc = new RTCPeerConnection();
       pcRef.current = pc;
 
-      // play remote audio
+      // Play remote audio
       const audioEl = new Audio();
       audioEl.autoplay = true;
-      audioRef.current = audioEl;
       pc.ontrack = (e) => { audioEl.srcObject = e.streams[0]; };
 
-      // add mic
-      const sender = pc.addTrack(stream.getTracks()[0], new MediaStream([stream.getTracks()[0]]));
+      // Send mic
+      pc.addTrack(stream.getTracks()[0], stream);
+      // Receive audio back
+      pc.addTransceiver("audio", { direction: "sendrecv" });
 
-      // data channel optional
-      pc.addTransceiver("audio");
-
+      // Gather ICE before sending offer
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
+      await new Promise<void>((resolve) => {
+        if (pc.iceGatheringState === "complete") return resolve();
+        const check = () => {
+          if (pc.iceGatheringState === "complete") {
+            pc.removeEventListener("icegatheringstatechange", check);
+            resolve();
+          }
+        };
+        pc.addEventListener("icegatheringstatechange", check);
+        setTimeout(resolve, 1000); // safety timeout
+      });
 
-      const r = await fetch(data.client_secret?.value || data.client_secret || data?.url || "", {
+      // Send SDP offer to OpenAI Realtime endpoint WITH Authorization header
+      const endpoint = `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}`;
+      const r = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/sdp" },
-        body: offer.sdp,
-      }).catch(() => null);
-
-      if (!r || !r.ok) {
-        throw new Error("Failed to start realtime call");
-      }
-      const answer = await r.text();
-      await pc.setRemoteDescription({ type: "answer", sdp: answer });
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/sdp",
+        },
+        body: pc.localDescription?.sdp || "",
+      });
+      if (!r.ok) throw new Error("Failed to start realtime call");
+      const answerSDP = await r.text();
+      await pc.setRemoteDescription({ type: "answer", sdp: answerSDP });
 
       setActive(true);
       onActiveChange?.(true);
-    } catch (e:any) {
-      setError(e.message || "Mic error");
+    } catch (e: any) {
+      setError(e?.message || "Mic error");
       setActive(false);
       onActiveChange?.(false);
     }
