@@ -1,9 +1,10 @@
 // lib/analytics/client.ts
 "use client"
 import type { PostHog } from "posthog-js"
+import type { AnalyticsEventName, AnalyticsEventPayload } from "./events"
 
 let ready = false
-let q: Array<[string, Record<string, any> | undefined]> = []
+let q: Array<[AnalyticsEventName, any]> = []
 let ph: PostHog | null = null
 
 const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY
@@ -29,7 +30,7 @@ export function init() {
   }).catch(() => {})
 }
 
-export function track(name: string, props?: Record<string, any>) {
+export function track<E extends AnalyticsEventName>(name: E, props: AnalyticsEventPayload<E>) {
   if (!KEY) return // feature-flag off
   if (!ready) {
     q.push([name, props])

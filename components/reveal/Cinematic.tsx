@@ -27,7 +27,7 @@ export default function Cinematic({ open, onExit, story }: CinematicProps){
     } }
     window.addEventListener('keydown', key); return ()=>window.removeEventListener('keydown', key)
   },[open])
-  function end(){ track('cinematic_exit',{ id:story.id, seconds:elapsed.toFixed(1) }); onExit() }
+  function end(){ track('cinematic_exit',{ id:story.id, seconds:Number(elapsed.toFixed(1)) }); onExit() }
   const palette = story.palette || []
   const reduce = useReducedMotion()
   return <AnimatePresence>{open && (
