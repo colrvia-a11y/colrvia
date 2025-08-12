@@ -43,9 +43,8 @@ self.addEventListener('fetch',event=>{
   }
 });
 
-self.addEventListener('online',()=>{
-  self.clients.matchAll().then(clients=>clients.forEach(c=>c.postMessage('online')))
-});
-self.addEventListener('offline',()=>{
-  self.clients.matchAll().then(clients=>clients.forEach(c=>c.postMessage('offline')))
-});
+function broadcastStatus(status){
+  self.clients.matchAll().then(clients=>clients.forEach(c=>c.postMessage(status)))
+}
+self.addEventListener('online',()=>broadcastStatus('online'));
+self.addEventListener('offline',()=>broadcastStatus('offline'));
