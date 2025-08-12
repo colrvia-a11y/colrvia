@@ -1,4 +1,6 @@
 import { getDesigner } from '@/lib/ai/designers'
+import { AI_ENABLE, AI_MODEL, AI_MAX_OUTPUT_TOKENS, HAS_OPENAI_KEY } from '@/lib/ai/config'
+import { capture, enabled as analyticsEnabled } from '@/lib/analytics/server'
 
 type LegacySwatch = { role: string; brand: string; code: string; name: string; hex: string }
 
@@ -39,21 +41,24 @@ export function buildDeterministicNarrative(opts: {
 }
 
 export async function polishWithLLM(text: string, designerId?: string) {
-  if (!process.env.OPENAI_API_KEY) return text
+  if (!AI_ENABLE || !HAS_OPENAI_KEY) return text
   const d = getDesigner(designerId || '')
   const system = `${d?.style || ''}\nConstraints: 2–3 short sentences, warm and specific. Keep facts.`
   try {
     const { OpenAI } = await import('openai')
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
     const resp = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: AI_MODEL,
       temperature: 0.3,
-      max_tokens: 120,
+      max_tokens: Math.min(120, AI_MAX_OUTPUT_TOKENS),
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: `Rewrite more naturally, keep facts: ${text}` },
       ],
     })
+    if (analyticsEnabled() && (resp as any)?.usage) {
+      await capture('ai_usage', { model: AI_MODEL, ...(resp as any).usage })
+    }
     const t = resp.choices[0]?.message?.content?.trim()
     return t?.length ? t : text
   } catch {

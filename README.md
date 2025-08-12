@@ -350,6 +350,13 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 - Routes: `POST /api/intakes/start`, `GET /api/intakes/resume`, `POST /api/intakes/patch`, `POST /api/intakes/finalize`.
 - State (answers + chat messages) is saved after every turn; on finalize the created `story_id` is linked and the cookie cleared.
 
+### AI configuration
+- `AI_ENABLE=true|false` — master switch for LLM calls (defaults to deterministic if false or key missing)
+- `AI_MODEL` — OpenAI model id (default `gpt-4o-mini`)
+- `AI_MAX_OUTPUT_TOKENS` — cap response tokens (default 300)
+- `OPENAI_API_KEY` — required for any LLM usage (set in Vercel)
+- Status: visit `/api/ai/status` to verify `{ enabled, provider, model, hasKey }`
+
 ### Analytics (optional)
 - PostHog instrumentation is gated by `NEXT_PUBLIC_POSTHOG_KEY` and never sends raw free‑text answers.
 - Events: `designer_select`, `intake_start`, `intake_resume`, `preferences_question`, `preferences_answer` (choices or length only), `voice_toggle`, `mic_toggle`, `tts_speak`, `preferences_complete`.

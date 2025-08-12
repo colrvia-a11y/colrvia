@@ -4,6 +4,7 @@ import { PALETTE_GUIDELINES } from './guidelines'
 import { byBrand, isNearWhite, isNeutral, contrastScore, excludeByAvoid } from './catalog'
 import { makeRNG, pick } from '@/lib/utils/seededRandom'
 import { capture, enabled as analyticsEnabled } from '@/lib/analytics/server'
+import { AI_ENABLE, AI_MODEL, AI_MAX_OUTPUT_TOKENS, HAS_OPENAI_KEY } from '@/lib/ai/config'
 
 type Candidates = { neutrals: Color[]; whites: Color[]; accents: Color[] }
 
@@ -81,7 +82,7 @@ function sanitizeLlmPalette(parsed: Palette | null, candidates: Candidates, fall
 }
 
 async function tryLlmPick(input: DesignInput, candidates: Candidates, fallback: Palette): Promise<Palette | null> {
-  if (!process.env.OPENAI_API_KEY) return null
+  if (!AI_ENABLE || !HAS_OPENAI_KEY) return null
   let OpenAIImpl: any
   try {
     const mod = await import('openai')
@@ -144,11 +145,15 @@ async function tryLlmPick(input: DesignInput, candidates: Candidates, fallback: 
     const messages: any[] = [{ role: 'system', content: sys }, user]
     if (fixNote) messages.push({ role: 'system', content: `Fix the prior output: ${fixNote}` })
     const resp = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: AI_MODEL,
       temperature: 0.2,
       response_format: { type: 'json_object' },
+      max_tokens: AI_MAX_OUTPUT_TOKENS,
       messages
     })
+    if (analyticsEnabled() && (resp as any)?.usage) {
+      await capture('ai_usage', { model: AI_MODEL, ...(resp as any).usage })
+    }
     const parsed = JSON.parse(resp.choices[0]?.message?.content || '{}')
     return sanitizeLlmPalette(parsed, candidates, fallback)
   }
@@ -187,7 +192,7 @@ export async function designPalette(input: DesignInput): Promise<Palette> {
   const assisted = await tryLlmPick(input, candidates, fallback).catch(()=>null)
   if (!assisted || !assisted.swatches || assisted.swatches.length < 5) {
     if (analyticsEnabled()) {
-      await capture('orch_fallback', { reason: process.env.OPENAI_API_KEY ? 'llm_invalid_or_error' : 'llm_disabled', ms: Date.now() - t0 })
+      await capture('orch_fallback', { reason: (AI_ENABLE && HAS_OPENAI_KEY) ? 'llm_invalid_or_error' : 'llm_disabled', ms: Date.now() - t0 })
       await capture('orch_result', { roles: 5, via: 'deterministic', ms: Date.now() - t0 })
     }
     return fallback
