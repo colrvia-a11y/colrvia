@@ -65,15 +65,16 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
         )}
       </header>
       <main id="main" className="flex-1">{children}</main>
-  <footer className="mt-16 bg-[var(--color-bg)]">
-  <div className="max-w-6xl mx-auto px-4 py-10 text-sm text-muted-foreground flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-          <p className="opacity-80">© {new Date().getFullYear()} Colrvia</p>
-          <div className="flex gap-5">
-            <Link href="/designers" className="hover:underline">Designers</Link>
-            <Link href="/dashboard" className="hover:underline">Stories</Link>
-          </div>
-        </div>
-      </footer>
+  {/* Footer: force dark mode for better subtext contrast on dark green backgrounds */}
+  <footer className="mt-16 dark bg-[#2F5D50]">
+    <div className="max-w-6xl mx-auto px-4 py-10 text-sm flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+  <p className="opacity-80 text-subtext-dark">© {new Date().getFullYear()} Colrvia</p>
+      <div className="flex gap-5">
+  <Link href="/designers" className="hover:underline text-subtext-dark">Designers</Link>
+  <Link href="/dashboard" className="hover:underline text-subtext-dark">Stories</Link>
+      </div>
+    </div>
+  </footer>
   <TabBar />
     </div>
   )
