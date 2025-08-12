@@ -11,3 +11,6 @@ node_modules/
 .DS_Store
 coverage/
 .env.local
+
+# Ensure local env variants ignored
+.env*.local
