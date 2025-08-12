@@ -5,6 +5,7 @@ import VoiceMic from "@/components/assistant/VoiceMic";
 import GlowFrame from "@/components/assistant/GlowFrame";
 import type { IntakeTurn, SessionState } from "@/lib/types";
 import { countAllFields } from "@/lib/engine";
+import { useRouter } from "next/navigation";
 
 export default function IntakePage() {
   const [session, setSession] = React.useState<SessionState>({
@@ -16,6 +17,7 @@ export default function IntakePage() {
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [history, setHistory] = React.useState<{ field_id: string; value: any }[]>([]);
+  const router = useRouter();
 
   const ask = React.useCallback(async (userMessage: string, saveUnder?: string) => {
     try {
@@ -43,6 +45,30 @@ export default function IntakePage() {
   }, [session]);
 
   React.useEffect(() => { if (!turn) ask("INIT"); }, [turn, ask]);
+
+  async function handleReveal() {
+    try {
+      setLoading(true);
+      const body: any = {};
+      if (session.answers?.desired_vibe) body.vibe = session.answers.desired_vibe;
+      if (session.answers?.brand) body.brand = session.answers.brand;
+      const res = await fetch("/api/stories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (res.ok && data?.id) {
+        router.push(`/reveal/${data.id}`);
+      } else {
+        setError(data?.error || "Failed to generate palette");
+      }
+    } catch (e: any) {
+      setError(e?.message || "Network error");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function resetAll() {
     try { window.colrviaVoice?.stop(); } catch {}
@@ -89,7 +115,11 @@ export default function IntakePage() {
         </div>
   {loading && <div className="text-xs text-neutral-500">Thinking…</div>}
   {error && <div className="text-xs text-red-600">{error}</div>}
-  <QuestionRenderer turn={turn} onAnswer={(ans)=>{ if(!turn) return; ask(ans, turn.field_id); }} />
+  <QuestionRenderer
+    turn={turn}
+    onAnswer={(ans)=>{ if(!turn) return; ask(ans, turn.field_id); }}
+    onComplete={handleReveal}
+  />
         {log.length > 0 && (
           <details className="mt-6 text-xs text-neutral-500">
             <summary className="cursor-pointer select-none">Log</summary>

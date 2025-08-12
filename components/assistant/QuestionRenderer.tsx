@@ -5,12 +5,27 @@ import type { IntakeTurn } from "@/lib/types";
 type Props = {
   turn: IntakeTurn | null;
   onAnswer: (answer: string) => void;
+  onComplete?: () => void;
 };
 
-export default function QuestionRenderer({ turn, onAnswer }: Props) {
+export default function QuestionRenderer({ turn, onAnswer, onComplete }: Props) {
   const [text, setText] = React.useState("");
 
   if (!turn) return null;
+
+  if (turn.field_id === "_complete") {
+    return (
+      <div className="p-4 rounded-2xl border bg-white/70 dark:bg-neutral-900/70 text-center">
+        <div className="text-lg font-medium">{turn.next_question}</div>
+        <button
+          className="px-3 py-2 rounded-lg border mt-3"
+          onClick={() => onComplete && onComplete()}
+        >
+          Reveal My Palette
+        </button>
+      </div>
+    );
+  }
 
   const send = (val: string) => {
     onAnswer(val);
