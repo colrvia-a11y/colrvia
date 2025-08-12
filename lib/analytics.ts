@@ -41,6 +41,10 @@ function flushQueue() {
   writeQueue([])
 }
 
+function handleSwMessage(e: MessageEvent){
+  if(e.data === 'online') flushQueue()
+}
+
 export function initAnalytics(){
   if(typeof window === 'undefined') return
   if(client) return client
@@ -54,9 +58,7 @@ export function initAnalytics(){
     flushQueue()
   })
   window.addEventListener('online', flushQueue)
-  navigator.serviceWorker?.addEventListener('message', e => {
-    if (e.data === 'online') flushQueue()
-  })
+  navigator.serviceWorker?.addEventListener('message', handleSwMessage)
   return client
 }
 
