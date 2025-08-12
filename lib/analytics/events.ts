@@ -14,6 +14,10 @@ export interface AnalyticsEventMap {
   explanation_copy: { len: number }
   explanation_listen: { len: number }
   variant_open: { id: string; variant: string }
+  question_shown: { id: string; priority: 'P1' | 'P2' | 'P3' | 'P4' }
+  answer_saved: { id: string; priority: 'P1' | 'P2' | 'P3' | 'P4' }
+  question_dropped: { id: string; priority: 'P1' | 'P2' | 'P3' | 'P4'; reason: string }
+  flow_capped: { id: string; priority: 'P1' | 'P2' | 'P3' | 'P4'; reason: string }
 }
 
 export type AnalyticsEventName = keyof AnalyticsEventMap

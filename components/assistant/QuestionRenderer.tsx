@@ -1,6 +1,8 @@
 "use client";
 import React from "react";
 import type { IntakeTurn } from "@/lib/types";
+import { track } from "@/lib/analytics";
+import { getQuestionPriority } from "@/lib/intake/questions";
 
 type Props = {
   turn: IntakeTurn | null;
@@ -15,6 +17,11 @@ export default function QuestionRenderer({ turn, onAnswer, onComplete, completeB
   const [text, setText] = React.useState("");
 
   if (!turn) return null;
+
+  React.useEffect(() => {
+    if (!turn || !turn.field_id || turn.field_id === "_complete") return;
+    track('question_shown', { id: turn.field_id, priority: getQuestionPriority(turn.field_id) });
+  }, [turn?.field_id]);
 
   if (turn.field_id === "_complete") {
     return (
@@ -37,6 +44,9 @@ export default function QuestionRenderer({ turn, onAnswer, onComplete, completeB
   }
 
   const send = (val: string) => {
+    if (turn.field_id) {
+      track('answer_saved', { id: turn.field_id, priority: getQuestionPriority(turn.field_id) });
+    }
     onAnswer(val);
     setText("");
   };
