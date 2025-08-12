@@ -9,8 +9,7 @@ vi.mock("@supabase/supabase-js", () => {
     lighting:{ id:"lighting", type:"single", key:"lighting", question:"How is the lighting? (e.g., lots of daylight, warm artificial light)", next:"room_photos" },
     room_photos:{ id:"room_photos", type:"multi", key:"room_photos", question:"Room photos (8am/noon/4pm; lights off + on)", helper:"Daylight near a window; include one shot with white paper for reference.", next:"existing_elements_desc" },
     existing_elements_desc:{ id:"existing_elements_desc", type:"single", key:"existing_elements_desc", question:"Describe key existing items (optional)", next:"existing_elements_photos" },
-    existing_elements_photos:{ id:"existing_elements_photos", type:"multi", key:"existing_elements_photos", question:"Photos of existing items", next:"adjacent_photos" },
-    adjacent_photos:{ id:"adjacent_photos", type:"multi", key:"adjacent_photos", question:"Photos of adjacent rooms/sightlines", next:"done" },
+    existing_elements_photos:{ id:"existing_elements_photos", type:"multi", key:"existing_elements_photos", question:"Photos of existing items", next:"done" },
     done:{ id:"done", type:"end" }
   }}
   let session:any = null
