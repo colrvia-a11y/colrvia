@@ -16,7 +16,13 @@ export default function DesignersGrid(){
           <p className="text-sm text-muted-foreground mb-4">{d.tagline}</p>
           {d.pro && <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide bg-black text-white px-2 py-1 rounded-full w-fit mb-3">Pro</span>}
           <div className="mt-auto">
-            <Button as={Link} href={`/preferences/${d.id}`} className="w-full" onClick={()=> track('designer_select',{ designerId: d.id })} aria-label={`Start with ${d.name}`}>
+            <Button
+              as={Link}
+              href={d.id === 'therapist' ? '/intake' : `/preferences/${d.id}`}
+              className="w-full"
+              onClick={() => track('designer_select', { designerId: d.id })}
+              aria-label={`Start with ${d.name}`}
+            >
               Start with {d.short}
             </Button>
           </div>
