@@ -5,7 +5,7 @@ import VoiceMic from "@/components/assistant/VoiceMic";
 import GlowFrame from "@/components/assistant/GlowFrame";
 import type { IntakeTurn, SessionState } from "@/lib/types";
 import { countAllFields } from "@/lib/engine";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function IntakePage() {
   const [session, setSession] = React.useState<SessionState>({
@@ -19,6 +19,7 @@ export default function IntakePage() {
   const [revealing, setRevealing] = React.useState(false);
   const [history, setHistory] = React.useState<{ field_id: string; value: any }[]>([]);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const ask = React.useCallback(async (userMessage: string, saveUnder?: string) => {
     try {
@@ -45,13 +46,16 @@ export default function IntakePage() {
     }
   }, [session]);
 
-  React.useEffect(() => { if (!turn) ask("INIT"); }, [turn, ask]);
-
-  const handleReveal = React.useCallback(async () => {
+  React.useEffect(() => {
+    if (searchParams.get("resume") === "reveal") return;
+    if (!turn) ask("INIT");
+  }, [turn, ask, searchParams]);
+  const handleReveal = React.useCallback(async (override?: SessionState) => {
     try {
       setError(null);
       setRevealing(true);
-      const vibe = session.answers?.["desired_vibe"] as string | undefined;
+      const current = override ?? session;
+      const vibe = current.answers?.["desired_vibe"] as string | undefined;
       const res = await fetch("/api/stories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -62,7 +66,8 @@ export default function IntakePage() {
         })
       });
       if (res.status === 401) {
-        router.push("/sign-in");
+        try { localStorage.setItem("colrvia_session", JSON.stringify(current)); } catch {}
+        router.push(`/sign-in?next=${encodeURIComponent("/intake?resume=reveal")}`);
         return;
       }
       const data = await res.json();
@@ -77,6 +82,18 @@ export default function IntakePage() {
       setRevealing(false);
     }
   }, [router, session]);
+
+  React.useEffect(() => {
+    if (searchParams.get("resume") !== "reveal") return;
+    const stored = localStorage.getItem("colrvia_session");
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored) as SessionState;
+      setSession(parsed);
+      localStorage.removeItem("colrvia_session");
+      handleReveal(parsed);
+    } catch {}
+  }, [searchParams, handleReveal]);
 
   function resetAll() {
     try { window.colrviaVoice?.stop(); } catch {}
