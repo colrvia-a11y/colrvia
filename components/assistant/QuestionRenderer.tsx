@@ -5,12 +5,36 @@ import type { IntakeTurn } from "@/lib/types";
 type Props = {
   turn: IntakeTurn | null;
   onAnswer: (answer: string) => void;
+  /** Called when the intake flow is complete */
+  onComplete?: () => void;
+  /** Whether the completion action is in progress */
+  completeBusy?: boolean;
 };
 
-export default function QuestionRenderer({ turn, onAnswer }: Props) {
+export default function QuestionRenderer({ turn, onAnswer, onComplete, completeBusy }: Props) {
   const [text, setText] = React.useState("");
 
   if (!turn) return null;
+
+  if (turn.field_id === "_complete") {
+    return (
+      <div className="p-4 rounded-2xl border bg-white/70 dark:bg-neutral-900/70 text-center">
+        <div className="text-lg font-medium">{turn.next_question}</div>
+        {turn.explain_why && (
+          <div className="text-sm text-neutral-600 mt-1">{turn.explain_why}</div>
+        )}
+        {onComplete && (
+          <button
+            className="btn btn-primary mt-3"
+            onClick={onComplete}
+            disabled={completeBusy}
+          >
+            {completeBusy ? "Generating…" : "Reveal My Palette"}
+          </button>
+        )}
+      </div>
+    );
+  }
 
   const send = (val: string) => {
     onAnswer(val);
