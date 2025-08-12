@@ -2,6 +2,8 @@ import React from 'react'
 import { describe, it, expect } from 'vitest'
 import Home from '@/app/page'
 import { render } from '@testing-library/react'
+import { NextIntlClientProvider } from 'next-intl'
+import messages from '@/messages/en.json'
 import { vi } from 'vitest'
 vi.mock('@/components/ux/StartStoryPortal', () => ({ useStartStory: () => (()=>{}) }))
 
@@ -10,7 +12,11 @@ vi.mock('@/components/ux/StartStoryPortal', () => ({ useStartStory: () => (()=>{
 describe('Home hero', () => {
   it('shows hero copy and CTA', () => {
     // @ts-ignore
-  const { getByText } = render(<Home />)
+    const { getByText } = render(
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <Home />
+      </NextIntlClientProvider>
+    )
     expect(getByText('instant color confidence')).toBeTruthy()
     expect(getByText('from vibe to walls in minutes.')).toBeTruthy()
     expect(getByText('real paint codes. clear placements.')).toBeTruthy()

@@ -2,6 +2,7 @@
 import React from 'react'
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { useTranslations } from 'next-intl'
 import nextDynamic from "next/dynamic"
 import { useState } from "react"
 const HowItWorksModal = nextDynamic(() => import("@/components/marketing/HowItWorksModal"), { ssr: false })
@@ -13,6 +14,7 @@ export default function HomePage() {
   // @ts-ignore client boundary ok
   const [open, setOpen] = useState(false)
   const startStory = useStartStory()
+  const t = useTranslations('HomePage')
   return (
     <main className="relative mx-auto max-w-3xl px-4 py-12 bg-[#404934] text-[#F7F7F2]">
       <div className="absolute inset-0 pointer-events-none" aria-hidden>
@@ -22,16 +24,16 @@ export default function HomePage() {
       <div className="relative space-y-10">
         <header className="space-y-6">
           <div className="space-y-2">
-            <p className="text-sm uppercase tracking-wide text-[#d1d9ce]">instant color confidence</p>
+            <p className="text-sm uppercase tracking-wide text-[#d1d9ce]">{t('tagline')}</p>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
               className="font-display text-4xl sm:text-5xl leading-[1.05] font-semibold"
             >
-              from vibe to walls in minutes.
+              {t('headline')}
               <br />
-              <span className="text-[#f2b897]">real paint codes. clear placements.</span>
+              <span className="text-[#f2b897]">{t('highlight')}</span>
             </motion.h1>
           </div>
           <div className="flex flex-wrap gap-4">
@@ -39,7 +41,7 @@ export default function HomePage() {
               type="button"
               onClick={() => setOpen(true)}
               className="px-5 py-2 rounded-full border border-[#566049] text-sm hover:bg-[#566049]/30 transition"
-            >How it works</button>
+            >{t('howItWorks')}</button>
           </div>
         </header>
         <div className="mt-8">
@@ -49,7 +51,7 @@ export default function HomePage() {
             className="inline-flex items-center justify-center rounded-2xl px-8 py-4 text-xl md:text-2xl font-semibold w-full sm:w-auto hover:opacity-95"
             style={{ backgroundColor: "#f2b897", color: "#1f2937" }}
           >
-            Start Color Story
+            {t('start')}
           </Link>
         </div>
       </div>

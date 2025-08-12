@@ -17,7 +17,8 @@ vi.mock("next-themes", () => ({ ThemeProvider: ({ children }: any) => <>{childre
 
 describe("RootLayout a11y", () => {
   it("includes a skip link and main landmark", async () => {
-    render(<RootLayout>{<div>Child</div>}</RootLayout>)
+    const element = await RootLayout({ children: <div>Child</div> })
+    render(element)
     const skip = await screen.findByRole("link", { name: /skip to content/i })
     expect(skip).toHaveAttribute("href", "#main")
     await waitFor(() => {

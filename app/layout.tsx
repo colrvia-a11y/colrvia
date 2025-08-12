@@ -12,6 +12,9 @@ import { Analytics } from '@vercel/analytics/react'
 import { MotionProvider } from '@/components/theme/MotionSettings'
 import AmbientEdge from '@/components/ui/ambient-edge'
 import dynamic from 'next/dynamic'
+import { NextIntlClientProvider, createTranslator } from 'next-intl'
+import { getLocale, getMessages } from '@/lib/i18n'
+
 const RouteTransition = dynamic(() => import('@/components/ux/RouteTransition'), { ssr:false })
 const StartStoryPortalProvider = dynamic(()=> import('@/components/ux/StartStoryPortal').then(m=> m.StartStoryPortalProvider), { ssr:false })
 const FirstRunGate = dynamic(()=> import('@/components/providers/FirstRunGate'), { ssr:false })
@@ -48,26 +51,31 @@ export const metadata: Metadata = {
  * Root layout for the app. Wraps all pages and applies global styles. See
  * https://beta.nextjs.org/docs/routing/pages-and-layouts for details.
  */
-export default function RootLayout({
+export default async function RootLayout({
   children
 }: {
   children: React.ReactNode
 }) {
+  const locale = getLocale()
+  const messages = await getMessages(locale)
+  const t = createTranslator({ locale, messages })
+
   return (
-  <html lang="en"> 
+    <html lang={locale}>
       <head>
         <meta name="theme-color" content="#F7F5EF" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
       </head>
       <body className="antialiased font-sans">
-        {/* Skip link for keyboard users */}
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-2xl focus:bg-[var(--surface,theme(colors.white))] focus:text-[var(--ink,#000)] focus:shadow"
-        >
-          Skip to content
-        </a>
-        <Script id="supabase-hash-redirect" strategy="beforeInteractive">{`
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {/* Skip link for keyboard users */}
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-2xl focus:bg-[var(--surface,theme(colors.white))] focus:text-[var(--ink,#000)] focus:shadow"
+          >
+            {t('Layout.skipToContent')}
+          </a>
+          <Script id="supabase-hash-redirect" strategy="beforeInteractive">{`
     (function () {
       try {
         var h = window.location.hash || '';
@@ -79,28 +87,29 @@ export default function RootLayout({
       } catch (e) {}
     })();
   `}</Script>
-  <AuthHashListener />
-  <ThemeProvider attribute="class" defaultTheme="system" enableSystem value={{ light:'light', dark:'theme-dark' }}>
-    <MotionProvider>
-      <RegisterSW />
-  <AuthSyncBridge />
-  <StartStoryPortalProvider>
-  <FirstRunGate />
-  <main id="main" className="min-h-dvh">
-  <AppShell><RouteTransition>{children}</RouteTransition></AppShell>
-  </main>
-  </StartStoryPortalProvider>
-  <Analytics />
-  <SupabaseListener />
-    </MotionProvider>
-  </ThemeProvider>
-  {/* Animated ambient edge glow; reads brand tokens from CSS (shadcn) */}
-  <AmbientEdge
-    thickness={22}
-    blur={26}
-    speedSeconds={16}
-    opacity={0.55}
-  />
+          <AuthHashListener />
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem value={{ light:'light', dark:'theme-dark' }}>
+            <MotionProvider>
+              <RegisterSW />
+              <AuthSyncBridge />
+              <StartStoryPortalProvider>
+                <FirstRunGate />
+                <main id="main" className="min-h-dvh">
+                  <AppShell><RouteTransition>{children}</RouteTransition></AppShell>
+                </main>
+              </StartStoryPortalProvider>
+              <Analytics />
+              <SupabaseListener />
+            </MotionProvider>
+          </ThemeProvider>
+          {/* Animated ambient edge glow; reads brand tokens from CSS (shadcn) */}
+          <AmbientEdge
+            thickness={22}
+            blur={26}
+            speedSeconds={16}
+            opacity={0.55}
+          />
+        </NextIntlClientProvider>
       </body>
     </html>
   )
