@@ -54,7 +54,13 @@ Algorithm uses LAB-based lightness shifts + contrast guards (walls/trim >=3:1, a
 Tests: `tests/ai.test.ts` + decoder/contract tests (`tests/variant-route.test.ts`, `tests/variant-post.test.ts`).
 `has_variants` column (optional) plus `lib/db/stories.ts` computes & persists flags for dashboard badges.
 
+| NEXT_PUBLIC_ONBOARDING_MODE | yes (api mode) | Set to `api` to enable live rule-driven intake |
 ## Share Images
+## API-driven onboarding setup
+1. **Create tables**: open Supabase → SQL Editor → paste contents of `db/migrations/2025-08-11_api-intake.sql` → Run.
+2. **Set envs (Vercel)**: see `docs/ENVIRONMENT.md`. At minimum set `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `NEXT_PUBLIC_ONBOARDING_MODE=api`.
+3. **Verify**: deploy, then visit `/api/health/intake` — you should see `{ ok: true, counts: ... }`.
+4. **Try it**: go to `/designers` → pick a designer → the chat asks one question at a time. On completion, palette is generated and you land on the reveal page.
 OG/Twitter image endpoint: `/api/share/[id]/image` (edge, 1200×630). `generateMetadata` in reveal page attaches dynamic OG image (variant param aware). Place fonts (`/public/fonts/Inter-Regular.ttf`, `Fraunces-SemiBold.ttf`) for branded output; falls back if absent. Text normalization (length cap, trimming, fallbacks) covered by `buildOgText` in `lib/og.ts` with tests.
 
 ## Cinematic Reveal & Motion Accessibility
