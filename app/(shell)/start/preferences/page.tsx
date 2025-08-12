@@ -10,5 +10,5 @@ export default function PreferencesAlias(){
   if (d) router.replace(`/preferences/${d}`)
     else router.replace('/designers')
   },[sp, router])
-  return <main className="px-4 py-12 text-sm text-[var(--ink-subtle)]">Loading preferences…</main>
+  return <main className="px-4 py-12 text-sm text-muted-foreground">Loading preferences…</main>
 }

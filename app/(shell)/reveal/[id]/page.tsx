@@ -86,13 +86,13 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
   <StoryHeroCard imageSrc={heroImage} title={displayTitle} meta={`${data.brand} · ${data.vibe}`} href="#palette" palette={palette.filter(p=>p.hex).map(p=>({ hex:p.hex!, name:p.name }))} ctaLabel="Open" />
         <div className="absolute bottom-4 right-4"><PdfButton storyId={data.id} /></div>
       </div>
-      <div className="flex items-center gap-3 text-[11px] text-[var(--ink-subtle)]">
+  <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
         <span>{new Date(data.created_at).toLocaleDateString()}</span>
         <span aria-hidden>•</span>
   <RevealClient story={{ id:data.id, title:displayTitle, narrative:data.narrative, palette, placements:data.placements }} />
       </div>
       <div className="space-y-4" aria-label="Placement ratios">
-        <div className="flex gap-3 text-[10px] tracking-wide uppercase text-[var(--ink-subtle)]">
+  <div className="flex gap-3 text-[10px] tracking-wide uppercase text-muted-foreground">
           <span className="flex-1">Primary</span>
           <span className="flex-1">Secondary</span>
           <span className="flex-1">Accent</span>
@@ -118,7 +118,7 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
       ) : (
         <div className="rounded-xl border border-dashed border-[var(--border)] p-8 text-center space-y-4 bg-[var(--bg-surface)]">
           <h2 className="font-display text-xl">No palette yet</h2>
-          <p className="text-sm text-[var(--ink-subtle)]">We couldn&apos;t parse a palette for this story. Try generating again or start a new one.</p>
+          <p className="text-sm text-muted-foreground">We couldn&apos;t parse a palette for this story. Try generating again or start a new one.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href={`/start?regenerate=${id}`} className="btn btn-primary">Regenerate</Link>
             <Link href="/designers" className="btn btn-secondary">New Story</Link>

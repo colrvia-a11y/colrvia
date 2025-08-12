@@ -84,9 +84,9 @@ export default function DesignersCarousel(){
                   <div className="absolute inset-0 p-5 flex flex-col">
                     <div className="text-6xl mb-2 drop-shadow-sm" aria-hidden>{d.avatar}</div>
                     <h3 className="text-2xl md:text-3xl font-semibold tracking-tight">{d.name}</h3>
-                    <p className="text-sm md:text-base text-[var(--ink-subtle)] mt-1">{d.tagline}</p>
+                    <p className="text-sm md:text-base text-muted-foreground mt-1">{d.tagline}</p>
                     <div className="mt-auto flex items-center justify-between">
-                      <div className="text-xs text-[var(--ink-subtle)]">{idx+1} / {designers.length}</div>
+                      <div className="text-xs text-muted-foreground">{idx+1} / {designers.length}</div>
                       <Button
                         as={Link}
                         href={`/start/preferences?designerId=${d.id}`}

@@ -59,7 +59,7 @@ export default function VariantTabs({ storyId, initialPalette, initialTitle, ini
           return <Chip key={v} role="tab" aria-selected={variant===v} aria-disabled={disabled} disabled={disabled} active={variant===v} onClick={()=>load(v as any)} className="capitalize" size="sm">{v}</Chip>
         })}
       </div>
-      {loading && <div className="h-24 rounded-2xl bg-[#F2EFE9] animate-pulse flex items-center justify-center text-xs tracking-wide text-[var(--ink-subtle)]" aria-label="Loading variant">Generating…</div>}
+  {loading && <div className="h-24 rounded-2xl bg-[#F2EFE9] animate-pulse flex items-center justify-center text-xs tracking-wide text-muted-foreground" aria-label="Loading variant">Generating…</div>}
       {error && <div role="status" className="text-xs text-red-600">{error}</div>}
     </div>
   )

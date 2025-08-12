@@ -11,7 +11,7 @@ export default function StartPage(){
         <p className="text-sm text-[var(--color-fg-muted)] max-w-md">We’ll guide you with our default designer. You can explore other voices later.</p>
       </header>
       <Link href={`/preferences/${DEFAULT_DESIGNER_ID}`} className="btn btn-primary w-full sm:w-auto">Get my palette</Link>
-      <p className="text-xs text-[var(--ink-subtle)]">Want to meet all designers? <Link href="/designers" className="underline">See them here</Link>.</p>
+  <p className="text-xs text-muted-foreground">Want to meet all designers? <Link href="/designers" className="underline">See them here</Link>.</p>
     </main>
   )
 }

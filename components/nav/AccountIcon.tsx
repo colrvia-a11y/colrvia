@@ -10,7 +10,7 @@ export default function AccountIcon(){
     <motion.div whileTap={{ scale:0.95 }}>
       <Link href="/account" aria-label="Account" className="block" onClick={()=> track('nav_click',{ dest:'/account' })}>
         <div className="rounded-full border bg-[var(--bg-surface)]/80 p-2 backdrop-blur hover:bg-[var(--color-linen)]/70 transition-colors">
-          <User className="h-5 w-5 text-[var(--ink-subtle)]" />
+          <User className="h-5 w-5 text-muted-foreground" />
         </div>
       </Link>
     </motion.div>

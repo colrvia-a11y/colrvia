@@ -17,21 +17,21 @@ export default function HowItWorksContent({ compact = false }: { compact?: boole
               <span className="mt-0.5"><Palette className="h-5 w-5" /></span>
               <div>
                 <p className="font-medium">Pick a designer</p>
-                <p className="text-sm text-[var(--ink-subtle)]">Three styles. Same guardrails. Choose who you vibe with.</p>
+                <p className="text-sm text-muted-foreground">Three styles. Same guardrails. Choose who you vibe with.</p>
               </div>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-0.5"><MessageSquare className="h-5 w-5" /></span>
               <div>
                 <p className="font-medium">Answer a few quick questions</p>
-                <p className="text-sm text-[var(--ink-subtle)]">Voice or typing. The AI keeps it friendly and focused.</p>
+                <p className="text-sm text-muted-foreground">Voice or typing. The AI keeps it friendly and focused.</p>
               </div>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-0.5"><CheckCircle className="h-5 w-5" /></span>
               <div>
                 <p className="font-medium">Get real paint codes + placements</p>
-                <p className="text-sm text-[var(--ink-subtle)]">Sherwin-Williams or Behr, 60/30/10 with trim & ceiling.</p>
+                <p className="text-sm text-muted-foreground">Sherwin-Williams or Behr, 60/30/10 with trim & ceiling.</p>
               </div>
             </li>
           </ol>

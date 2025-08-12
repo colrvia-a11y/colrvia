@@ -38,7 +38,7 @@ function Inner(){
     return ()=>{ cancelled = true }
   },[params, router])
   return (
-    <div className="min-h-screen flex items-center justify-center text-sm text-[var(--ink-subtle)]">
+  <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
       {status==='working' && <div>Signing you in…</div>}
       {status==='error' && <div>Sign-in failed. <button onClick={()=>router.replace('/sign-in')} className="underline">Return to sign-in</button></div>}
       {status==='done' && <div>Redirecting…</div>}
@@ -46,5 +46,5 @@ function Inner(){
   )
 }
 export default function AuthCallbackPage(){
-  return <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-[var(--ink-subtle)]">Preparing…</div>}><Inner/></Suspense>
+  return <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Preparing…</div>}><Inner/></Suspense>
 }

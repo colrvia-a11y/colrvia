@@ -16,7 +16,7 @@ export default async function PreferencesPage({ params }: { params:{ designerId:
     <main className="max-w-3xl mx-auto px-4 py-10 space-y-6">
       <header className="space-y-2">
         <h1 className="font-display text-3xl leading-tight">Preferences</h1>
-        <p className="text-sm text-[var(--ink-subtle)]">Guided by <span className="font-medium">{designer.name}</span>{designer.pro ? ' · Pro' : ''}</p>
+  <p className="text-sm text-muted-foreground">Guided by <span className="font-medium">{designer.name}</span>{designer.pro ? ' · Pro' : ''}</p>
       </header>
       {locked ? (
         <div className="rounded-2xl border bg-[var(--bg-surface)] p-6 space-y-4">
@@ -25,7 +25,7 @@ export default async function PreferencesPage({ params }: { params:{ designerId:
             <Link href={`/preferences/${DEFAULT_DESIGNER_ID}`} className="btn btn-secondary flex-1">Continue with default</Link>
             <UpgradeButton className="btn btn-primary flex-1" />
           </div>
-          {!user && <p className="text-[11px] text-[var(--ink-subtle)]">You’ll need to sign in during checkout.</p>}
+          {!user && <p className="text-[11px] text-muted-foreground">You’ll need to sign in during checkout.</p>}
         </div>
       ) : (
         <PreferencesChat designerId={designer.id} />

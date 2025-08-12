@@ -66,7 +66,7 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
       </header>
       <main id="main" className="flex-1">{children}</main>
   <footer className="mt-16 bg-[#404934] text-[#F7F7F2]">
-        <div className="max-w-6xl mx-auto px-4 py-10 text-sm text-[var(--ink-subtle)] flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+  <div className="max-w-6xl mx-auto px-4 py-10 text-sm text-muted-foreground flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
           <p className="opacity-80">© {new Date().getFullYear()} Colrvia</p>
           <div className="flex gap-5">
             <Link href="/designers" className="hover:underline">Designers</Link>

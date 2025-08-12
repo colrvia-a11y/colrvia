@@ -56,7 +56,7 @@ export default function NarrativeCard({ storyId }: { storyId: string }) {
   return (
     <Card className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-5 shadow-sm">
       <h2 className="text-base font-medium mb-2">Why this palette works</h2>
-      <p className="text-sm leading-6 text-[var(--ink-subtle)] whitespace-pre-line">{text}</p>
+  <p className="text-sm leading-6 text-muted-foreground whitespace-pre-line">{text}</p>
       <div className="mt-3 flex gap-2">
         <Button variant="outline" onClick={copy}>Copy</Button>
         <Button variant="primary" onClick={listen} aria-pressed={speaking}>{speaking ? 'Stop' : 'Listen'}</Button>

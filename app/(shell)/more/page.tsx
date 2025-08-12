@@ -20,14 +20,14 @@ export default function MorePage(){
     <main className="max-w-md mx-auto px-4 py-10 space-y-10">
       <header>
         <h1 className="font-display text-4xl leading-[1.05] mb-4">More</h1>
-        <p className="text-sm text-[var(--ink-subtle)]">Profile, plan, help, and feedback.</p>
+  <p className="text-sm text-muted-foreground">Profile, plan, help, and feedback.</p>
       </header>
       <ul className="divide-y rounded-2xl border bg-[var(--bg-surface)]">
         {items.map(i=> (
           <li key={i.href}>
             <Link href={i.href} className="flex items-center justify-between px-5 py-4 hover:bg-[var(--color-linen)]/60">
               <span>{i.label}</span>
-              <span aria-hidden className="text-xs text-[var(--ink-subtle)]">›</span>
+              <span aria-hidden className="text-xs text-muted-foreground">›</span>
             </Link>
           </li>
         ))}
@@ -35,7 +35,7 @@ export default function MorePage(){
           <button onClick={logout} className="w-full text-left px-5 py-4 hover:bg-[var(--color-linen)]/60">Log out</button>
         </li>
       </ul>
-      <div className="text-center text-xs text-[var(--ink-subtle)]">© {new Date().getFullYear()} Colrvia</div>
+  <div className="text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Colrvia</div>
     </main>
   )
 }

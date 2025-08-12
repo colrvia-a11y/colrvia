@@ -41,41 +41,49 @@ a, button, [role="button"] { outline-offset: 3px; }
 
 @layer base {
   :root {
-    /* Preserve existing background tokens; adjust text for readability */
-    --foreground: 222 47% 11%;
-    --muted-foreground: 215 16% 35%;
-    --secondary-foreground: 215 16% 46%;
-    --accent-foreground: 0 0% 98%;
-
-    /* Cards/popovers stay light surfaces with dark text */
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    /* Accessible defaults (WCAG AA on light) */
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;           /* slate-900 = #0f172a */
+    --card: 210 33% 98%;                        /* slate-50  = #f8fafc */
+    --card-foreground: 222.2 47.4% 11.2%;       /* high contrast on card */
+    --muted-foreground: 215 24% 35%;            /* ~#475569 (≥4.5:1 on white) */
+    --ring: 221.2 83.2% 53.3%;
+    /* Back-compat token used around the app */
+    --ink-subtle: 215 24% 35%;                  /* align to --muted-foreground */
+  /* Compatibility tokens retained from upstream */
+  --secondary-foreground: 215 16% 46%;        /* maps to a slightly lighter tone */
+  --accent-foreground: 0 0% 98%;              /* text on accent backgrounds (white) */
   }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      /* Light text on dark backgrounds */
-      --foreground: 0 0% 98%;
-      --muted-foreground: 210 16% 85%;
-      --secondary-foreground: 210 16% 92%;
-      --accent-foreground: 0 0% 100%;
-    }
+  .dark {
+    /* Accessible defaults (WCAG AA on dark) */
+    --background: 222.2 47.4% 11.2%;            /* #0f172a */
+    --foreground: 210 40% 98%;                  /* #f1f5f9 */
+    --card: 222.2 47.4% 11.2%;
+    --card-foreground: 210 40% 98%;
+    --muted-foreground: 213 27% 84%;            /* ~#cbd5e1 (≥4.5:1 on dark) */
+    --ink-subtle: 213 27% 84%;
+  /* Compatibility tokens retained from upstream */
+  --secondary-foreground: 210 16% 92%;
+  --accent-foreground: 0 0% 100%;
   }
+}
 
-  /* Ensure base text always honors our tokens */
-  body {
-    color: hsl(var(--foreground));
-  }
+/* Strong, visible focus for keyboard users */
+*:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
 
-  /* Typography helpers for long-form copy if prose is used */
-  .prose {
-    --tw-prose-body: hsl(var(--foreground));
-    --tw-prose-headings: hsl(var(--foreground));
-    --tw-prose-links: hsl(var(--accent-foreground));
-    --tw-prose-bold: hsl(var(--foreground));
-  }
+/* Respect users who ask for more contrast */
+@media (prefers-contrast: more) {
+  :root { --muted-foreground: 215 28% 28%; } /* ~#334155 for extra headroom */
+}
+
+@layer utilities {
+  /* Ensure these utility classes exist and map to our tokens */
+  .text-muted-foreground { color: hsl(var(--muted-foreground)); }
+  .bg-card { background-color: hsl(var(--card)); }
+  .text-card-foreground { color: hsl(var(--card-foreground)); }
 }
 
 /* Utilities */
