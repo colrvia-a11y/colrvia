@@ -1,5 +1,6 @@
 import './globals.css'
 import React from 'react'
+import { initSentry } from '@/lib/monitoring/sentry'
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import AuthHashListener from '@/components/auth-hash-listener'
@@ -14,6 +15,8 @@ import AmbientEdge from '@/components/ui/ambient-edge'
 import dynamic from 'next/dynamic'
 import { NextIntlClientProvider, createTranslator } from 'next-intl'
 import { getLocale, getMessages } from '@/lib/i18n'
+
+initSentry()
 
 const RouteTransition = dynamic(() => import('@/components/ux/RouteTransition'), { ssr:false })
 const StartStoryPortalProvider = dynamic(()=> import('@/components/ux/StartStoryPortal').then(m=> m.StartStoryPortalProvider), { ssr:false })
