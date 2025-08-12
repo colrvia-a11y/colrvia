@@ -4,16 +4,18 @@ export type PaletteColor = {
   brand: string;
   placement: string;
 };
+export type DesignerId = 'emily' | 'zane' | 'marisol' | 'therapist';
+
 export type ColorStory = {
   id: string;
   title: string;
   narrative: string;
   palette: PaletteColor[];
-  designer: 'emily' | 'zane' | 'marisol';
+  designer: DesignerId;
   createdAt: string;
 };
 export type DesignerProfile = {
-  id: 'emily' | 'zane' | 'marisol';
+  id: DesignerId;
   name: string;
   tagline: string;
   style: string;
