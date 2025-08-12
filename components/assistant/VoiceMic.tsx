@@ -50,6 +50,12 @@ export default function VoiceMic({ onActiveChange, greet }: Props) {
   async function start() {
     setError(null);
     try {
+      const tokenRes = await fetch("/api/realtime/session", { method: "POST" });
+      if (!tokenRes.ok) throw new Error((await tokenRes.text()) || "Failed to init session");
+      const tokenData = await tokenRes.json();
+      const clientSecret = tokenData?.client_secret?.value;
+      if (!clientSecret) throw new Error("Missing session token");
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       const pc = new RTCPeerConnection({
@@ -97,7 +103,7 @@ export default function VoiceMic({ onActiveChange, greet }: Props) {
       const res = await fetch("/api/realtime/offer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sdp: pc.localDescription?.sdp || "" }),
+        body: JSON.stringify({ sdp: pc.localDescription?.sdp || "", token: clientSecret }),
       });
       if (!res.ok) throw new Error((await res.text()) || "Failed to start realtime call");
       const answerSDP = await res.text();
