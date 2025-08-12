@@ -86,14 +86,36 @@ export function useIntakeChat(designerId: string): UseIntakeChat {
           body: JSON.stringify({
             designerKey: designerId,
             brand: data?.input?.brand,
+            vibe: Array.isArray(data?.input?.vibe)
+              ? data.input.vibe.join(' ')
+              : data?.input?.vibe,
             palette_v2: data?.palette_v2,
             seed: `intake:${sessionId}`
           })
         })
       } catch {}
-      const story = create ? await create.json().catch(() => null) : null
-      setDone(true)
-      if (story?.id) router.push(`/reveal/${story.id}`)
+      if (!create) {
+        setStatusText('Something went wrong')
+        setBusy(false)
+        return
+      }
+      if (create.status === 401) {
+        router.push('/sign-in')
+        return
+      }
+      if (!create.ok) {
+        setStatusText('Could not create story')
+        setBusy(false)
+        return
+      }
+      const story = await create.json().catch(() => null)
+      if (story?.id) {
+        setDone(true)
+        router.push(`/reveal/${story.id}`)
+      } else {
+        setStatusText('Could not create story')
+        setBusy(false)
+      }
     } catch (e) {
       console.error('ONBOARDING_API_FLOW_FAIL', e)
       setBusy(false)
