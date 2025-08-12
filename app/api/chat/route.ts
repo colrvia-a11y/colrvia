@@ -35,9 +35,15 @@ export async function POST(req: NextRequest) {
     const res = await client.responses.create({
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       instructions: SYSTEM_PROMPT,
-      // Strict JSON via text.format
-      text: ( { format: { type: "json_schema", json_schema: IntakeTurnJSONSchema } } as any),
-      // Simple string input keeps us compatible across SDKs
+      // Strict structured JSON via text.format (flattened fields)
+      text: {
+        format: {
+          type: "json_schema",
+          name: "IntakeTurn",
+          schema: IntakeTurnJSONSchema.schema,
+          strict: true
+        }
+      },
       input:
         "You are driving an intake for home color design.\n" +
         "Here is the current session state (JSON):\n" +
