@@ -2,8 +2,6 @@
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
 
-const API_MODE = process.env.NEXT_PUBLIC_ONBOARDING_MODE === 'api'
-
 export default function OnboardingChat({ designerId }: { designerId: string }) {
   const router = useRouter()
   const startedRef = React.useRef(false)
@@ -13,6 +11,7 @@ export default function OnboardingChat({ designerId }: { designerId: string }) {
   const [busy, setBusy] = React.useState(false)
   const [done, setDone] = React.useState(false)
   const [statusText, setStatusText] = React.useState<string | null>(null)
+  const API_MODE = process.env.NEXT_PUBLIC_ONBOARDING_MODE === 'api'
 
   React.useEffect(() => {
     if (!API_MODE || startedRef.current) return
@@ -51,24 +50,27 @@ export default function OnboardingChat({ designerId }: { designerId: string }) {
         setBusy(false)
         return
       }
-      setStatusText('Great — generating your palette now…')
-      const fin = await fetch('/api/intakes/finalize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId })
-      })
-      const data = await fin.json().catch(() => null)
-      const create = await fetch('/api/stories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          designerKey: designerId,
-          brand: data?.input?.brand,
-          palette_v2: data?.palette_v2,
-          seed: `intake:${sessionId}`
+        setStatusText('Great — generating your palette now…')
+        const fin = await fetch('/api/intakes/finalize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
         })
-      })
-      const story = await create.json().catch(() => null)
+        const data = await fin.json().catch(() => null)
+        let create: Response | null = null
+        try {
+          create = await fetch('/api/stories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              designerKey: designerId,
+              brand: data?.input?.brand,
+              palette_v2: data?.palette_v2,
+              seed: `intake:${sessionId}`
+            })
+          })
+        } catch {}
+        const story = create ? await create.json().catch(() => null) : null
       setDone(true)
       if (story?.id) router.push(`/reveal/${story.id}`)
     } catch (e) {
