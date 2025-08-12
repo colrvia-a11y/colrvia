@@ -3,13 +3,19 @@ import type { SessionState, RoomType } from "@/lib/types";
 
 export function countAllFields(state: SessionState): number {
   const answers = state.answers || {};
-  const modules: any = INTAKE_GRAPH.modules as any;
-  const core = (INTAKE_GRAPH.core as any).flatMap((f: any) => f.input_type === "group" ? f.fields : f);
-  const carry = (INTAKE_GRAPH.carryover as any).flatMap((f: any) => f.input_type === "group" ? f.fields : f);
-  const room = (answers["room_type"] as any) || (state as any).room_type;
-  const mod = room && modules[room] ? modules[room].flatMap((f: any) => f.input_type === "group" ? f.fields : f) : [];
-  const all = [...core, ...carry, ...mod];
-  return all.filter((f: any) => f.input_type !== "group").length;
+  const all = orderedFields(state);
+  return all.filter(f => evalShowIf((f as any).show_if, answers)).length;
+}
+
+export function countAnsweredFields(state: SessionState): number {
+  const answers = state.answers || {};
+  const all = orderedFields(state);
+  return all.filter(f =>
+    evalShowIf((f as any).show_if, answers) &&
+    answers[(f as any).id] !== undefined &&
+    answers[(f as any).id] !== null &&
+    answers[(f as any).id] !== ""
+  ).length;
 }
 // (imports moved to top for ordering)
 

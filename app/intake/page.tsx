@@ -3,8 +3,9 @@ import React from "react";
 import QuestionRenderer from "@/components/assistant/QuestionRenderer";
 import VoiceMic from "@/components/assistant/VoiceMic";
 import GlowFrame from "@/components/assistant/GlowFrame";
+import Progress from "@/components/ui/Progress";
 import type { IntakeTurn, SessionState } from "@/lib/types";
-import { countAllFields } from "@/lib/engine";
+import { countAllFields, countAnsweredFields } from "@/lib/engine";
 
 export default function IntakePage() {
   const [session, setSession] = React.useState<SessionState>({
@@ -52,7 +53,9 @@ export default function IntakePage() {
   function goBack() {
     setHistory((h: { field_id: string; value: any }[]) => { const next=[...h]; const last=next.pop(); if(!last) return next; setSession(s=>{ const a={...s.answers}; delete a[last.field_id]; return { ...s, answers:a };}); ask("BACK"); return next; });
   }
-  const total = countAllFields(session) || 1; const answered = Object.keys(session.answers||{}).length; const pct = Math.min(100, Math.round(answered/total*100));
+  const total = countAllFields(session) || 1;
+  const answered = countAnsweredFields(session);
+  const pct = Math.min(100, Math.round((answered / total) * 100));
 
   // Speak on each new turn (question) when voice active and turn changes
   const lastSpokenRef = React.useRef<string | null>(null);
@@ -81,7 +84,10 @@ export default function IntakePage() {
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-semibold">Colrvia Intake</h1>
           <div className="flex items-center gap-3">
-            <div className="text-xs text-neutral-600">{pct}% complete</div>
+            <div className="w-28">
+              <Progress value={answered} max={total} />
+            </div>
+            <div className="text-xs text-neutral-600 whitespace-nowrap">{pct}% complete</div>
             <button className="text-sm underline" onClick={goBack} disabled={!history.length}>Back</button>
             <button className="text-sm underline" onClick={resetAll}>Start over</button>
             <VoiceMic onActiveChange={setVoiceActive} greet="Hi—I'll ask a few quick questions to understand your needs. Ready when you are." />
