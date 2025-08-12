@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ensureContrast, contrastRatio } from '@/lib/ai/color'
+import { ensureContrast, contrastRatio, deltaEHex } from '@/lib/ai/color'
 import { makeVariant } from '@/lib/ai/variants'
 
 const sampleBase = [
@@ -15,6 +15,18 @@ describe('contrast helpers', () => {
   })
 })
 
+describe('deltaE', () => {
+  it('returns 0 for identical colors', () => {
+    expect(deltaEHex('#ffffff', '#ffffff')).toBeCloseTo(0, 5)
+  })
+  it('is symmetric and increases with difference', () => {
+    const near = deltaEHex('#000000', '#010101')
+    const far = deltaEHex('#000000', '#ffffff')
+    expect(deltaEHex('#000000', '#ffffff')).toBeCloseTo(deltaEHex('#ffffff', '#000000'), 5)
+    expect(far).toBeGreaterThan(near)
+  })
+})
+
 describe('variants', () => {
   it('softer accent is lighter than base accent', () => {
     const softer = makeVariant(sampleBase, 'SW', 'softer')
@@ -27,5 +39,11 @@ describe('variants', () => {
   const baseAccent = sampleBase.find((s: any)=>s.role==='accent')!.hex
   const boldAccent = bolder.find((s: any)=>s.role==='accent')!.hex
     expect(boldAccent).not.toBe(baseAccent)
+  })
+  it('accent maintains perceptible deltaE from walls', () => {
+    const softer = makeVariant(sampleBase, 'SW', 'softer')
+    const walls = softer.find((s: any)=>s.role==='walls')!.hex
+    const accent = softer.find((s: any)=>s.role==='accent')!.hex
+    expect(deltaEHex(accent, walls)).toBeGreaterThan(10)
   })
 })

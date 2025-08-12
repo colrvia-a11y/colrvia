@@ -1,5 +1,5 @@
 import { Swatch, Brand } from '@/types/story'
-import { contrastRatio, ensureContrast } from './color'
+import { contrastRatio, ensureContrast, deltaEHex } from './color'
 
 type Tweak = 'softer'|'bolder'
 
@@ -39,10 +39,10 @@ export function makeVariant(base: Swatch[], _brand: Brand, tweak: Tweak): Swatch
     else if (role==='trim' && trimHex) hex = trimHex
     else if (role==='accent') {
       hex = shift(hex, tweak==='softer'? 'softer':'bolder', 0.12)
-      // accent vs walls ≥2:1
+      // accent vs walls ≥2:1 and visibly different
       if (wallsHex) {
         let tries=0
-        while (contrastRatio(hex, wallsHex) < 2 && tries<10) {
+        while ((contrastRatio(hex, wallsHex) < 2 || deltaEHex(hex, wallsHex) < 10) && tries<10) {
           hex = shift(hex, tweak==='softer'? 'softer':'bolder', 0.06)
           tries++
         }
