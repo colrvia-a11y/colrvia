@@ -32,38 +32,20 @@ export async function POST(req: NextRequest) {
       progress: body.sessionState?.progress ?? 0,
     };
 
-    // Call the Responses API using text.format JSON schema (updated API)
-    const options: any = {
+    const res = await client.responses.create({
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       instructions: SYSTEM_PROMPT,
-      modalities: ["text"],
-      text: {
-        format: {
-          type: "json_schema",
-          json_schema: IntakeTurnJSONSchema
-        }
-      },
-      input: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text:
-                "You are driving an intake for home color design. " +
-                "Here is the current session state (JSON):\n" +
-                JSON.stringify(condensedState) +
-                "\n" +
-                "User just said:\n" +
-                body.userMessage +
-                "\nReturn ONLY the next IntakeTurn as strict JSON.",
-            },
-          ],
-        },
-      ],
-    };
-
-    const res = await client.responses.create(options);
+      // Strict JSON via text.format
+      text: ( { format: { type: "json_schema", json_schema: IntakeTurnJSONSchema } } as any),
+      // Simple string input keeps us compatible across SDKs
+      input:
+        "You are driving an intake for home color design.\n" +
+        "Here is the current session state (JSON):\n" +
+        JSON.stringify(condensedState) +
+        "\nUser just said:\n" +
+        body.userMessage +
+        "\nReturn ONLY the next IntakeTurn as strict JSON.",
+    });
 
     // Extract JSON text safely
     const raw = (res as any).output_text ?? JSON.stringify((res as any).output?.[0]?.content?.[0]?.json ?? {});
