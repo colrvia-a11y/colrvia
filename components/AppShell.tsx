@@ -5,7 +5,7 @@ import { User } from 'lucide-react'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="theme-moss min-h-screen">
+  <div className="min-h-screen">
       <header className="sticky top-0 z-40 bg-[var(--color-bg)]">
         <div className="max-w-content container flex items-center justify-between py-3">
           <Link href="/" className="font-display text-2xl">Colrvia</Link>

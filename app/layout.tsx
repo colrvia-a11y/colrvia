@@ -1,6 +1,7 @@
 import './globals.css'
 import React from 'react'
 import type { Metadata } from 'next'
+import { cn } from "@/lib/utils"
 import Script from 'next/script'
 import AuthHashListener from '@/components/auth-hash-listener'
 import AppShell from '@/components/AppShell'
@@ -61,12 +62,16 @@ export default async function RootLayout({
   const t = createTranslator({ locale, messages })
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className="theme-moss">
       <head>
         <meta name="theme-color" content="#F7F5EF" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
       </head>
-      <body className="min-h-screen bg-background text-foreground antialiased font-sans">
+      <body
+        className={cn(
+          'min-h-screen bg-[var(--color-bg)] text-[var(--color-fg)] antialiased font-sans'
+        )}
+      >
         <NextIntlClientProvider locale={locale} messages={messages}>
           {/* Skip link for keyboard users */}
           <a

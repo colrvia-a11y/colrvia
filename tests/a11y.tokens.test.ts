@@ -10,6 +10,9 @@ describe('a11y tokens', () => {
 
   it('layout applies text-foreground to body', () => {
     const layout = readFileSync(join(process.cwd(), 'app/layout.tsx'), 'utf8');
-    expect(layout).toMatch(/text-foreground/);
+  // Body previously used the shadcn token class text-foreground; we've moved
+  // to explicit CSS var usage for theme tokens. Allow either form so the
+  // intent (applying a readable foreground text class) remains enforced.
+  expect(layout).toMatch(/text-foreground|text-\[var\(--color-fg\)\]/);
   });
 });

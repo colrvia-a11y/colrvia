@@ -35,7 +35,7 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
     } catch {}
   }
   return (
-    <div className="theme-moss min-h-screen flex flex-col">
+  <div className="min-h-screen flex flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 z-[100] bg-white text-sm px-3 py-2 rounded shadow">Skip to content</a>
   <header className="bg-[var(--color-bg)] sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
