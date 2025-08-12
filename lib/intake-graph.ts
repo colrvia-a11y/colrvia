@@ -183,19 +183,10 @@ const CORE_FIELDS: FieldSpec[] = [
   },
   { id: "avoid_vibe", input_type: "text", label: "Vibe you do NOT want" },
   {
-    id: "orientation",
-    input_type: "singleSelect",
-    label: "Room orientation",
-    options: ["North", "East", "South", "West", "Unknown"],
+    id: "lighting",
+    input_type: "text",
+    label: "How is the lighting? (e.g., lots of daylight, warm artificial light)",
   },
-  { id: "natural_light", input_type: "singleSelect", label: "Natural light", options: ["Low", "Medium", "High"] },
-  {
-    id: "artificial_light_type",
-    input_type: "singleSelect",
-    label: "Artificial lighting",
-    options: ["LED", "Incandescent", "Halogen", "Fluorescent", "Mixed/Unknown"],
-  },
-  { id: "artificial_cct", input_type: "singleSelect", label: "Bulb color (CCT)", options: ["2700K", "3000K", "3500K", "4000K+"] },
   {
     id: "room_photos",
     input_type: "upload",
@@ -204,16 +195,12 @@ const CORE_FIELDS: FieldSpec[] = [
     multiple: true,
   },
   {
-    id: "fixed_elements",
+    id: "existing_elements",
     input_type: "group",
-    label: "Fixed elements",
+    label: "Existing materials or big furniture to match?",
     fields: [
-      { id: "floors_photo", input_type: "upload", label: "Floors (close-up + wide)", multiple: true },
-      { id: "counters_photo", input_type: "upload", label: "Counters/tops (if present)", multiple: true },
-      { id: "tile_photo", input_type: "upload", label: "Tile/stone", multiple: true },
-      { id: "big_furniture_photo", input_type: "upload", label: "Large furniture/fixtures", multiple: true },
-      { id: "metals_photo", input_type: "upload", label: "Metals (hardware/fixtures)", multiple: true },
-      { id: "fabrics_photo", input_type: "upload", label: "Key fabrics", multiple: true },
+      { id: "existing_elements_desc", input_type: "text", label: "Describe key existing items (optional)" },
+      { id: "existing_elements_photos", input_type: "upload", label: "Photos of existing items", multiple: true },
     ],
   },
   {
@@ -222,25 +209,6 @@ const CORE_FIELDS: FieldSpec[] = [
     label: "Photos of adjacent rooms/sightlines",
     multiple: true,
   },
-  {
-    id: "brand_access",
-    input_type: "multiSelect",
-    label: "Paint brands available/preferred",
-    options: ["Sherwin-Williams", "Benjamin Moore", "Behr", "Farrow & Ball", "PPG", "Other"],
-  },
-  {
-    id: "sensitivities",
-    input_type: "multiSelect",
-    label: "Sensitivities",
-    options: ["Low/Zero-VOC only", "Odor sensitive", "Allergies/asthma", "None"],
-  },
-  {
-    id: "timeline",
-    input_type: "singleSelect",
-    label: "Timeline",
-    options: ["ASAP", "2 weeks", "1 month", "2–3 months", "Flexible"],
-  },
-  { id: "painter_role", input_type: "singleSelect", label: "Who is painting?", options: ["DIY", "Pro", "Unknown"] },
 ];
 
 /* -------------------- Carryover & constraints (always asked) -------------------- */
@@ -303,11 +271,9 @@ const CARRYOVER_FIELDS: FieldSpec[] = [
   },
   {
     id: "saturation_comfort",
-    input_type: "slider",
-    label: "Saturation comfort",
-    helper: "0 = muted, 5 = balanced, 10 = vivid",
-    min: 0,
-    max: 10,
+    input_type: "singleSelect",
+    label: "Color intensity preference",
+    options: ["Neutral", "Balanced", "Bold"],
   },
   {
     id: "dark_comfort",
@@ -343,6 +309,7 @@ const CARRYOVER_FIELDS: FieldSpec[] = [
     ],
   },
   { id: "non_negotiables", input_type: "text", label: "Non-negotiables to honor (items, finishes, heirlooms)" },
+  { id: "brand_notes", input_type: "text", label: "Any paint brands to use or avoid? (optional)" },
   WHITE_MATCH_GROUP,
 ];
 
