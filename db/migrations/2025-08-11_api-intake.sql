@@ -40,10 +40,15 @@ create table if not exists palette_guidelines (
 -- Seed active flow + guidelines if none exist
 insert into intake_flows (slug, version, is_active, nodes)
 select 'default', 1, true, '{
-  "start": { "id":"start", "type":"single", "key":"brand", "question":"Which paint brand do you prefer?", "options":["Sherwin-Williams","Behr"], "next":"lighting" },
-  "lighting": { "id":"lighting", "type":"single", "key":"lighting", "question":"How is the light in the room?", "options":["Low","Mixed","Bright"], "next":"vibe" },
-  "vibe": { "id":"vibe", "type":"multi", "key":"vibe", "question":"Pick a couple words that match your vibe", "options":["Cozy","Calm","Elegant","Airy","Bold"], "min":1, "max":2, "next":"room" },
-  "room": { "id":"room", "type":"single", "key":"room", "question":"What space is this for?", "options":["Living Room","Bedroom","Kitchen","Office"], "next":"done" },
+  "start": { "id":"start", "type":"single", "key":"room_type", "question":"Which room?", "options":["Foyer","Living","Dining","Kitchen","Pantry","Breakfast Nook","Bedroom","Kid's Room","Nursery","Home Office","Bathroom","Powder Room","Laundry/Mudroom","Hallway","Stairwell","Loft/Bonus","Media Room","Sunroom","Basement","Gym","Closet","Garage","Other"], "next":"primary_use" },
+  "primary_use": { "id":"primary_use", "type":"multi", "key":"primary_use", "question":"Top uses (pick up to 3)", "options":["Relax","Work/Study","Entertain","Sleep","Play","Eat","Cook","Get ready","Laundry","Storage","Exercise","Other"], "max":3, "next":"desired_vibe" },
+  "desired_vibe": { "id":"desired_vibe", "type":"single", "key":"desired_vibe", "question":"Desired vibe", "options":["Calm","Airy","Cozy","Focused","Luxe","Energizing","Grounded","Fresh","Moody"], "next":"avoid_vibe" },
+  "avoid_vibe": { "id":"avoid_vibe", "type":"single", "key":"avoid_vibe", "question":"Vibe you do NOT want", "next":"lighting" },
+  "lighting": { "id":"lighting", "type":"single", "key":"lighting", "question":"How is the lighting? (e.g., lots of daylight, warm artificial light)", "next":"room_photos" },
+  "room_photos": { "id":"room_photos", "type":"multi", "key":"room_photos", "question":"Room photos (8am/noon/4pm; lights off + on)", "helper":"Daylight near a window; include one shot with white paper for reference.", "next":"existing_elements_desc" },
+  "existing_elements_desc": { "id":"existing_elements_desc", "type":"single", "key":"existing_elements_desc", "question":"Describe key existing items (optional)", "next":"existing_elements_photos" },
+  "existing_elements_photos": { "id":"existing_elements_photos", "type":"multi", "key":"existing_elements_photos", "question":"Photos of existing items", "next":"adjacent_photos" },
+  "adjacent_photos": { "id":"adjacent_photos", "type":"multi", "key":"adjacent_photos", "question":"Photos of adjacent rooms/sightlines", "next":"done" },
   "done": { "id":"done", "type":"end" }
 }'::jsonb
 where not exists (select 1 from intake_flows where is_active = true);
