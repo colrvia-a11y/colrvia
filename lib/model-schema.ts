@@ -69,12 +69,7 @@ export const IntakeTurnJSONSchema = {
                   field: { type: "string" },
                   op: { type: "string", enum: ["==","!=",">=","<=",">","<","truthy","falsy"] },
                   value: {
-                    oneOf: [
-                      { type: "string" },
-                      { type: "number" },
-                      { type: "boolean" },
-                      { type: "null" }
-                    ]
+                    type: ["string","number","boolean","null"]
                   }
                 },
                 required: ["field","op"]
