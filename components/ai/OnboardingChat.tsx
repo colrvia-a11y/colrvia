@@ -159,12 +159,29 @@ export default function PreferencesChat({ designerId }: Props) {
         if(voiceOn) speak(j.step.node.question)
         return
       }
-      // done -> finalize
+      // done -> finalize -> create story -> reveal
       const closing = 'Great — generating your palette now.'
       setMessages(prev => [...prev, { role:'assistant', content: closing }])
       if(voiceOn) speak(closing)
       setFinalizing(true)
-      try{ await fetch('/api/intakes/finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sessionId }) }) }catch(e){ console.error('FINALIZE_FAIL', e) }
+      try{
+        const fin = await fetch('/api/intakes/finalize',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sessionId }) })
+        const data = await fin.json().catch(()=>null)
+        try {
+          const vibeInput = Array.isArray(data?.input?.vibe) ? data.input.vibe.join(', ') : (data?.input?.vibe || 'Cozy Neutral')
+          const brandInput = (data?.input?.brand || 'sherwin_williams')
+            .toString().toLowerCase().replace(/[^a-z0-9_]+/g,'_')
+          const resp = await fetch('/api/stories',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ brand: brandInput, vibe: vibeInput, source:'intake' }) })
+          if(resp.ok){
+            const created = await resp.json().catch(()=>null)
+            if(created?.id){
+              setCelebrate(true)
+              await new Promise(r=>setTimeout(r,350))
+              router.push(`/reveal/${created.id}`)
+            }
+          }
+        } catch(e){ console.error('CREATE_STORY_FROM_API_FINALIZE_FAIL', e) }
+      }catch(e){ console.error('FINALIZE_FAIL', e) }
       finally{ setFinalizing(false) }
       return
     }
@@ -214,6 +231,12 @@ export default function PreferencesChat({ designerId }: Props) {
     try{ recogRef.current.start(); track('mic_toggle',{ on:true }) }catch{}
   }
 
+  // Quick replies convenience
+  function onQuickReply(v: string){
+    setInput("")
+    submit(v,'chips')
+  }
+
   return (
     <div className="rounded-2xl border border-linen p-4 space-y-3">
       <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1" aria-live="polite">
@@ -236,7 +259,7 @@ export default function PreferencesChat({ designerId }: Props) {
       {!speechSupported && <p className="text-xs text-[var(--ink-subtle)]">Voice works best in Chrome.</p>}
       {currentNode.options?.length ? (
         <div className="flex flex-wrap gap-2" aria-label="Quick choices">
-            {currentNode.options.map((opt: string) => {
+      {currentNode.options.map((opt: string) => {
             const selected = isMulti ? multiTemp.includes(opt) : false
             return (
               <motion.button
@@ -246,7 +269,7 @@ export default function PreferencesChat({ designerId }: Props) {
                 whileHover={{ scale: isMulti? 1 : 1.02 }}
                 onClick={()=>{
                   if(!isMulti){
-                    submit(opt,'chips')
+        onQuickReply(opt)
                     return
                   }
                   setMultiTemp(prev => {
