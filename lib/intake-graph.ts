@@ -109,33 +109,6 @@ const TEXTILES_GROUP: FieldSpec = {
   ],
 };
 
-const WHITE_MATCH_GROUP: FieldSpec = {
-  id: "white_match_group",
-  input_type: "group",
-  label: "White matching",
-  fields: [
-    {
-      id: "need_white_match",
-      input_type: "yesNo",
-      label: "Do we need to match existing whites (trim/doors/cabinets)?",
-    },
-    {
-      id: "white_reference_photo",
-      input_type: "upload",
-      label: "Photo: white printer paper touching the white to match (daylight, lights off)",
-      show_if: { need_white_match: true },
-      multiple: true,
-    },
-    { id: "white_brand_known", input_type: "yesNo", label: "Do you know the brand/color name of that white?" },
-    {
-      id: "white_brand_code",
-      input_type: "text",
-      label: "Brand & color name/code",
-      show_if: { white_brand_known: true },
-    },
-  ],
-};
-
 /* -------------------- Core (always asked) -------------------- */
 
 const CORE_FIELDS: FieldSpec[] = [
@@ -203,12 +176,6 @@ const CORE_FIELDS: FieldSpec[] = [
       { id: "existing_elements_photos", input_type: "upload", label: "Photos of existing items", multiple: true },
     ],
   },
-  {
-    id: "adjacent_photos",
-    input_type: "upload",
-    label: "Photos of adjacent rooms/sightlines",
-    multiple: true,
-  },
 ];
 
 /* -------------------- Carryover & constraints (always asked) -------------------- */
@@ -262,55 +229,12 @@ const CARRYOVER_FIELDS: FieldSpec[] = [
     ],
   },
   {
-    id: "temperature_preference",
-    input_type: "slider",
-    label: "Warm ↔ Cool preference",
-    helper: "0 = cool, 5 = neutral, 10 = warm",
-    min: 0,
-    max: 10,
-  },
-  {
     id: "saturation_comfort",
     input_type: "singleSelect",
     label: "Color intensity preference",
     options: ["Neutral", "Balanced", "Bold"],
   },
-  {
-    id: "dark_comfort",
-    input_type: "slider",
-    label: "Comfort with dark colors",
-    min: 0,
-    max: 5,
-  },
-  {
-    id: "sheen_preferences",
-    input_type: "group",
-    label: "Sheen preferences by surface",
-    fields: [
-      {
-        id: "sheen_walls",
-        input_type: "singleSelect",
-        label: "Walls",
-        options: ["Flat", "Matte", "Eggshell", "Satin"],
-      },
-      {
-        id: "sheen_trim",
-        input_type: "singleSelect",
-        label: "Trim/Doors",
-        options: ["Satin", "Semi-gloss", "Gloss"],
-      },
-      {
-        id: "sheen_cabinets",
-        input_type: "singleSelect",
-        label: "Cabinets (if any)",
-        options: ["Satin", "Semi-gloss", "Gloss", "N/A"],
-      },
-      { id: "sheen_ceiling", input_type: "singleSelect", label: "Ceiling", options: ["Flat", "Matte"] },
-    ],
-  },
-  { id: "non_negotiables", input_type: "text", label: "Non-negotiables to honor (items, finishes, heirlooms)" },
   { id: "brand_notes", input_type: "text", label: "Any paint brands to use or avoid? (optional)" },
-  WHITE_MATCH_GROUP,
 ];
 
 /* -------------------- Room modules (conditional) -------------------- */
@@ -363,15 +287,10 @@ const DINING: FieldSpec[] = [
 const KITCHEN: FieldSpec[] = [
   CABINETRY_GROUP,
   {
-    id: "island_statement",
-    input_type: "yesNo",
-    label: "Different color for island/lowers?",
-    show_if: { dark_comfort: { ">=": 3 } },
-  },
-  {
     id: "countertops_group",
     input_type: "group",
     label: "Countertops",
+    show_if: { room_type: "Kitchen" },
     fields: [
       { id: "counter_material", input_type: "singleSelect", label: "Material", options: ["Quartz", "Granite", "Marble", "Butcher Block", "Laminate", "Other"] },
       {
@@ -380,7 +299,7 @@ const KITCHEN: FieldSpec[] = [
         label: "Dominant undertone",
         options: ["Neutral", "Warm (yellow/gold)", "Cool (blue)", "Green", "Pink/Red", "Brown"],
       },
-      { id: "counter_photo", input_type: "upload", label: "Countertop photos (with white paper)", multiple: true },
+      { id: "counter_photo", input_type: "upload", label: "Countertop photos (with white paper)", multiple: true, show_if: { room_type: "Kitchen" } },
     ],
   },
   {
@@ -592,7 +511,6 @@ export const INTAKE_GRAPH: Graph = {
     tile: TILE_GROUP,
     cabinetry: CABINETRY_GROUP,
     textiles: TEXTILES_GROUP,
-    white_match: WHITE_MATCH_GROUP,
   },
 } as const;
 
