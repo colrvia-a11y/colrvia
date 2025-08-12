@@ -125,3 +125,21 @@
   }
 }
 
+/* App theme: Moss (dark on green) — ensures AA contrast */
+.theme-moss {
+  color-scheme: dark;
+  /* Surfaces */
+  --color-bg: #404934;           /* page background (moss) */
+  --color-bg-alt: #404934;       /* raised/alt surfaces */
+  --color-bg-inset: #566049;     /* subtle insets */
+  --color-surface: #404934;      /* default surface */
+  --color-border: #667257;       /* borders on moss */
+  --color-border-strong: #7a866c;
+  /* Text */
+  --color-fg: #F7F7F2;           /* primary text */
+  --color-fg-muted: #cbd5e1;     /* muted text (≥4.5:1 on #404934) */
+  --color-fg-subtle: #e5e7eb;    /* subtle captions */
+  /* Legacy aliases pick these up automatically:
+     --paper → --color-bg, --ink → --color-fg, --ink-subtle → --color-fg-muted */
+}
+

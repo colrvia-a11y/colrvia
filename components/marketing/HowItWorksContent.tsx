@@ -40,7 +40,7 @@ export default function HowItWorksContent({ compact = false }: { compact?: boole
           </div>
         </div>
         <div className="order-1 md:order-2">
-          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border bg-[var(--color-linen)]/40">
+          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border bg-[var(--linen)]/40">
             <Image
               src="/marketing/howitworks.svg"
               alt="How it works preview"

@@ -35,17 +35,17 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
     } catch {}
   }
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="theme-moss min-h-screen flex flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 z-[100] bg-white text-sm px-3 py-2 rounded shadow">Skip to content</a>
-  <header className="bg-[#404934] sticky top-0 z-50">
+  <header className="bg-[var(--color-bg)] sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="font-display tracking-tight text-lg text-[#F7F7F2]">COLRVIA</Link>
+            <Link href="/" className="font-display tracking-tight text-lg">COLRVIA</Link>
           </div>
-          <nav className="hidden md:flex items-center gap-6 text-sm text-[#F7F7F2]" aria-label="Primary">
+          <nav className="hidden md:flex items-center gap-6 text-sm" aria-label="Primary">
             <Link href="/designers" className="hover:underline">Designers</Link>
             {!checking && !user && <Link href="/sign-in" className="hover:underline">Sign in / Sign up</Link>}
-            {user && <Link href="/account" aria-label="Account" className="rounded-full border border-white/15 bg-white/5 p-2 hover:bg-white/10 transition-colors"><User size={18} /></Link>}
+            {user && <Link href="/account" aria-label="Account" className="rounded-full border border-white/15 bg-white/5 p-2 hover:bg-white/10 transition-colors"><User size={18} /><span className="sr-only">Account</span></Link>}
             {user && <button onClick={signOut} className="text-sm hover:underline">Sign out</button>}
           </nav>
           <div className="flex items-center gap-2">
@@ -65,7 +65,7 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
         )}
       </header>
       <main id="main" className="flex-1">{children}</main>
-  <footer className="mt-16 bg-[#404934] text-[#F7F7F2]">
+  <footer className="mt-16 bg-[var(--color-bg)]">
   <div className="max-w-6xl mx-auto px-4 py-10 text-sm text-muted-foreground flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
           <p className="opacity-80">© {new Date().getFullYear()} Colrvia</p>
           <div className="flex gap-5">

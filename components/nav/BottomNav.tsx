@@ -13,7 +13,7 @@ const TABS = [
 export function BottomNav(){
   const pathname = usePathname() || '/'
   return (
-    <nav aria-label="Primary" className="fixed inset-x-0 bottom-0 z-40 bg-[#404934] text-[#F7F7F2] backdrop-blur">
+    <nav aria-label="Primary" className="fixed inset-x-0 bottom-0 z-40 bg-[var(--color-bg)] backdrop-blur">
       <div className="mx-auto max-w-3xl">
         <ul className="grid grid-cols-3 gap-1 px-2 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           {TABS.map(({ href, label, Icon }) => {

@@ -60,7 +60,7 @@ function StoriesGrid({ stories }: { stories:any[] }) {
         return (
           <li key={s.id} className="[&>div]:h-full">
             <Link href={`/reveal/${s.id}`} className="block rounded-xl border p-4 hover:shadow-sm">
-              <div className="h-24 w-full bg-[var(--color-linen)] rounded-lg mb-3 flex items-center justify-center text-xs text-muted-foreground">{title}</div>
+              <div className="h-24 w-full bg-[var(--linen)] rounded-lg mb-3 flex items-center justify-center text-xs text-muted-foreground">{title}</div>
               <div className="text-xs text-muted-foreground">{meta}</div>
             </Link>
           </li>
