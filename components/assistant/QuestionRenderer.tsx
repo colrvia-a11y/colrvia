@@ -6,7 +6,7 @@ import { getQuestionPriority } from "@/lib/intake/questions";
 
 type Props = {
   turn: IntakeTurn | null;
-  onAnswer: (answer: string) => void;
+  onAnswer: (answer: string | string[]) => void;
   /** Called when the intake flow is complete */
   onComplete?: () => void;
   /** Whether the completion action is in progress */
@@ -15,6 +15,7 @@ type Props = {
 
 export default function QuestionRenderer({ turn, onAnswer, onComplete, completeBusy }: Props) {
   const [text, setText] = React.useState("");
+  const [selected, setSelected] = React.useState<string[]>([]);
   const fieldId = turn?.field_id;
 
   React.useEffect(() => {
@@ -44,12 +45,13 @@ export default function QuestionRenderer({ turn, onAnswer, onComplete, completeB
     );
   }
 
-  const send = (val: string) => {
+  const send = (val: string | string[]) => {
     if (turn.field_id) {
       track('answer_saved', { id: turn.field_id, priority: getQuestionPriority(turn.field_id) });
     }
     onAnswer(val);
     setText("");
+    setSelected([]);
   };
 
   const renderControls = () => {
@@ -65,6 +67,44 @@ export default function QuestionRenderer({ turn, onAnswer, onComplete, completeB
             <button className="px-3 py-2 rounded-lg border opacity-80" onClick={() => send("Not sure")}>
               I’m not sure
             </button>
+          </div>
+        );
+      case "multiSelect":
+        return (
+          <div className="mt-3">
+            <div className="flex flex-wrap gap-2">
+              {turn.choices?.map((c) => {
+                const active = selected.includes(c);
+                return (
+                  <button
+                    key={c}
+                    className={`px-3 py-2 rounded-lg border ${active ? 'bg-neutral-200' : ''}`}
+                    onClick={() => {
+                      setSelected((prev) =>
+                        prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
+                      );
+                    }}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex gap-2 mt-3">
+              <button
+                className="px-3 py-2 rounded-lg border"
+                onClick={() => send(selected)}
+                disabled={selected.length === 0}
+              >
+                Continue
+              </button>
+              <button
+                className="px-3 py-2 rounded-lg border opacity-80"
+                onClick={() => send("Not sure")}
+              >
+                Skip / I’m not sure
+              </button>
+            </div>
           </div>
         );
       case "yesNo":
