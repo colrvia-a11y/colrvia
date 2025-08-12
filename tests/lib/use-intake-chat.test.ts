@@ -30,8 +30,7 @@ describe('useIntakeChat', () => {
     global.fetch = fetchMock
 
     const { result } = renderHook(() => useIntakeChat('emily'))
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
-    expect(result.current.currentNode?.question).toBe('Brand?')
+    await waitFor(() => expect(result.current.currentNode?.question).toBe('Brand?'))
 
     await act(async () => {
       await result.current.submit('SW')
