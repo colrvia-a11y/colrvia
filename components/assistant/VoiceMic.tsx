@@ -13,31 +13,25 @@ export default function VoiceMic({ onActiveChange }: Props) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Get ephemeral client secret for Realtime
-      const tokenRes = await fetch("/api/realtime/session", { method: "POST" });
-      const session = await tokenRes.json();
-      if (!tokenRes.ok) throw new Error(session?.error || "Could not create realtime session");
-
-      const token = session?.client_secret?.value;
-      const model = session?.model || "gpt-4o-realtime-preview-2024-12-17";
-      if (!token) throw new Error("Missing realtime client token");
-
-      const pc = new RTCPeerConnection();
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }],
+        iceTransportPolicy: "all",
+      });
       pcRef.current = pc;
 
-      // Play remote audio
+      // Remote audio
       const audioEl = new Audio();
       audioEl.autoplay = true;
       pc.ontrack = (e) => { audioEl.srcObject = e.streams[0]; };
 
-      // Send mic
+      // Send mic / receive back
       pc.addTrack(stream.getTracks()[0], stream);
-      // Receive audio back
       pc.addTransceiver("audio", { direction: "sendrecv" });
 
-      // Gather ICE before sending offer
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
+
+      // Wait for ICE to gather
       await new Promise<void>((resolve) => {
         if (pc.iceGatheringState === "complete") return resolve();
         const check = () => {
@@ -47,21 +41,20 @@ export default function VoiceMic({ onActiveChange }: Props) {
           }
         };
         pc.addEventListener("icegatheringstatechange", check);
-        setTimeout(resolve, 1000); // safety timeout
+        setTimeout(resolve, 1200);
       });
 
-      // Send SDP offer to OpenAI Realtime endpoint WITH Authorization header
-      const endpoint = `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}`;
-      const r = await fetch(endpoint, {
+      // Send to our server relay
+      const res = await fetch("/api/realtime/offer", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/sdp",
-        },
-        body: pc.localDescription?.sdp || "",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sdp: pc.localDescription?.sdp || "",
+          model: undefined, // use server default
+        }),
       });
-      if (!r.ok) throw new Error("Failed to start realtime call");
-      const answerSDP = await r.text();
+      if (!res.ok) throw new Error((await res.text()) || "Failed to start realtime call");
+      const answerSDP = await res.text();
       await pc.setRemoteDescription({ type: "answer", sdp: answerSDP });
 
       setActive(true);
@@ -74,8 +67,10 @@ export default function VoiceMic({ onActiveChange }: Props) {
   }
 
   function stop() {
-    pcRef.current?.getSenders().forEach(s => { try { (s.track as MediaStreamTrack)?.stop(); } catch {} });
-    pcRef.current?.close();
+    try {
+      pcRef.current?.getSenders().forEach((s) => (s.track as MediaStreamTrack | undefined)?.stop());
+      pcRef.current?.close();
+    } catch {}
     pcRef.current = null;
     setActive(false);
     onActiveChange?.(false);
@@ -83,9 +78,11 @@ export default function VoiceMic({ onActiveChange }: Props) {
 
   return (
     <div className="flex items-center gap-3">
-      <button onClick={active ? stop : start}
+      <button
+        onClick={active ? stop : start}
         className={`px-4 py-2 rounded-full border ${active ? "bg-black text-white dark:bg-white dark:text-black" : "bg-white/70 dark:bg-neutral-900/70"}`}
-        aria-pressed={active}>
+        aria-pressed={active}
+      >
         {active ? "Stop voice" : "Talk to designer"}
       </button>
       {error && <span className="text-xs text-red-500">{error}</span>}

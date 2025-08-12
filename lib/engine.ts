@@ -1,3 +1,15 @@
+export function countAllFields(state: SessionState): number {
+  // Count unique non-group fields visible for this state
+  const answers = state.answers || {};
+  const all = (function orderedFields() {
+    const core = (INTAKE_GRAPH.core as any).flatMap((f:any)=>f.input_type==="group"?f.fields:f);
+    const carry = (INTAKE_GRAPH.carryover as any).flatMap((f:any)=>f.input_type==="group"?f.fields:f);
+    const room = (answers["room_type"] as any) || state.room_type;
+    const mod = room && INTAKE_GRAPH.modules[room] ? (INTAKE_GRAPH.modules[room] as any).flatMap((f:any)=>f.input_type==="group"?f.fields:f) : [];
+    return [...core, ...carry, ...mod];
+  })();
+  return all.filter((f:any)=>f.input_type!=="group").length;
+}
 import { INTAKE_GRAPH, type FieldSpec } from "@/lib/intake-graph";
 import type { SessionState, RoomType } from "@/lib/types";
 
