@@ -41,8 +41,11 @@ export function makeVariant(base: Swatch[], _brand: Brand, tweak: Tweak): Swatch
       hex = shift(hex, tweak==='softer'? 'softer':'bolder', 0.12)
       // accent vs walls ≥2:1 and visibly different
       if (wallsHex) {
-        let tries=0
-        while ((contrastRatio(hex, wallsHex) < 2 || deltaEHex(hex, wallsHex) < 10) && tries<10) {
+        let tries = 0
+        while (tries < 10) {
+          const ratio = contrastRatio(hex, wallsHex)
+          const diff = deltaEHex(hex, wallsHex)
+          if (ratio >= 2 && diff >= 10) break
           hex = shift(hex, tweak==='softer'? 'softer':'bolder', 0.06)
           tries++
         }
