@@ -1,7 +1,7 @@
 # Colrvia
 
 ## PWA
-Manifest route at `/manifest.webmanifest` (Next auto). Service worker in `public/sw.js` precaches `/` and `/offline` and provides network-first navigation with offline fallback. Install prompt banner component `components/pwa/InstallPrompt.tsx` (render on app pages). Icons under `public/icons` (supply real PNGs 192/512 + maskable variants). Update theme/background colors in `app/manifest.ts` if brand evolves.
+Manifest route at `/manifest.webmanifest` (Next auto). Service worker in `public/sw.js` precaches `/` and `/offline`, caches `/reveal/*` shells and related `/api/stories/*` + `/api/share/*/image` responses with stale‑while‑revalidate, and serves cached reveal pages when offline (falling back to `/offline`). Install prompt banner component `components/pwa/InstallPrompt.tsx` (render on app pages). Icons under `public/icons` (supply real PNGs 192/512 + maskable variants). Update theme/background colors in `app/manifest.ts` if brand evolves.
 
 Testing offline:
 1. Build & run locally.
