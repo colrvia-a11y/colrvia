@@ -1,10 +1,23 @@
 "use client"
+import { useEffect, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabaseBrowser } from '@/lib/supabase/client'
 
 export default function MorePage(){
   const router = useRouter()
+  const [session, setSession] = useState<Session | null>(null)
+
+  useEffect(() => {
+    const supabase = supabaseBrowser()
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+    return () => { sub.subscription.unsubscribe() }
+  }, [])
+
   async function logout(){
     try { await supabaseBrowser().auth.signOut() } catch {}
     router.push('/home')
@@ -32,7 +45,11 @@ export default function MorePage(){
           </li>
         ))}
         <li>
-          <button onClick={logout} className="w-full text-left px-5 py-4 hover:bg-[var(--linen)]/60">Log out</button>
+          {session ? (
+            <button onClick={logout} className="w-full text-left px-5 py-4 hover:bg-[var(--linen)]/60">Log out</button>
+          ) : (
+            <Link href="/sign-in" className="w-full block text-left px-5 py-4 hover:bg-[var(--linen)]/60">Log in</Link>
+          )}
         </li>
       </ul>
   <div className="text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Colrvia</div>
