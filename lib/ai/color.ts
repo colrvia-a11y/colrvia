@@ -1,6 +1,8 @@
-// Lightweight color utilities: hex->LAB, deltaE (CIE76), contrast ratio, ensureContrast, undertone signal
+// Lightweight color utilities: hex->LAB, deltaE (ΔE2000), contrast ratio, ensureContrast, undertone signal
 
 export type LAB = { L: number; a: number; b: number }
+
+import { differenceCiede2000 } from 'culori'
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const h = hex.replace('#','')
@@ -36,11 +38,17 @@ export function hexToLab(hex: string): LAB {
   return { L, a, b: b2 }
 }
 
+const de00 = differenceCiede2000()
+
 export function deltaE(l1: LAB, l2: LAB): number {
-  const dL = l1.L - l2.L
-  const da = l1.a - l2.a
-  const db = l1.b - l2.b
-  return Math.sqrt(dL*dL + da*da + db*db)
+  return de00(
+    { mode: 'lab65', l: l1.L, a: l1.a, b: l1.b },
+    { mode: 'lab65', l: l2.L, a: l2.a, b: l2.b }
+  )
+}
+
+export function deltaEHex(hex1: string, hex2: string): number {
+  return deltaE(hexToLab(hex1), hexToLab(hex2))
 }
 
 export function luminance(hex: string): number {
