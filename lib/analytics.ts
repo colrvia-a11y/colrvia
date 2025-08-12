@@ -1,4 +1,6 @@
 import type { PostHog } from 'posthog-js'
+import type { AnalyticsEventName, AnalyticsEventPayload } from './analytics/events'
+
 let client: PostHog | null = null
 
 export function initAnalytics(){
@@ -15,7 +17,7 @@ export function initAnalytics(){
   return client
 }
 
-export function track(name: string, props?: Record<string,any>){
+export function track<E extends AnalyticsEventName>(name: E, props: AnalyticsEventPayload<E>){
   if(!client) return
   client.capture(name, props)
 }
