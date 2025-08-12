@@ -68,6 +68,11 @@ a, button, [role="button"] { outline-offset: 3px; }
   --secondary-foreground: 210 16% 92%;
   --accent-foreground: 0 0% 100%;
   }
+  /* Apply light subtext to the moss theme as it's a dark surface */
+  .theme-moss {
+    --muted-foreground: 213 27% 84%;
+    --subtext-on-dark: 213 27% 84%;
+  }
 }
 
 /* Strong, visible focus for keyboard users */
