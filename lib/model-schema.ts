@@ -55,7 +55,7 @@ export const IntakeTurnJSONSchema = {
       },
       choices: { type: "array", items: { type: "string" } },
       explain_why: { type: "string" },
-      state_updates: { type: "object", additionalProperties: true },
+  state_updates: { type: "object", additionalProperties: false },
       followups: {
         type: "array",
         items: {
