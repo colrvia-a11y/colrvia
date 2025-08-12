@@ -12,7 +12,8 @@ export type DarkLocation = 'all_walls' | 'accent_wall' | 'ceiling' | 'trim_doors
 export type FixedElement =
   | 'ctops' | 'backsplash' | 'cabinets' | 'flooring' | 'appliances'
   | 'vanity_top' | 'tile' | 'fixtures_finish' | 'bath_flooring'
-  | 'wood_floor' | 'fireplace' | 'builtins_trim' | 'major_furniture' | 'rugs_textiles' | 'artwork';
+  | 'wood_floor' | 'fireplace' | 'builtins_trim' | 'major_furniture' | 'rugs_textiles' | 'artwork'
+  | 'none';
 
 export type AnchorOpenConcept = 'dark_floor' | 'stone' | 'metal' | 'large_sofa_rug' | 'none';
 
