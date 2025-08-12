@@ -16,6 +16,11 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:54321',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'anon',
+      NEXT_PUBLIC_ONBOARDING_MODE: 'api',
+    },
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
