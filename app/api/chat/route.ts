@@ -5,19 +5,10 @@ import { IntakeTurnZ, IntakeTurnJSONSchema } from "@/lib/model-schema";
 import type { SessionState } from "@/lib/types";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+export const dynamic = "force-dynamic";
 
-export const dynamic = "force-dynamic"; // ensure SSR
+type ChatBody = { userMessage: string; sessionState: SessionState };
 
-type ChatBody = {
-  userMessage: string;
-  sessionState: SessionState;
-};
-
-/**
- * POST /api/chat
- * Body: { userMessage, sessionState }
- * Returns: IntakeTurn (strict JSON) validated by Zod.
- */
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as ChatBody;
@@ -25,7 +16,6 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ error: "Missing userMessage" }), { status: 400 });
     }
 
-    // Minimal context the model needs each turn
     const condensedState = {
       room_type: body.sessionState?.room_type ?? null,
       answers: body.sessionState?.answers ?? {},
@@ -35,35 +25,33 @@ export async function POST(req: NextRequest) {
     const res = await client.responses.create({
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       instructions: SYSTEM_PROMPT,
-      // Strict structured JSON via text.format (flattened fields)
       text: {
         format: {
           type: "json_schema",
           name: "IntakeTurn",
           schema: IntakeTurnJSONSchema.schema,
-          strict: true
-        }
+          strict: true,
+        },
       },
       input:
         "You are driving an intake for home color design.\n" +
-        "Here is the current session state (JSON):\n" +
+        "Current session (JSON): " +
         JSON.stringify(condensedState) +
-        "\nUser just said:\n" +
+        "\nUser said: " +
         body.userMessage +
-        "\nReturn ONLY the next IntakeTurn as strict JSON.",
+        "\nReturn ONLY IntakeTurn JSON.",
     });
 
-    // Extract JSON text safely
-    const raw = (res as any).output_text ?? JSON.stringify((res as any).output?.[0]?.content?.[0]?.json ?? {});
+    const raw =
+      (res as any).output_text ??
+      JSON.stringify((res as any).output?.[0]?.content?.[0]?.json ?? {});
     let parsed: unknown;
-
     try {
       parsed = JSON.parse(raw);
     } catch {
       return new Response(JSON.stringify({ error: "Model did not return valid JSON", raw }), { status: 502 });
     }
 
-    // Validate against Zod
     const turn = IntakeTurnZ.safeParse(parsed);
     if (!turn.success) {
       return new Response(JSON.stringify({ error: "Schema validation failed", issues: turn.error.issues, raw }), {

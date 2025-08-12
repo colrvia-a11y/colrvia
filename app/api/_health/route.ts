@@ -1,6 +1,6 @@
 export async function GET() {
-  return new Response(JSON.stringify({ ok: true }), {
+  return new Response(JSON.stringify({ ok: true, ts: Date.now() }), {
     headers: { "Content-Type": "application/json" },
-    status: 200
+    status: 200,
   });
 }

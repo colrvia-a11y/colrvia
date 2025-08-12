@@ -13,17 +13,23 @@ export default function IntakePage() {
   const [log, setLog] = React.useState<string[]>([]);
   const [voiceActive, setVoiceActive] = React.useState(false);
 
-  const ask = async (userMessage: string) => {
+  const ask = async (userMessage: string, saveUnder?: string) => {
+    // Save the user's answer locally first if we know the field
+    if (saveUnder && userMessage !== undefined) {
+      setSession(s => ({ ...s, answers: { ...s.answers, [saveUnder]: userMessage } }));
+    }
     setLog(l => [...l, `You: ${userMessage}`]);
+
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userMessage, sessionState: session })
+      body: JSON.stringify({ userMessage, sessionState: { ...session, answers: saveUnder ? { ...session.answers, [saveUnder]: userMessage } : session.answers } })
     });
+
     const data = await res.json();
-    if (!res.ok) { setLog(l => [...l, `Assistant (error): ${data?.error || "Unknown error"}`]); return; }
-    if (data?.state_updates && typeof data.state_updates === "object") {
-      setSession(s => ({ ...s, answers: { ...s.answers, ...data.state_updates } }));
+    if (!res.ok) {
+      setLog(l => [...l, `Assistant (error): ${data?.error || "Unknown error"}`]);
+      return;
     }
     setTurn(data as IntakeTurn);
   };
@@ -38,7 +44,13 @@ export default function IntakePage() {
           <h1 className="text-2xl font-semibold">Colrvia Intake</h1>
           <VoiceMic onActiveChange={setVoiceActive} />
         </div>
-  <QuestionRenderer turn={turn} onAnswer={(ans: string) => ask(ans)} />
+        <QuestionRenderer
+          turn={turn}
+          onAnswer={(ans) => {
+            if (!turn) return;
+            ask(ans, turn.field_id);
+          }}
+        />
         <div className="text-xs text-neutral-500 whitespace-pre-wrap">{log.slice(-6).join("\n")}</div>
       </main>
     </>
