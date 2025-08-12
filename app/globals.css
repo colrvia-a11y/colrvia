@@ -41,19 +41,27 @@ a, button, [role="button"] { outline-offset: 3px; }
 
 @layer base {
   :root {
-    /* Keep existing background tokens as-is (brand dark stays). 
-       We only correct foregrounds for readability. */
-    /* Light-on-dark default text for brand background */
-    --foreground: 0 0% 98%;
-    --muted-foreground: 210 16% 85%;
-    --secondary-foreground: 210 16% 92%;
-    --accent-foreground: 0 0% 100%;
+    /* Preserve existing background tokens; adjust text for readability */
+    --foreground: 222 47% 11%;
+    --muted-foreground: 215 16% 35%;
+    --secondary-foreground: 215 16% 46%;
+    --accent-foreground: 0 0% 98%;
 
     /* Cards/popovers stay light surfaces with dark text */
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* Light text on dark backgrounds */
+      --foreground: 0 0% 98%;
+      --muted-foreground: 210 16% 85%;
+      --secondary-foreground: 210 16% 92%;
+      --accent-foreground: 0 0% 100%;
+    }
   }
 
   /* Ensure base text always honors our tokens */
