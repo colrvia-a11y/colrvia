@@ -4,7 +4,8 @@ import QuestionRenderer from "@/components/assistant/QuestionRenderer";
 import VoiceMic from "@/components/assistant/VoiceMic";
 import GlowFrame from "@/components/assistant/GlowFrame";
 import type { IntakeTurn, SessionState } from "@/lib/types";
-import { countAllFields } from "@/lib/engine";
+import { buildQuestionQueue } from "@/lib/intake/engine";
+import { QUESTIONS } from "@/lib/intake/questions";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export const dynamic = 'force-dynamic'
@@ -23,10 +24,10 @@ export default function IntakePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const ask = React.useCallback(async (userMessage: string, saveUnder?: string) => {
+  const ask = React.useCallback(async (userMessage: any, saveUnder?: string) => {
     try {
       setLoading(true);
-      const normalized = userMessage === "Not sure" || userMessage === "Skip / I’m not sure" ? null : userMessage;
+      const normalized = typeof userMessage === "string" && (userMessage === "Not sure" || userMessage === "Skip / I’m not sure") ? null : userMessage;
       if (saveUnder !== undefined) {
         setSession(s => {
           const nextAns = { ...s.answers };
@@ -35,7 +36,7 @@ export default function IntakePage() {
         });
         if (normalized !== null) setHistory((h: { field_id: string; value: any }[]) => [...h, { field_id: saveUnder, value: normalized }]);
       }
-      setLog(l => [...l, `You: ${userMessage}`]);
+      setLog(l => [...l, `You: ${JSON.stringify(userMessage)}`]);
       const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userMessage, sessionState: { ...session, answers: saveUnder !== undefined ? (normalized === null ? (()=>{ const a={...session.answers}; delete a[saveUnder]; return a; })() : { ...session.answers, [saveUnder]: normalized }) : session.answers } }) });
       const data = await res.json();
       if (!res.ok) { setError(data?.error || "Unknown error"); setLog(l => [...l, `Assistant (error): ${data?.error || "Unknown error"}`]); return; }
@@ -105,7 +106,15 @@ export default function IntakePage() {
   function goBack() {
     setHistory((h: { field_id: string; value: any }[]) => { const next=[...h]; const last=next.pop(); if(!last) return next; setSession(s=>{ const a={...s.answers}; delete a[last.field_id]; return { ...s, answers:a };}); ask("BACK"); return next; });
   }
-  const total = countAllFields(session) || 1; const answered = Object.keys(session.answers||{}).length; const pct = Math.min(100, Math.round(answered/total*100));
+  const queue = React.useMemo(() => buildQuestionQueue(session.answers as any), [session.answers]);
+  const total = queue.length || 1;
+  const answered = queue.filter(id => {
+    const field = QUESTIONS[id].field ?? id;
+    const val = (session.answers as any)[field];
+    if (Array.isArray(val)) return val.length > 0;
+    return val !== undefined && val !== null && val !== "";
+  }).length;
+  const pct = Math.min(100, Math.round(answered/total*100));
 
   // Speak on each new turn (question) when voice active and turn changes
   const lastSpokenRef = React.useRef<string | null>(null);
