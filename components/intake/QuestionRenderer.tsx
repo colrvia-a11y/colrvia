@@ -33,7 +33,7 @@ export default function QuestionRenderer({ question, onAnswer, onUpload }: Props
     track("question_shown", { id: question.id, priority: question.priority });
     setText("");
     setMulti([]);
-  }, [question.id]);
+  }, [question.id, question.priority]);
 
   function send(value: any) {
     track("answer_saved", { id: question.id, priority: question.priority });
@@ -78,7 +78,7 @@ export default function QuestionRenderer({ question, onAnswer, onUpload }: Props
           </div>
           <div className="flex gap-2 mt-4">
             <Button onClick={() => send(multi)}>Continue</Button>
-            <Button variant="outline" onClick={() => send(skipValue)}>I'm not sure</Button>
+            <Button variant="outline" onClick={() => send(skipValue)}>Im not sure</Button>
           </div>
         </div>
       );
@@ -93,7 +93,7 @@ export default function QuestionRenderer({ question, onAnswer, onUpload }: Props
             )}
             <div className="flex gap-2">
               <Button onClick={() => send(text)} disabled={!text.trim()}>Continue</Button>
-              <Button variant="outline" onClick={() => send(skipValue)}>I'm not sure</Button>
+              <Button variant="outline" onClick={() => send(skipValue)}>Im not sure</Button>
             </div>
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function QuestionRenderer({ question, onAnswer, onUpload }: Props
               variant="outline"
               onClick={() => send(skipValue)}
             >
-              I'm not sure
+              Im not sure
             </Button>
           </form>
         </div>

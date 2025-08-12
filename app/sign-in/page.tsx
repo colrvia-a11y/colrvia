@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { supabaseBrowser } from '@/lib/supabase/browser'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
+import { getAuthCallbackUrl } from '@/lib/url'
 
 type Mode = 'magic' | 'password'
 type PwPhase = 'signin' | 'signup'
@@ -24,11 +25,6 @@ export default function SignInPage() {
   const searchParams = useSearchParams()
   const next = searchParams.get('next') || '/dashboard'
 
-  const origin =
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : (process.env.NEXT_PUBLIC_SITE_URL ?? '')
-
   async function sendMagicLink(e: React.FormEvent) {
     e.preventDefault()
     setMsg(null)
@@ -37,7 +33,7 @@ export default function SignInPage() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
+        options: { emailRedirectTo: `${getAuthCallbackUrl()}?next=${encodeURIComponent(next)}` },
       })
       if (error) throw error
       setMsg(t('messages.checkEmailMagicLink'))
@@ -54,7 +50,7 @@ export default function SignInPage() {
   console.debug('[sign-in] initiating Google OAuth', { origin })
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
+        options: { redirectTo: `${getAuthCallbackUrl()}?next=${encodeURIComponent(next)}` },
       })
       if (error) throw error
       // the browser will redirect; nothing else to do
@@ -90,7 +86,7 @@ export default function SignInPage() {
     if (password !== confirm) { setMsg(t('messages.passwordsNoMatch')); return }
     setBusy(true)
     try {
-  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` } })
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${getAuthCallbackUrl()}?next=${encodeURIComponent(next)}` } })
       if (error) throw error
       if (data.user && !data.session) {
         setAwaitingConfirm(true)

@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabaseBrowser } from '@/lib/supabase/client'
+import Image from 'next/image'
 
 /**
  * File upload component for uploading images to the Supabase storage bucket
@@ -84,7 +85,7 @@ export function Upload({ projectId, onUploaded }: UploadProps) {
       {url && (
         <div className="flex items-center gap-3">
           <a className="underline text-sm" href={url} target="_blank" rel="noopener noreferrer">Open image</a>
-          <img src={url} alt="Uploaded preview" className="h-14 w-14 object-cover rounded-md border" />
+          <Image src={url} alt="Uploaded preview" width={56} height={56} className="h-14 w-14 object-cover rounded-md border" />
         </div>
       )}
       <p className="text-[11px] text-neutral-500">Max 10MB. JPG/PNG/WebP recommended.</p>

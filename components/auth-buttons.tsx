@@ -1,6 +1,7 @@
 "use client"
 
 import { supabaseBrowser } from '@/lib/supabase/client'
+import { getAuthCallbackUrl } from '@/lib/url'
 
 /**
  * Displays sign in and sign out buttons. Uses Supabase client-side auth
@@ -12,7 +13,7 @@ export function AuthButtons() {
     const supabase = supabaseBrowser()
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${location.origin}/auth/callback` }
+      options: { redirectTo: getAuthCallbackUrl() }
     })
   }
 
