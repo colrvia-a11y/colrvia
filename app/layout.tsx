@@ -12,7 +12,8 @@ import { Analytics } from '@vercel/analytics/react'
 import { MotionProvider } from '@/components/theme/MotionSettings'
 import AmbientEdge from '@/components/ui/ambient-edge'
 import dynamic from 'next/dynamic'
-import { NextIntlClientProvider, createTranslator } from 'next-intl'
+import { createTranslator } from 'next-intl'
+import I18nProvider from '@/components/providers/I18nProvider'
 import { getLocale, getMessages } from '@/lib/i18n'
 
 const RouteTransition = dynamic(() => import('@/components/ux/RouteTransition'), { ssr:false })
@@ -67,7 +68,7 @@ export default async function RootLayout({
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased font-sans">
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <I18nProvider locale={locale} messages={messages}>
           {/* Skip link for keyboard users */}
           <a
             href="#main"
@@ -109,7 +110,7 @@ export default async function RootLayout({
             speedSeconds={16}
             opacity={0.55}
           />
-        </NextIntlClientProvider>
+        </I18nProvider>
       </body>
     </html>
   )

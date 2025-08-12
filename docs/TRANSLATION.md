@@ -2,6 +2,8 @@
 
 This project uses [`next-intl`](https://next-intl.dev/) for internationalization.
 
+Translations are loaded in `app/layout.tsx` via an `I18nProvider` that uses the locale detection helpers from [`lib/i18n.ts`](../lib/i18n.ts).
+
 ## Adding or updating translations
 
 1. Edit `messages/en.json` with any new keys.

@@ -1,5 +1,11 @@
 import { headers } from 'next/headers'
 
+/**
+ * Internationalization helpers used by the I18nProvider.
+ * Detects the user's locale from the `Accept-Language` header
+ * and loads the corresponding translation messages.
+ */
+
 export const locales = ['en', 'es'] as const
 export type Locale = (typeof locales)[number]
 export const defaultLocale: Locale = 'en'

@@ -47,5 +47,17 @@
       "confirmationResent": "Confirmation email resent. Check inbox & spam.",
       "couldNotResend": "Could not resend confirmation email"
     }
+  },
+  "NotFoundPage": {
+    "title": "We couldn’t find that",
+    "description": "The page you’re looking for doesn’t exist or has moved.",
+    "goHome": "Go Home",
+    "startStory": "Start a Color Story"
+  },
+  "ErrorPage": {
+    "title": "Something went sideways",
+    "description": "We ran into an error while rendering this page. You can try again or head back to Start.",
+    "tryAgain": "Try again",
+    "goStart": "Go to Start"
   }
 }

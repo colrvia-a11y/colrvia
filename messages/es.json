@@ -47,5 +47,17 @@
       "confirmationResent": "Correo de confirmación reenviado. Revisa bandeja y spam.",
       "couldNotResend": "No se pudo reenviar el correo de confirmación"
     }
+  },
+  "NotFoundPage": {
+    "title": "No pudimos encontrar eso",
+    "description": "La página que buscas no existe o se ha movido.",
+    "goHome": "Ir al inicio",
+    "startStory": "Iniciar una historia de color"
+  },
+  "ErrorPage": {
+    "title": "Algo salió mal",
+    "description": "Encontramos un error al renderizar esta página. Puedes intentarlo de nuevo o volver a Inicio.",
+    "tryAgain": "Intentar de nuevo",
+    "goStart": "Ir a Inicio"
   }
 }
