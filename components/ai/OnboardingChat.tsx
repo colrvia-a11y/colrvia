@@ -1,24 +1,83 @@
 "use client"
 import * as React from 'react'
-import { useIntakeChat } from '@/lib/hooks/useIntakeChat'
+import { useRouter } from 'next/navigation'
+import { getCurrentNode, mapAnswersToStoryInput, type InterviewState } from '@/lib/ai/onboardingGraph'
 
 export default function OnboardingChat({ designerId }: { designerId: string }) {
-  const { currentNode, input, setInput, busy, done, statusText, submit } = useIntakeChat(designerId)
-  const API_MODE = process.env.NEXT_PUBLIC_ONBOARDING_MODE === 'api'
+  const router = useRouter()
+  const [state, setState] = React.useState<InterviewState | null>(null)
+  const [utterance, setUtterance] = React.useState('')
+  const [input, setInput] = React.useState('')
+  const [busy, setBusy] = React.useState(false)
+  const [statusText, setStatusText] = React.useState<string | null>(null)
 
-  if (!API_MODE) return null
+  React.useEffect(() => {
+    let alive = true
+    ;(async () => {
+      try {
+        const r = await fetch('/api/ai/preferences', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ designerId, step: 'start' }),
+        })
+        const j = await r.json().catch(() => null)
+        if (!alive) return
+        setState(j?.state ?? null)
+        setUtterance(j?.utterance ?? '')
+      } catch {}
+    })()
+    return () => {
+      alive = false
+    }
+  }, [designerId])
+
+  async function submit(value?: string) {
+    const v = (value ?? input).trim()
+    if (!v || !state || busy) return
+    setBusy(true)
+    try {
+      const r = await fetch('/api/ai/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ designerId, step: 'answer', content: v, state }),
+      })
+      const j = await r.json().catch(() => null)
+      setState(j?.state ?? null)
+      setUtterance(j?.utterance ?? '')
+      setInput('')
+      if (j?.state?.done) {
+        setStatusText('Great — generating your palette now…')
+        try {
+          const payload = mapAnswersToStoryInput(j.state.answers)
+          const create = await fetch('/api/stories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ designerKey: designerId, ...payload }),
+          })
+          const data = await create.json().catch(() => null)
+          if (create.ok && data?.id) {
+            router.push(`/reveal/${data.id}`)
+          } else {
+            setStatusText('Could not create story')
+          }
+        } catch {
+          setStatusText('Could not create story')
+        }
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const currentNode = state && !state.done ? getCurrentNode(state) : null
 
   return (
     <div role="dialog" aria-label="Preferences chat" className="rounded-2xl border border-white/15 bg-white/5 p-4 text-white/95">
       <div className="min-h-[120px]">
-        {currentNode?.question ? (
-          <p className="text-base md:text-lg">{currentNode.question}</p>
-        ) : (
-          <p className="opacity-80">Preparing questions…</p>
-        )}
+        {utterance ? <p className="text-base md:text-lg">{utterance}</p> : <p className="opacity-80">Preparing questions…</p>}
         {statusText && <p className="mt-2 text-sm opacity-80">{statusText}</p>}
       </div>
-      {Array.isArray(currentNode?.options) && currentNode.options.length > 0 && !done && (
+      {Array.isArray(currentNode?.options) && currentNode.options.length > 0 && !state?.done && (
         <div className="mt-3 flex flex-wrap gap-2">
           {currentNode.options.map((o: string) => (
             <button
@@ -32,7 +91,7 @@ export default function OnboardingChat({ designerId }: { designerId: string }) {
           ))}
         </div>
       )}
-      {!done && (
+      {!state?.done && (
         <div className="mt-4 flex items-center gap-2">
           <input
             value={input}
