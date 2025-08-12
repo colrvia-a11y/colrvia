@@ -11,14 +11,14 @@ export type Op = "==" | "!=" | ">=" | "<=" | ">" | "<" | "truthy" | "falsy";
 export interface ShowIfCond {
   field: string;
   op: Op;
-  value?: unknown;
+  value: unknown;
 }
 
 export interface Followup {
   field_id: string;
   ask: string;
   input_type: InputType;
-  choices?: string[];
+  choices?: string[] | null;
   conditions: ShowIfCond[]; // all must pass
 }
 
@@ -26,15 +26,15 @@ export interface IntakeTurn {
   field_id: string; // where the user's next answer should be saved
   next_question: string;
   input_type: InputType;
-  choices?: string[];
-  explain_why?: string;
-  followups?: Followup[];
+  choices?: string[] | null;
+  explain_why?: string | null;
+  followups?: Followup[] | null;
   validation?: {
-    required?: boolean;
-    min?: number;
-    max?: number;
-    pattern?: string;
-  };
+    required?: boolean | null;
+    min?: number | null;
+    max?: number | null;
+    pattern?: string | null;
+  } | null;
 }
 
 export type RoomType =

@@ -14,7 +14,7 @@ const FollowupZ = z.object({
   field_id: z.string().min(1),
   ask: z.string().min(1),
   input_type: InputTypeZ,
-  choices: z.array(z.string()).min(1).optional(),
+  choices: z.array(z.string()).min(1).nullable().optional(),
   conditions: z.array(ShowIfCondZ).default([]),
 }).strict();
 
@@ -22,17 +22,18 @@ export const IntakeTurnZ = z.object({
   field_id: z.string().min(1),
   next_question: z.string().min(1),
   input_type: InputTypeZ,
-  choices: z.array(z.string()).min(1).optional(),
-  explain_why: z.string().optional(),
-  followups: z.array(FollowupZ).optional(),
+  choices: z.array(z.string()).min(1).nullable().optional(),
+  explain_why: z.string().nullable().optional(),
+  followups: z.array(FollowupZ).nullable().optional(),
   validation: z
     .object({
-      required: z.boolean().optional(),
-      min: z.number().optional(),
-      max: z.number().optional(),
-      pattern: z.string().optional(),
+      required: z.boolean().nullable().optional(),
+      min: z.number().nullable().optional(),
+      max: z.number().nullable().optional(),
+      pattern: z.string().nullable().optional(),
     })
     .strict()
+    .nullable()
     .optional(),
 }).strict();
 
@@ -48,10 +49,10 @@ export const IntakeTurnJSONSchema = {
       field_id: { type: "string" },
       next_question: { type: "string" },
       input_type: { type: "string", enum: ["singleSelect","multiSelect","slider","upload","yesNo","text"] },
-      choices: { type: "array", items: { type: "string" } },
-      explain_why: { type: "string" },
+      choices: { type: ["array","null"], items: { type: "string" } },
+      explain_why: { type: ["string","null"] },
       followups: {
-        type: "array",
+        type: ["array","null"],
         items: {
           type: "object",
           additionalProperties: false,
@@ -59,7 +60,7 @@ export const IntakeTurnJSONSchema = {
             field_id: { type: "string" },
             ask: { type: "string" },
             input_type: { type: "string", enum: ["singleSelect","multiSelect","slider","upload","yesNo","text"] },
-            choices: { type: "array", items: { type: "string" } },
+            choices: { type: ["array","null"], items: { type: "string" } },
             conditions: {
               type: "array",
               items: {
@@ -76,21 +77,22 @@ export const IntakeTurnJSONSchema = {
               }
             }
           },
-          required: ["field_id","ask","input_type","conditions"]
+          required: ["field_id","ask","input_type","choices","conditions"]
         }
       },
       validation: {
-        type: "object",
+        type: ["object","null"],
         additionalProperties: false,
         properties: {
-          required: { type: "boolean" },
-          min: { type: "number" },
-          max: { type: "number" },
-          pattern: { type: "string" },
-        }
+          required: { type: ["boolean","null"] },
+          min: { type: ["number","null"] },
+          max: { type: ["number","null"] },
+          pattern: { type: ["string","null"] },
+        },
+        required: ["required","min","max","pattern"]
       }
     },
-    required: ["field_id","next_question","input_type"]
+    required: ["field_id","next_question","input_type","choices","explain_why","followups","validation"]
   },
   strict: true,
 } as const;
