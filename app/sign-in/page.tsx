@@ -5,6 +5,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { supabaseBrowser } from '@/lib/supabase/browser'
 import { useTranslations } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 
 type Mode = 'magic' | 'password'
 type PwPhase = 'signin' | 'signup'
@@ -20,6 +21,8 @@ export default function SignInPage() {
   const [awaitingConfirm, setAwaitingConfirm] = useState(false)
   const supabase = supabaseBrowser()
   const t = useTranslations('SignInPage')
+  const searchParams = useSearchParams()
+  const next = searchParams.get('next') || '/dashboard'
 
   const origin =
     typeof window !== 'undefined'
@@ -34,7 +37,7 @@ export default function SignInPage() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${origin}/auth/callback` },
+        options: { emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
       })
       if (error) throw error
       setMsg(t('messages.checkEmailMagicLink'))
@@ -51,7 +54,7 @@ export default function SignInPage() {
   console.debug('[sign-in] initiating Google OAuth', { origin })
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${origin}/auth/callback` },
+        options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
       })
       if (error) throw error
       // the browser will redirect; nothing else to do
@@ -71,7 +74,7 @@ export default function SignInPage() {
       if (error) throw error
       if (data.session) {
         try { await fetch('/api/auth/sync', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ event:'SIGNED_IN', access_token: data.session.access_token, refresh_token: data.session.refresh_token }) }) } catch {}
-        window.location.href = '/dashboard'
+        window.location.href = next
       }
       else setMsg(t('messages.signedInRedirecting'))
     } catch (err:any) {
@@ -87,7 +90,7 @@ export default function SignInPage() {
     if (password !== confirm) { setMsg(t('messages.passwordsNoMatch')); return }
     setBusy(true)
     try {
-  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/auth/callback` } })
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` } })
       if (error) throw error
       if (data.user && !data.session) {
         setAwaitingConfirm(true)
@@ -95,7 +98,7 @@ export default function SignInPage() {
       } else {
         if (data.session) {
           try { await fetch('/api/auth/sync', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ event:'SIGNED_IN', access_token: data.session.access_token, refresh_token: data.session.refresh_token }) }) } catch {}
-          window.location.href = '/dashboard'
+          window.location.href = next
         }
       }
     } catch (err:any) {
