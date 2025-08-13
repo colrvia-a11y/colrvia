@@ -1,7 +1,7 @@
 /**
  * Dev-only smoke insert for stories table.
  * Usage:
- *   SUPABASE_SERVICE_ROLE=... TEST_USER_ID=... npm run smoke:insert
+ *   SUPABASE_SERVICE_ROLE_KEY=... TEST_USER_ID=... npm run smoke:insert
  * Falls back to anon key (likely to fail RLS) if no service role provided.
  */
 import { createClient } from '@supabase/supabase-js';
@@ -12,11 +12,11 @@ if(!url || !anon){
   console.error('[smoke-insert] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in env.');
   process.exit(1);
 }
-const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
+const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const key = serviceRole || anon;
 if(!serviceRole){
-  console.warn('[smoke-insert] SUPABASE_SERVICE_ROLE not set; RLS may block insert.');
+  console.warn('[smoke-insert] SUPABASE_SERVICE_ROLE_KEY not set; RLS may block insert.');
 }
 
 const supabase = createClient(url, key, { auth: { persistSession: false } });

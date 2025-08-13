@@ -3,7 +3,7 @@ import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair'
 
 export async function repairStoryPalette({ id }:{ id: string }): Promise<{ ok:true } | { ok:false; reason:string }>{
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if(!url || !key) return { ok:false, reason:'env' }
   const sb = createClient(url, key, { auth:{ persistSession:false } })
   const { data, error } = await sb.from('stories').select('id, palette, vibe, brand').eq('id', id).single()
