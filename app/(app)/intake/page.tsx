@@ -8,7 +8,7 @@ import { TemplateChips } from "@/components/intake/TemplateChips";
 import { Progress } from "@/components/intake/Progress";
 import { LivePreview } from "@/components/intake/LivePreview";
 import { StickyCTA } from "@/components/intake/StickyCTA";
-// import { track } from "@/lib/analytics"; // if you added it
+import { track } from "@/lib/analytics";
 
 const IntakeSchema = z.object({
   room: z.enum(["Living room","Bedroom","Kitchen","Bathroom","Workspace"], { required_error: "Pick a room" }),
@@ -37,7 +37,7 @@ export default function IntakePage() {
 
   async function onSubmit(data: Intake) {
     const t0 = performance.now();
-    // track({ name:"intake_submit", props:{ fields:Object.keys(data).length }});
+    track("intake_submit", { fields: Object.keys(data).length });
     // Optimistic frame: go to Reveal immediately with a temporary job id (client-side uid)
     const tmpId = `tmp_${Math.random().toString(36).slice(2,9)}`;
     router.push(`/reveal/${tmpId}?optimistic=1`);
@@ -45,13 +45,13 @@ export default function IntakePage() {
     // Kick off actual render job (replace with your action/api)
     try {
       // const job = await createRenderJob(data);
-      // track({ name:"render_started", props:{ job_id: job.id }});
+      // track("render_started", { job_id: job.id });
       // router.replace(`/reveal/${job.id}`);
     } catch (e) {
       // router.replace(`/reveal/error?reason=start-failed`);
     } finally {
       const ms = Math.round(performance.now() - t0);
-      // track({ name:"render_complete", props:{ job_id: tmpId, ms }});
+      track("render_complete", { job_id: tmpId, ms });
     }
   }
 
