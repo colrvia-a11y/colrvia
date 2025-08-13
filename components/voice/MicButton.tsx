@@ -2,6 +2,6 @@
 
 export default function MicButton() {
   return (
-    <button aria-label="mic" className="mic-button">🎙️</button>
+    <button type="button" aria-label="mic" className="mic-button">🎙️</button>
   );
 }

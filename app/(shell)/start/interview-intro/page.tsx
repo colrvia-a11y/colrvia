@@ -5,7 +5,7 @@ export default function InterviewIntro() {
   return (
     <div>
       <p>Designer interview · voice-first · ~6 minutes · 6–8 quick questions.</p>
-      <Link href="/start/interview">Let's do it</Link>
+      <Link href="/start/interview">Let&rsquo;s do it</Link>
     </div>
   )
 }
