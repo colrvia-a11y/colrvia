@@ -44,7 +44,7 @@ export default function RevealPage({ params }: { params: { id: string } }) {
       <div className="mx-auto max-w-6xl px-4 md:px-6 py-6">
         <h1 className="text-xl font-semibold mb-2">{copy.reveal.errorTitle}</h1>
         <p className="text-sm text-neutral-600 mb-4">{story?.error ?? copy.reveal.errorSub}</p>
-        <a href="/intake" className="inline-flex rounded-xl px-4 py-2 border">Try again</a>
+        <a href="/preferences/therapist" className="inline-flex rounded-xl px-4 py-2 border">Try again</a>
       </div>
     );
   }
