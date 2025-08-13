@@ -5,6 +5,7 @@ import QuestionRenderer from "@/components/intake/QuestionRenderer";
 import { buildQuestionQueue } from "@/lib/intake/engine";
 import { QUESTIONS } from "@/lib/intake/questions";
 import type { Answers, QuestionId } from "@/lib/intake/types";
+import { uid } from '@/lib/uid'
 
 export default function IntakePage() {
   const [answers, setAnswers] = React.useState<Answers & Record<string, any>>({});
@@ -40,18 +41,20 @@ export default function IntakePage() {
   const progress = queue.length ? Math.round((answeredCount / queue.length) * 100) : 0;
 
   async function handleReveal() {
+    const optimisticId = uid('job_')
+    router.push(`/reveal/${optimisticId}`)
     try {
-      const res = await fetch("/api/stories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand: "sherwin_williams", source: "intake", answers }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data?.id) return;
-      router.push(`/reveal/${data.id}`);
-    } catch {
-      // ignore
-    }
+      const res = await fetch('/api/render', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ brand: 'sherwin_williams', source: 'intake', answers })
+      })
+      const data = await res.json().catch(()=>null)
+      if(res.ok && data?.jobId){
+        // Replace current optimistic route with real job id (shallow)
+        router.replace(`/reveal/${data.jobId}`)
+      }
+    } catch {/* ignore */}
   }
 
   return (

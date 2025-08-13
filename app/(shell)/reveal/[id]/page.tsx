@@ -10,11 +10,14 @@ import PaletteGrid from '@/components/reveal/PaletteGrid'
 import CopyToast from '@/components/reveal/CopyToast'
 import StoryHeroCard from '@/components/visual/StoryHeroCard'
 import SwatchRibbon from '@/components/visual/SwatchRibbon'
+import { ActionsBar } from '@/components/reveal/ActionsBar'
+import { ResultCard } from '@/components/reveal/ResultCard'
 import PdfButton from './pdf-button'
 import { normalizePalette } from '@/lib/palette'
 import { repairStoryPalette } from '@/lib/palette/repair'
 import RevealPaletteClient from './RevealPaletteClient'
 import NextDynamic from 'next/dynamic'
+import JobWatcherClient from './JobWatcherClient'
 const NarrativeCard = NextDynamic(() => import('@/components/reveal/NarrativeCard'), { ssr:false })
 export async function generateMetadata({ params, searchParams }:{ params:{id:string}; searchParams:Record<string,string|undefined> }): Promise<Metadata> {
   const id = params.id
@@ -46,6 +49,19 @@ export const revalidate = 0
 
 export default async function RevealStoryPage({ params }:{ params:{ id:string }}) {
   const id = params.id
+  // Optimistic placeholder: if this id is not a real UUID, show skeleton
+  if(!/^[0-9a-fA-F-]{36}$/.test(id)){
+    return <main className="mx-auto max-w-xl p-8 space-y-6 animate-pulse" aria-busy="true" aria-live="polite">
+      <div className="h-8 w-2/3 rounded bg-[var(--bg-skeleton)]" />
+      <div className="h-48 w-full rounded-xl bg-[var(--bg-skeleton)]" />
+      <div className="space-y-3">
+        <div className="h-4 w-1/2 rounded bg-[var(--bg-skeleton)]" />
+        <div className="h-4 w-1/3 rounded bg-[var(--bg-skeleton)]" />
+      </div>
+      <p className="text-sm text-muted-foreground">Preparing your palette…</p>
+      <JobWatcherClient jobId={id} />
+    </main>
+  }
   if (id === 'mock') {
     return (
       <main className="mx-auto max-w-3xl p-6 space-y-6">
@@ -104,7 +120,9 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
           <div className="flex-1 h-3 rounded-full bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden"><div className="h-full bg-accent/40" style={{width:placements.ten+'%'}} /></div>
         </div>
       </div>
-      <VariantTabs storyId={data.id} initialPalette={palette} initialTitle={data.title} initialNarrative={data.narrative} baseMeta={{ brand:data.brand, vibe:data.vibe }} />
+  <VariantTabs storyId={data.id} initialPalette={palette} initialTitle={data.title} initialNarrative={data.narrative} baseMeta={{ brand:data.brand, vibe:data.vibe }} />
+  {/* Job results (images) if present on related job record (via story->jobs relation not yet fetched). Placeholder for future enhancement. */}
+  {/* If story creation stored images in a job result accessible separately, one could fetch job by story id here. */}
       {palette.length>0 ? (
         <>
           <SwatchRibbon swatches={palette.slice(0,5).filter(p=>p.hex).map(p=>({ hex:p.hex!, name:p.name }))} />
@@ -126,7 +144,7 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
           </div>
         </div>
       )}
-      <StoryActionBar storyId={data.id} palette={palette as any} />
+  <StoryActionBar storyId={data.id} palette={palette as any} />
     </main>
   )
 }
