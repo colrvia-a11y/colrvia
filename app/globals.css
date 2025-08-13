@@ -76,10 +76,9 @@ a, button, [role="button"] { outline-offset: 3px; }
 }
 
 /* Strong, visible focus for keyboard users */
-*:focus-visible {
-  outline: 2px solid hsl(var(--ring));
-  outline-offset: 2px;
-}
+/* Enhanced accessible focus ring that adapts to brand */
+:root { --focus-ring: 0 0 0 3px color-mix(in oklab, var(--brand) 55%, white); }
+*:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
 /* Respect users who ask for more contrast */
 @media (prefers-contrast: more) {

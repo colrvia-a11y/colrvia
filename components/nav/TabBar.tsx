@@ -21,7 +21,7 @@ export default function TabBar(){
           const Icon = t.icon
           return (
             <li key={t.href}>
-              <Link href={t.href} className="flex flex-col items-center text-[11px] font-medium relative px-2 py-1 focus:outline-none focus-visible:underline">
+              <Link href={t.href} aria-current={active ? 'page': undefined} className="flex flex-col items-center text-[11px] font-medium relative px-2 py-1 focus:outline-none focus-visible:underline">
                 <Icon size={20} className="mb-0.5" />
                 {t.label}
                 {active && <span aria-hidden className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[var(--brand)]" />}

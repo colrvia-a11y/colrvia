@@ -5,6 +5,8 @@
   --brand-saturation: 84%; /* saturation for primary brand color */
   --brand-light: 55%; /* lightness for primary brand color */
   --brand: hsl(var(--brand-hue) var(--brand-saturation) var(--brand-light)); /* primary brand color for interactive elements */
+  --brand-hover: hsl(var(--brand-hue) var(--brand-saturation) calc(var(--brand-light) - 5%)); /* hover variant */
+  --brand-contrast: hsl(60 30% 98%); /* near-white contrast text */
   --brand-accent-hue: 20; /* hue for secondary accent color */
   --brand-accent: hsl(var(--brand-accent-hue) 90% 55%); /* warm accent used for highlights and warnings */
 
