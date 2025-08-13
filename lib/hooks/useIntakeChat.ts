@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { isAuthDisabled } from '@/lib/flags'
 
 export interface IntakeNode {
   question?: string
@@ -100,7 +101,13 @@ export function useIntakeChat(designerId: string): UseIntakeChat {
         return
       }
       if (create.status === 401) {
-        router.push('/sign-in')
+        if (!isAuthDisabled()) {
+          router.push('/sign-in')
+          return
+        }
+        // Treat as guest failure in preview
+        setStatusText('Guest access: could not create story (401).')
+        setBusy(false)
         return
       }
       if (!create.ok) {

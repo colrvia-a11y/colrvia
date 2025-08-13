@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import { isAuthDisabled } from '@/lib/flags'
 
 export function UpgradeButton({ className }: { className?: string }) {
   const [busy, setBusy] = useState(false)
@@ -8,7 +9,11 @@ export function UpgradeButton({ className }: { className?: string }) {
       setBusy(true)
       const res = await fetch('/api/checkout', { method: 'POST' })
       if (res.status === 401) {
-        window.location.href = '/sign-in?next=' + encodeURIComponent(window.location.pathname)
+        if (!isAuthDisabled()) {
+          window.location.href = '/sign-in?next=' + encodeURIComponent(window.location.pathname)
+        } else {
+          alert('Sign-in required for upgrade (disabled in preview).')
+        }
         return
       }
       const json = await res.json()

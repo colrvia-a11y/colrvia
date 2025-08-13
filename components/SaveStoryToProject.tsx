@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { isAuthDisabled } from '@/lib/flags'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -26,7 +27,7 @@ export default function SaveStoryToProject() {
       try {
         const res = await fetch('/api/projects', { cache: 'no-store' })
         if (res.status === 401) {
-          setAuth(false)
+          if (!isAuthDisabled()) setAuth(false)
         } else if (res.ok) {
           const list = await res.json()
           setProjects(list)
@@ -73,8 +74,12 @@ export default function SaveStoryToProject() {
       if (res.ok) {
   router.push(`/reveal/${story.id}`)
       } else if (res.status === 401) {
-        setAuth(false)
-        setError('Please sign in.')
+        if (!isAuthDisabled()) {
+          setAuth(false)
+          setError('Please sign in.')
+        } else {
+          setError('Sign-in required to save (disabled in preview).')
+        }
       } else {
         const j = await res.json().catch(() => ({}))
         setError(j.error || 'Failed to save story')

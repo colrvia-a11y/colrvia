@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabaseBrowser } from '@/lib/supabase/client'
+import { isAuthDisabled } from '@/lib/flags'
 import Image from 'next/image'
 
 /**
@@ -36,10 +37,16 @@ export function Upload({ projectId, onUploaded }: UploadProps) {
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
-      alert('Please sign in to upload files.')
-      setBusy(false)
-      router.push('/sign-in')
-      return
+      if (!isAuthDisabled()) {
+        alert('Please sign in to upload files.')
+        setBusy(false)
+        router.push('/sign-in')
+        return
+      } else {
+        alert('Uploads require sign-in (disabled in preview).')
+        setBusy(false)
+        return
+      }
     }
 
     const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_')
