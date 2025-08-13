@@ -10,7 +10,9 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/projects', destination: '/dashboard', permanent: true },
-      { source: '/project/:path*', destination: '/dashboard', permanent: true }
+      { source: '/project/:path*', destination: '/dashboard', permanent: true },
+      { source: '/preferences/therapist', destination: '/intake', permanent: true },
+      { source: '/preferences/therapist/:path*', destination: '/intake', permanent: true }
     ]
   }
 }
