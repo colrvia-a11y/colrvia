@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, useRef } from "react";
 import TypeReveal from "@/components/motion/TypeReveal";
+import { useReducedMotion } from "@/components/theme/MotionSettings";
 import "@/styles/brand-surface.css";
+import "@/styles/card-motion.css";
 
 /**
  * DESIGN-ONLY INTAKE LANDING
@@ -208,12 +210,49 @@ function ModeCard({
   badge?: string;
   subtle?: boolean;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  const reduced = useReducedMotion();
+  const ref = useRef<HTMLButtonElement>(null);
+  const [hovered, setHovered] = useState(false);
+
+  const allow3D =
+    !reduced &&
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(hover: hover) and (pointer: fine)").matches;
+
+  function resetTilt() {
+    if (ref.current) ref.current.style.transform = "";
+  }
+
+  function onPointerEnter(e: React.PointerEvent) {
+    if (!allow3D || e.pointerType !== "mouse") return;
+    setHovered(true);
+  }
+  function onPointerMove(e: React.PointerEvent) {
+    if (!allow3D || e.pointerType !== "mouse" || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    const rotateX = (y / (rect.height / 2)) * -8;
+    const rotateY = (x / (rect.width / 2)) * 8;
+    ref.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  }
+  function onPointerLeave() {
+    if (!allow3D) return;
+    setHovered(false);
+    resetTilt();
+  }
+
   return (
     <button
+      ref={ref}
       type="button"
       onClick={onClick}
+      onPointerEnter={onPointerEnter}
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
       {...a11y}
       className={[
+        "card-3d",
         "w-full text-left rounded-2xl border px-4 py-4 transition",
         "focus-visible:outline-none focus-visible:ring-2 ring-offset-2",
         active
@@ -223,6 +262,9 @@ function ModeCard({
           : "bg-white/8 border-white/20",
         "hover:bg-white/12 active:scale-[0.99]",
       ].join(" ")}
+      style={{
+        boxShadow: hovered ? "0 12px 24px rgba(0,0,0,0.2)" : undefined,
+      }}
     >
       <div className="flex items-start gap-3">
         <span className="text-xl leading-none pt-0.5" aria-hidden>
