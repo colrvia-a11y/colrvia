@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
+import TypeReveal from "@/components/motion/TypeReveal";
+import "@/styles/brand-surface.css";
 
 /**
  * DESIGN-ONLY INTAKE LANDING
@@ -31,21 +33,28 @@ export default function IntakeLanding() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-gradient-to-b from-[#0D2C22] to-[#143629] text-[#F7F6F3]">
+    <div className="min-h-[100dvh] bg-colrvia-surface text-[#F7F6F3]">
       {/* Header */}
-      <header className="mx-auto max-w-md px-5 pt-6 pb-2 flex items-center gap-3">
+      <header className="mx-auto max-w-3xl px-6 pt-8 pb-2 flex items-center gap-3">
         <BackButton onClick={() => router.back()} />
         <DesignerChip name="Moss AI" avatarAlt="Moss AI avatar" />
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-md px-5">
-        {/* H1 visible for brand feel; keep it short */}
-        <h1 className="font-serif text-[56px] leading-[0.95] tracking-tight mb-2">hi.</h1>
-        {/* Visually secondary intro */}
-        <p className="text-sm opacity-90">
-          I’ll ask a few questions and create options for your space.
-        </p>
+      <section className="mx-auto max-w-3xl px-6">
+        <TypeReveal
+          as="h1"
+          text="hi."
+          speed={90}
+          delay={80}
+          className="font-serif text-[64px] leading-[0.95] tracking-tight mb-2"
+        />
+        <TypeReveal
+          text="I’ll ask a few questions and create options for your space."
+          speed={18}
+          delay={620}
+          className="text-[15px] opacity-90"
+        />
 
         {/* (Optional) Hidden semantic heading for SR users */}
         <h2 className="sr-only" id="intake-choose-heading">
