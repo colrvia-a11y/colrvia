@@ -56,9 +56,11 @@ export default function IntakePage() {
 
   return (
     <main className="mx-auto max-w-xl p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-2xl font-semibold">Colrvia Intake</h1>
-        <div className="text-sm text-neutral-600">{progress}% complete</div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="text-sm text-neutral-600">{progress}% complete</div>
+        </div>
       </div>
       {currentQuestion ? (
         <QuestionRenderer

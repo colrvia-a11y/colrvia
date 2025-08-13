@@ -127,8 +127,14 @@ export default function VoiceMic({ onActiveChange, greet }: Props) {
     <div className="flex items-center gap-3">
       <button
         onClick={active ? stop : start}
-        className={`px-4 py-2 rounded-full border ${active ? "bg-black text-white dark:bg-white dark:text-black" : "bg-white/70 dark:bg-neutral-900/70"}`}
+        className={`px-4 py-2 rounded-full border ${
+          active
+            ? "bg-black text-white dark:bg-white dark:text-black"
+            : "bg-white/70 dark:bg-neutral-900/70 text-black dark:text-white"
+        }`}
         aria-pressed={active}
+        title={active ? "Stop voice" : "Talk to designer"}
+        aria-label={active ? "Stop voice" : "Talk to designer"}
       >
         {active ? "Stop voice" : "Talk to designer"}
       </button>
