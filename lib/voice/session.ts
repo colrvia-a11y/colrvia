@@ -1,8 +1,4 @@
-export async function speak(text: string) {
-  // Placeholder for TTS invocation
-  console.log('speak', text);
-}
-
-export async function stopSpeak() {
-  // Placeholder to stop TTS
-}
+export async function startVoiceSession(){/*noop*/}
+export async function speak(_text?: string){/*noop*/}
+export async function stopSpeak(){/*noop*/}
+export async function listenOnce(){ return ''; }
