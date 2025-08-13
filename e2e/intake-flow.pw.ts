@@ -22,8 +22,8 @@ test.describe("Intake flow", () => {
     await page.goto("/designers")
     await page.getByRole("link", { name: /start with color therapist/i }).click()
 
-    await expect(page).toHaveURL(/\/preferences\/therapist$/)
-    await expect(page.getByText("Which room?")).toBeVisible()
+    await expect(page).toHaveURL(/\/intake$/)
+    await expect(page.getByRole("button", { name: /start voice chat/i })).toBeVisible()
   })
 
   test("unauthenticated reveal round-trips through sign-in", async ({ page }) => {
@@ -70,12 +70,14 @@ test.describe("Intake flow", () => {
       }
     })
 
-    await page.goto("/preferences/therapist")
+    await page.goto("/intake")
+    await page.getByRole("button", { name: /start voice chat/i }).click()
     await page.getByRole("button", { name: /sherwin/i }).click()
 
     await expect(page).toHaveURL(/\/sign-in$/)
 
-    await page.goto("/preferences/therapist")
+    await page.goto("/intake")
+    await page.getByRole("button", { name: /start voice chat/i }).click()
     await page.getByRole("button", { name: /sherwin/i }).click()
 
     await expect(page).toHaveURL(/\/reveal\/story-123/)

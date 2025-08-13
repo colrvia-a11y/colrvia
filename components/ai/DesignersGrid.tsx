@@ -18,7 +18,7 @@ export default function DesignersGrid(){
           <div className="mt-auto">
           <Button
               as={Link}
-              href={d.id === 'therapist' ? '/preferences/therapist' : `/preferences/${d.id}`}
+              href={d.id === 'therapist' ? '/intake' : `/preferences/${d.id}`}
               className="w-full"
               onClick={() => track('designer_select', { designerId: d.id })}
               aria-label={`Start with ${d.name}`}
