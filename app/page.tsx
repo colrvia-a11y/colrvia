@@ -46,8 +46,8 @@ export default function HomePage() {
         </header>
         <div className="mt-8">
           <Link
-            href="/designers"
-            onClick={(e) => { e.preventDefault(); startStory("/designers") }}
+            href="/start/interview-intro"
+            onClick={(e) => { e.preventDefault(); startStory("/start/interview-intro") }}
             className="inline-flex items-center justify-center rounded-2xl px-8 py-4 text-xl md:text-2xl font-semibold w-full sm:w-auto hover:opacity-95"
             style={{ backgroundColor: "#f2b897", color: "#1f2937" }}
           >
