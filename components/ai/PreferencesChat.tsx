@@ -1,24 +1,20 @@
 "use client"
 import * as React from 'react'
-import { useIntakeChat } from '@/lib/hooks/useIntakeChat'
+import { usePreferencesChat } from '@/lib/hooks/usePreferencesChat'
 
-export default function OnboardingChat({ designerId }: { designerId: string }) {
-  const { currentNode, input, setInput, busy, done, statusText, submit } = useIntakeChat(designerId)
-  const API_MODE = process.env.NEXT_PUBLIC_ONBOARDING_MODE === 'api'
-
-  if (!API_MODE) {
-    return (
-      <div role="alert" className="rounded-2xl border border-white/15 bg-white/5 p-4 text-white/95">
-        NEXT_PUBLIC_ONBOARDING_MODE must be set to &quot;api&quot; to enable live intake.
-      </div>
-    )
-  }
+export default function PreferencesChat({ designerId }: { designerId: string }) {
+  const { currentNode, utterance, input, setInput, busy, done, statusText, submit } =
+    usePreferencesChat(designerId)
 
   return (
-    <div role="dialog" aria-label="Preferences chat" className="rounded-2xl border border-white/15 bg-white/5 p-4 text-white/95">
+    <div
+      role="dialog"
+      aria-label="Preferences chat"
+      className="rounded-2xl border border-white/15 bg-white/5 p-4 text-white/95"
+    >
       <div className="min-h-[120px]">
-        {currentNode?.question ? (
-          <p className="text-base md:text-lg">{currentNode.question}</p>
+        {utterance ? (
+          <p className="text-base md:text-lg">{utterance}</p>
         ) : (
           <p className="opacity-80">Preparing questions…</p>
         )}
@@ -27,7 +23,8 @@ export default function OnboardingChat({ designerId }: { designerId: string }) {
       {Array.isArray(currentNode?.options) && currentNode.options.length > 0 && !done && (
         <div className="mt-3 flex flex-wrap gap-2">
           {currentNode.options.map((o: string) => (
-            <button type="button"
+            <button
+              type="button"
               key={o}
               disabled={busy}
               onClick={() => submit(o)}
@@ -50,7 +47,8 @@ export default function OnboardingChat({ designerId }: { designerId: string }) {
             placeholder="Say it or type it…"
             className="flex-1 rounded-xl bg-white/10 px-3 py-2 text-sm outline-none placeholder:text-white/60"
           />
-          <button type="button"
+          <button
+            type="button"
             onClick={() => submit(input)}
             disabled={!input || busy}
             className="rounded-xl bg-white/20 px-3 py-2 text-sm hover:bg-white/25 disabled:opacity-50"

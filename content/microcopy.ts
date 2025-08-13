@@ -1,12 +1,4 @@
 export const copy = {
-  intake: {
-    title: "Describe your space",
-    roomHelp: "Pick the space you’re redesigning.",
-    styleHelp: "We’ll tailor layouts, textures, and finishes.",
-    promptHelp: "Add constraints and preferences.",
-    cta: "Generate (≈12s)",
-    trust: "Private to you · You can edit inputs later",
-  },
   reveal: {
     generatingTitle: "Generating your designs…",
     generatingSub: "This takes about 8–15 seconds. You can keep browsing.",

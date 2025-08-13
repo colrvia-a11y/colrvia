@@ -18,8 +18,6 @@ export interface AnalyticsEventMap {
   answer_saved: { id: string; priority: 'P1' | 'P2' | 'P3' | 'P4' }
   question_dropped: { id: string; priority: 'P1' | 'P2' | 'P3' | 'P4'; reason: string }
   flow_capped: { id: string; priority: 'P1' | 'P2' | 'P3' | 'P4'; reason: string }
-  intake_start: { template?: string }
-  intake_submit: { fields: number }
   render_started: { story_id: string }
   render_complete: { story_id: string; ms?: number }
   reveal_action: { story_id: string; action: 'download_all' | 'share' | 'retry' | 'more_like' | 'compare_open' }

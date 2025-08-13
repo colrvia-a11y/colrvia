@@ -8,8 +8,7 @@ export default function PreferencesAlias(){
   useEffect(() => {
     const d = sp.get('designerId')
     if (d) {
-      if (d === 'therapist') router.replace('/intake')
-      else router.replace(`/preferences/${d}`)
+      router.replace(`/preferences/${d}`)
     } else {
       router.replace('/designers')
     }
