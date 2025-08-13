@@ -48,31 +48,26 @@ export default function IntakePage() {
   }
 
   async function onSubmit(data: Intake) {
-    const t0 = performance.now();
-    track("intake_submit", { fields: Object.keys(data).length });
-
+    // track("intake_submit", { fields: Object.keys(data).length });
     const tmpId = `tmp_${Math.random().toString(36).slice(2, 9)}`;
-    // Optimistic transition to Reveal
     router.push(`/reveal/${tmpId}?optimistic=1`);
 
-    // Kick off the real job
     try {
       const res = await fetch("/api/story", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(data),
       });
-      const { id } = (await res.json()) as { id: string };
-      if (id) {
-        track("render_started", { job_id: id });
-        router.replace(`/reveal/${id}`);
-        // track("render_complete", { job_id: id, ms: Math.round(performance.now() - t0) });
-      } else {
-        router.replace(`/reveal/error?reason=no-story`);
+      const json = (await res.json()) as { storyId?: string };
+      if (json.storyId) {
+        // track("render_started", { story_id: json.storyId });
+        router.replace(`/reveal/${json.storyId}`);
+        return;
       }
-    } catch {
-      router.replace(`/reveal/error?reason=start-failed`);
+    } catch (e) {
+      // no-op
     }
+    router.replace(`/reveal/error?reason=story-create-failed`);
   }
 
   return (

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import RootLayout from "@/app/layout"
+vi.mock("next/font/google", () => ({ Inter: () => ({ className: "" }), Fraunces: () => ({ className: "" }) }))
 vi.mock('@/components/auth-hash-listener', () => ({ default: () => null }))
 vi.mock('@/components/AppShell', () => ({ default: ({ children }: any) => <div>{children}</div> }))
 vi.mock('@/components/providers/AuthSyncBridge', () => ({ default: () => null }))

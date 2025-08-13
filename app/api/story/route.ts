@@ -1,50 +1,64 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { supabaseServer } from "@/lib/supabase/server";
+import crypto from "node:crypto";
+import { createSupabaseServer } from "@/lib/supabase/server";
 
-const IntakeSchema = z.object({
-  room: z.string(),
-  style: z.string(),
-  budget: z.enum(["$", "$$", "$$$"]).optional(),
-  prompt: z.string(),
-});
+function idemKey(payload: unknown) {
+  return crypto
+    .createHash("sha256")
+    .update(JSON.stringify(payload))
+    .digest("hex")
+    .slice(0, 24);
+}
 
 export async function POST(req: Request) {
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "INVALID_JSON" }, { status: 400 });
-  }
-  const parsed = IntakeSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "INVALID_INPUT" }, { status: 422 });
-  }
-
-  const supabase = supabaseServer();
+  const supabase = createSupabaseServer();
   const {
     data: { user },
-    error: userErr,
   } = await supabase.auth.getUser();
-  if (!user || userErr) {
-    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  const idempotency_key = idemKey({ u: user.id, b: body });
+
+  // Return existing story for duplicate clicks
+  const { data: existing } = await supabase
+    .from("stories")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("idempotency_key", idempotency_key)
+    .single();
+
+  if (existing?.id) {
+    return NextResponse.json({ storyId: existing.id, accepted: true, duplicate: true });
   }
 
-  const { data, error } = await supabase
+  const title =
+    (typeof body?.["title"] === "string" && (body as any).title) ||
+    `${(body as any)?.style ?? (body as any)?.room ?? "Design"} concept`;
+
+  const { data: created, error } = await supabase
     .from("stories")
     .insert({
       user_id: user.id,
-      designer_key: "default",
-      brand: "sherwin_williams",
-      inputs: parsed.data,
-      status: "new",
+      title,
+      status: "queued",
+      input: body,
+      idempotency_key,
     })
     .select("id")
     .single();
 
-  if (error || !data) {
-    return NextResponse.json({ error: "CREATE_FAILED" }, { status: 500 });
+  if (error || !created) {
+    return NextResponse.json({ error: "create_failed" }, { status: 500 });
   }
 
-  return NextResponse.json({ id: data.id }, { status: 201 });
+  // OPTIONAL: kick your render worker so it updates this story later
+  // Swap to your actual function/queue name if different.
+  await supabase.functions
+    .invoke("render-worker", { body: { storyId: created.id, userId: user.id } })
+    .catch(() => {
+      /* fire-and-forget */
+    });
+
+  return NextResponse.json({ storyId: created.id, accepted: true });
 }

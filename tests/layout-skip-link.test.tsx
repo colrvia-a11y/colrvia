@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react"
 import RootLayout from "@/app/layout"
 
 // Provide minimal mocks for providers that instantiate Supabase or other side effects
+vi.mock("next/font/google", () => ({ Inter: () => ({ className: "" }), Fraunces: () => ({ className: "" }) }))
 vi.mock("next/script", () => ({ default: (props: any) => <>{props.children}</> }))
 vi.mock("@/components/providers/AuthSyncBridge", () => ({ default: () => null }))
 vi.mock("@/components/providers/SupabaseListener", () => ({ default: () => null }))
