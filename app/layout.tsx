@@ -16,16 +16,12 @@ import AmbientEdge from '@/components/ui/ambient-edge'
 import dynamic from 'next/dynamic'
 import { NextIntlClientProvider, createTranslator } from 'next-intl'
 import { getLocale, getMessages } from '@/lib/i18n'
-import { Inter as InterFont, Fraunces as FrauncesFont } from 'next/font/google'
+// Proper font loader usage: must be called at module scope & assigned to const
+import { Inter, Fraunces } from 'next/font/google'
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
+const fraunces = Fraunces({ subsets: ['latin'], display: 'swap', variable: '--font-fraunces' })
 
 initSentry()
-
-const inter = typeof InterFont === 'function'
-  ? InterFont({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
-  : { variable: '--font-inter' }
-const fraunces = typeof FrauncesFont === 'function'
-  ? FrauncesFont({ subsets: ['latin'], display: 'swap', variable: '--font-fraunces' })
-  : { variable: '--font-fraunces' }
 
 const RouteTransition = dynamic(() => import('@/components/ux/RouteTransition'), { ssr:false })
 const StartStoryPortalProvider = dynamic(()=> import('@/components/ux/StartStoryPortal').then(m=> m.StartStoryPortalProvider), { ssr:false })
@@ -73,7 +69,7 @@ export default async function RootLayout({
   const t = createTranslator({ locale, messages })
 
   return (
-    <html lang={locale} className={`${inter.variable} ${fraunces.variable} theme-moss`}>
+    <html lang={locale} className={cn('theme-moss', inter.variable, fraunces.variable)}>
       <head>
         <meta name="theme-color" content="#F7F5EF" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
