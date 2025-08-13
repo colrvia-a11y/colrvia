@@ -22,7 +22,7 @@ export default async function PreferencesPage({ params }: { params:{ designerId:
         <div className="rounded-2xl border bg-[var(--bg-surface)] p-6 space-y-4">
           <p className="text-sm">This designer is a <strong>Pro</strong> feature.</p>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link href={`/preferences/${DEFAULT_DESIGNER_ID}`} className="btn btn-secondary flex-1">Continue with default</Link>
+            <Link href="/intake" className="btn btn-secondary flex-1">Continue with default</Link>
             <UpgradeButton className="btn btn-primary flex-1" />
           </div>
           {!user && <p className="text-[11px] text-muted-foreground">You’ll need to sign in during checkout.</p>}

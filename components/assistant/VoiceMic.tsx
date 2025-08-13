@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-type Props = { onActiveChange?: (active: boolean) => void; greet?: string | null };
+type Props = { onActiveChange?: (active: boolean) => void; greet?: string | null; autoStart?: boolean };
 
 declare global {
   interface Window {
@@ -13,7 +13,7 @@ declare global {
   }
 }
 
-export default function VoiceMic({ onActiveChange, greet }: Props) {
+export default function VoiceMic({ onActiveChange, greet, autoStart }: Props) {
   const [active, setActive] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const pcRef = React.useRef<RTCPeerConnection | null>(null);
@@ -122,6 +122,12 @@ export default function VoiceMic({ onActiveChange, greet }: Props) {
   function stop() {
     window.colrviaVoice?.stop();
   }
+
+  React.useEffect(() => {
+    if (autoStart) {
+      start();
+    }
+  }, [autoStart]);
 
   return (
     <div className="flex items-center gap-3" aria-busy={active || undefined}>

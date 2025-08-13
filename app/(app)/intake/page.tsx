@@ -79,7 +79,6 @@ export default function IntakeLanding() {
           title="Start voice chat"
           badge="Recommended"
           bullets={["Speak or type", "Upload photos", "Done in ~3–5 min"]}
-          icon="🎤"
         />
         <ModeCard
           role="radio"
@@ -89,7 +88,6 @@ export default function IntakeLanding() {
           onClick={() => setMode("form")}
           title="Fill out a form instead"
           bullets={["No mic needed", "Finish in ~4–6 min"]}
-          icon="📝"
           subtle
         />
 
@@ -195,7 +193,7 @@ function ModeCard({
   onClick: () => void;
   title: string;
   bullets: string[];
-  icon: string;
+  icon?: string;
   badge?: string;
   subtle?: boolean;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
@@ -216,9 +214,11 @@ function ModeCard({
       ].join(" ")}
     >
       <div className="flex items-start gap-3">
-        <span className="text-xl leading-none pt-0.5" aria-hidden>
-          {icon}
-        </span>
+        {icon && (
+          <span className="text-xl leading-none pt-0.5" aria-hidden>
+            {icon}
+          </span>
+        )}
 
         <div className="flex-1">
           <div className="flex items-center gap-2">

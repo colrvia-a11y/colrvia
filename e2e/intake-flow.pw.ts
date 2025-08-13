@@ -22,7 +22,10 @@ test.describe("Intake flow", () => {
     await page.goto("/designers")
     await page.getByRole("link", { name: /start with color therapist/i }).click()
 
-    await expect(page).toHaveURL(/\/preferences\/therapist$/)
+    await expect(page).toHaveURL(/\/intake$/)
+    await page.getByRole("radio", { name: /fill out a form/i }).click()
+    await page.getByRole("button", { name: /start form/i }).click()
+    await expect(page).toHaveURL(/\/intake\/form$/)
     await expect(page.getByText("Which room?")).toBeVisible()
   })
 
@@ -70,12 +73,12 @@ test.describe("Intake flow", () => {
       }
     })
 
-    await page.goto("/preferences/therapist")
+    await page.goto("/intake/form")
     await page.getByRole("button", { name: /sherwin/i }).click()
 
     await expect(page).toHaveURL(/\/sign-in$/)
 
-    await page.goto("/preferences/therapist")
+    await page.goto("/intake/form")
     await page.getByRole("button", { name: /sherwin/i }).click()
 
     await expect(page).toHaveURL(/\/reveal\/story-123/)

@@ -10,7 +10,7 @@ export default function StartPage(){
         <h1 className="font-display text-4xl leading-[1.05] mb-4">Start</h1>
         <p className="text-sm text-[var(--color-fg-muted)] max-w-md">We’ll guide you with our default designer. You can explore other voices later.</p>
       </header>
-      <Link href={`/preferences/${DEFAULT_DESIGNER_ID}`} className="btn btn-primary w-full sm:w-auto">Get my palette</Link>
+      <Link href="/intake" className="btn btn-primary w-full sm:w-auto">Get my palette</Link>
   <p className="text-xs text-muted-foreground">Want to meet all designers? <Link href="/designers" className="underline">See them here</Link>.</p>
     </main>
   )
