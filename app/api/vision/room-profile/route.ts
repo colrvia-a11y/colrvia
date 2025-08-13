@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { z } from "zod";
 import { RoomProfileSchema } from "@/lib/vision/roomProfile";
+import { logAiUsage } from '@/lib/metrics/logger'
 import { VISION_SYSTEM_PROMPT, buildVisionUserPrompt } from "@/lib/vision/prompt";
 
 const BodySchema = z.object({
@@ -39,6 +40,17 @@ export async function POST(req: NextRequest) {
       response_format: { type: "json_object" },
       messages,
     });
+
+    // Best-effort logging (service role insert) – swallow errors.
+    const usage: any = (resp as any)?.usage || {}
+    logAiUsage({
+      event: 'vision_room_profile',
+      model,
+      input_tokens: usage.prompt_tokens,
+      output_tokens: usage.completion_tokens,
+      total_tokens: usage.total_tokens,
+      metadata: { images: body.images?.length || 0 }
+    }).catch(()=>{})
 
     const raw = resp.choices[0]?.message?.content || "{}";
     const parsed = JSON.parse(raw);

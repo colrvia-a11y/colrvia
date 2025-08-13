@@ -5,6 +5,7 @@ import { byBrand, isNearWhite, isNeutral, contrastScore, excludeByAvoid } from '
 import { makeRNG, pick } from '@/lib/utils/seededRandom'
 import { capture, enabled as analyticsEnabled } from '@/lib/analytics/server'
 import { AI_ENABLE, AI_MODEL, AI_MAX_OUTPUT_TOKENS, HAS_OPENAI_KEY } from '@/lib/ai/config'
+import { logAiUsage } from '@/lib/metrics/logger'
 
 type Candidates = { neutrals: Color[]; whites: Color[]; accents: Color[] }
 
@@ -151,8 +152,18 @@ async function tryLlmPick(input: DesignInput, candidates: Candidates, fallback: 
       max_tokens: AI_MAX_OUTPUT_TOKENS,
       messages
     })
-    if (analyticsEnabled() && (resp as any)?.usage) {
-      await capture('ai_usage', { model: AI_MODEL, ...(resp as any).usage })
+    if ((resp as any)?.usage) {
+      const u: any = (resp as any).usage
+      // capture (legacy analytics path)
+      if (analyticsEnabled()) await capture('ai_usage', { model: AI_MODEL, ...u })
+      // dedicated cost logging
+      logAiUsage({
+        event: 'palette_orchestrator',
+        model: AI_MODEL,
+        input_tokens: u.prompt_tokens,
+        output_tokens: u.completion_tokens,
+        total_tokens: u.total_tokens
+      }).catch(()=>{})
     }
     const parsed = JSON.parse(resp.choices[0]?.message?.content || '{}')
     return sanitizeLlmPalette(parsed, candidates, fallback)
