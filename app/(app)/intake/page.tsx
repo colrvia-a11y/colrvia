@@ -8,7 +8,7 @@ import { TemplateChips } from "@/components/intake/TemplateChips";
 import { Progress } from "@/components/intake/Progress";
 import { LivePreview } from "@/components/intake/LivePreview";
 import { StickyCTA } from "@/components/intake/StickyCTA";
-import { uid } from "@/lib/uid";
+import { track } from "@/lib/analytics/client";
 
 const IntakeSchema = z.object({
   room: z.enum(["Living room", "Bedroom", "Kitchen", "Bathroom", "Workspace"], { required_error: "Pick a room" }),
@@ -42,21 +42,34 @@ export default function IntakePage() {
 
   const selection = { room: watch("room"), style: watch("style") };
 
+  function applyTemplate(v: Record<string, any>) {
+    Object.entries(v).forEach(([k, val]) => setValue(k as any, val, { shouldValidate: true }));
+    track("intake_start", { template: (v as any).style || undefined });
+  }
+
   async function onSubmit(data: Intake) {
-    const tempId = uid("tmp");
+    const t0 = performance.now();
+    track("intake_submit", { fields: Object.keys(data).length });
+
+    const tmpId = `tmp_${Math.random().toString(36).slice(2, 9)}`;
     // Optimistic transition to Reveal
-    router.push(`/reveal/${tempId}?optimistic=1`);
+    router.push(`/reveal/${tmpId}?optimistic=1`);
 
     // Kick off the real job
     try {
-      const res = await fetch("/api/render", {
+      const res = await fetch("/api/story", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(data),
       });
-      const { jobId } = (await res.json()) as { jobId: string };
-      if (jobId) router.replace(`/reveal/${jobId}`);
-      else router.replace(`/reveal/error?reason=no-job`);
+      const { id } = (await res.json()) as { id: string };
+      if (id) {
+        track("render_started", { job_id: id });
+        router.replace(`/reveal/${id}`);
+        // track("render_complete", { job_id: id, ms: Math.round(performance.now() - t0) });
+      } else {
+        router.replace(`/reveal/error?reason=no-story`);
+      }
     } catch {
       router.replace(`/reveal/error?reason=start-failed`);
     }
@@ -67,12 +80,7 @@ export default function IntakePage() {
       <form onSubmit={handleSubmit(onSubmit)} aria-describedby="intake-help">
         <Progress step={1} total={2} />
 
-        <TemplateChips
-          templates={TEMPLATES}
-          onApply={(v) => {
-            Object.entries(v).forEach(([k, val]) => setValue(k as any, val, { shouldValidate: true }));
-          }}
-        />
+        <TemplateChips templates={TEMPLATES} onApply={applyTemplate} />
 
         {/* Room */}
         <div className="mb-4">
