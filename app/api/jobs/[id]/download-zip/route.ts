@@ -23,12 +23,12 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   for (const url of images) {
     const res = await fetch(url)
     if (!res.ok) continue
-    const buf = Buffer.from(await res.arrayBuffer())
+    const buf = new Uint8Array(await res.arrayBuffer())
     const ext = url.split('?')[0].split('.').pop() || 'jpg'
     zip.file(`colrvia-${params.id}-${String(idx).padStart(2, '0')}.${ext}`, buf)
     idx++
   }
-  const out = await zip.generateAsync({ type: 'nodebuffer' })
+  const out = await zip.generateAsync({ type: 'arraybuffer' })
   return new NextResponse(out, {
     headers: {
       'content-type': 'application/zip',
