@@ -9,6 +9,7 @@ import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair';
 import { designPalette } from '@/lib/ai/orchestrator';
 import { mapV2ToLegacy } from '@/lib/ai/mapRoles';
 import type { DesignInput, Palette as V2Palette } from '@/lib/ai/schema';
+import { buildDeterministicNarrative } from '@/lib/ai/narrative';
 
 import { StoryBodySchema, type StoryBody } from "@/lib/validators"
 import type { StoriesPostRes } from "@/types/api"
@@ -31,15 +32,12 @@ export async function POST(req: Request) {
   return NextResponse.json<StoriesPostRes>({ error: "INVALID_INPUT", issues }, { status: 422 })
   }
 
-  // 3) Auth (current behavior preserved): require user
+  // 3) Auth (optional): get user if present
   const supabase = supabaseServer()
   const {
     data: { user },
     error: userErr,
   } = await supabase.auth.getUser()
-  if (userErr || !user) {
-  return NextResponse.json<StoriesPostRes>({ error: "UNAUTH" }, { status: 401 })
-  }
 
   // 4) Build or repair palette using existing flow; guard to avoid 500s on downstream throws
   try {
@@ -93,8 +91,19 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "PALETTE_INVALID" }, { status: 422 })
       }
     }
+    // 3. Persist only if user is present; otherwise return story directly
+    if (!user || userErr) {
+      const narrative = buildDeterministicNarrative({ input: { vibe: body.vibe || vibe, brand }, palette: finalPalette })
+      const story = {
+        id: null,
+        title: body.vibe ? `${body.vibe} Palette` : 'Your Color Story',
+        palette: finalPalette.map((s: any) => ({ hex: s.hex, name: s.name, brand: s.brand, placement: s.role })),
+        narrative,
+        createdAt: new Date().toISOString(),
+      }
+      return NextResponse.json<StoriesPostRes>({ story }, { status: 200 })
+    }
 
-    // 3. Persist
     const { data: created, error: insertErr } = await supabase
       .from("stories")
       .insert({

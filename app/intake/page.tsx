@@ -68,12 +68,18 @@ export default function IntakePage() {
           source: "intake"
         })
       });
+      const data = await res.json();
+      if (data?.story) {
+        try { localStorage.setItem("colrvia:lastStory", JSON.stringify(data.story)); } catch {}
+        router.push("/reveal");
+        return;
+      }
       if (res.status === 401) {
+        setRevealing(false);
         try { localStorage.setItem("colrvia_session", JSON.stringify(current)); } catch {}
         router.push(`/sign-in?next=${encodeURIComponent("/intake?resume=reveal")}`);
         return;
       }
-      const data = await res.json();
       if (!res.ok || !data?.id) {
         setError(data?.error || "Could not create story");
         return;
