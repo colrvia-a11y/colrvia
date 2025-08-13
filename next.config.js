@@ -1,4 +1,6 @@
-/** @type {import('next').NextConfig} */
+const createNextIntlPlugin = require('next-intl/plugin');
+const withNextIntl = createNextIntlPlugin();
+
 const csp = `
 default-src 'self';
 script-src 'self' 'unsafe-inline' https://app.posthog.com https://*.supabase.co;
@@ -10,7 +12,8 @@ frame-ancestors 'self';
 base-uri 'self';
 form-action 'self';`.replace(/\n/g, " ");
 
-module.exports = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "picsum.photos" },
@@ -33,3 +36,5 @@ module.exports = {
     ];
   }
 };
+
+module.exports = withNextIntl(nextConfig);
