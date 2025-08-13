@@ -10,6 +10,7 @@ import CopyToast from '@/components/reveal/CopyToast'
 import StoryHeroCard from '@/components/visual/StoryHeroCard'
 import SwatchRibbon from '@/components/visual/SwatchRibbon'
 import PdfButton from './pdf-button'
+import RevealPoller from '@/components/reveal/RevealPoller'
 import { normalizePalette } from '@/lib/palette'
 import { repairStoryPalette } from '@/lib/palette/repair'
 import RevealPaletteClient from './RevealPaletteClient'
@@ -49,6 +50,8 @@ export default async function RevealStoryPage({ params, searchParams }:{ params:
   if (optimistic) {
     return (
       <div className="mx-auto max-w-6xl px-4 md:px-6 py-6">
+        {/* ensure we auto-finish when it's a real id */}
+        {!id.startsWith("tmp_") && <RevealPoller id={id} />}
         <h1 className="text-xl font-semibold mb-4">Generating your designs…</h1>
         <div className="grid md:grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_,i) => (
