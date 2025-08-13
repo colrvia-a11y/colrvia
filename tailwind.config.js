@@ -31,8 +31,8 @@ module.exports = {
       container: { center: true, padding: "16px" },
       maxWidth: { content: "72rem" }, // ~1152px
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["Fraunces", "Inter", "ui-serif", "serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-fraunces)", "serif"],
       },
       boxShadow: {
         card: "0 6px 24px rgba(0,0,0,0.06)",

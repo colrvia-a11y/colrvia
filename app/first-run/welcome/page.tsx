@@ -15,7 +15,7 @@ export default function FirstRunWelcome(){
         <div className="space-y-3">
           <Link href="/designers" onClick={setDone} className="btn btn-primary w-full">Start color story</Link>
           <Link href="/sign-in" onClick={()=>{ setDone(); }} className="btn btn-secondary w-full">Sign in</Link>
-          <button onClick={()=>{ setDone(); router.push('/home') }} className="btn btn-ghost w-full">Skip for now</button>
+          <button type="button" onClick={()=>{ setDone(); router.push('/home') }} className="btn btn-ghost w-full">Skip for now</button>
         </div>
       </div>
     </main>

@@ -48,10 +48,24 @@ export default function HorizontalCarousel({ children, className='', ariaLabel='
         {children}
       </div>
       <div className="hidden md:flex absolute inset-y-0 left-0 items-center">
-        <button aria-label="Scroll left" onClick={()=>scroll(-1)} className="h-9 w-9 rounded-full bg-white/80 backdrop-blur border border-[var(--border)] shadow-soft hover:bg-white transition" >‹</button>
+        <button
+          type="button"
+          aria-label="Scroll left"
+          onClick={() => scroll(-1)}
+          className="relative h-9 w-9 rounded-full bg-white/80 backdrop-blur border border-[var(--border)] shadow-soft hover:bg-white transition"
+        >
+          <span className="absolute inset-[-4px]" aria-hidden />‹
+        </button>
       </div>
       <div className="hidden md:flex absolute inset-y-0 right-0 items-center">
-        <button aria-label="Scroll right" onClick={()=>scroll(1)} className="h-9 w-9 rounded-full bg-white/80 backdrop-blur border border-[var(--border)] shadow-soft hover:bg-white transition" >›</button>
+        <button
+          type="button"
+          aria-label="Scroll right"
+          onClick={() => scroll(1)}
+          className="relative h-9 w-9 rounded-full bg-white/80 backdrop-blur border border-[var(--border)] shadow-soft hover:bg-white transition"
+        >
+          <span className="absolute inset-[-4px]" aria-hidden />›
+        </button>
       </div>
     </div>
   )

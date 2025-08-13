@@ -20,7 +20,7 @@ function Swatch({ c }: { c: PaletteColor }) {
         <div className="text-neutral-600">{c.hex} · {c.brand}</div>
         <div className="text-neutral-500 mt-1 text-xs">{c.placement}</div>
       </div>
-      <button
+      <button type="button"
         aria-label={`Copy ${c.hex}`}
         onClick={() => { navigator.clipboard.writeText(c.hex); setCopied(true); setTimeout(()=>setCopied(false), 1000) }}
         className="absolute top-2 right-2 text-[10px] px-2 py-1 rounded-md bg-black/70 text-white opacity-0 group-hover:opacity-100 transition"

@@ -22,7 +22,7 @@ function useReducedMotionPref() {
 }
 
 export default function DesignersCarousel(){
-  const listRef = useRef<HTMLDivElement|null>(null)
+  const listRef = useRef<HTMLUListElement|null>(null)
   const reduced = useReducedMotionPref()
   const id = 'designers-carousel'
   const [active, setActive] = useState(0)
@@ -64,19 +64,40 @@ export default function DesignersCarousel(){
       <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-[var(--bg-canvas)] to-transparent z-10" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[var(--bg-canvas)] to-transparent z-10" />
       <div className="absolute inset-y-0 left-0 z-20 flex items-center">
-  <button type="button" className="btn btn-secondary rounded-full shadow-sm h-10 w-10" aria-controls={id} aria-label="Previous" onClick={()=>scrollByDir(-1)}>
+        <button
+          type="button"
+          className="btn btn-secondary relative rounded-full shadow-sm h-10 w-10"
+          aria-controls={id}
+          aria-label="Previous"
+          onClick={() => scrollByDir(-1)}
+        >
+          <span className="absolute inset-[-4px]" aria-hidden />
           <ChevronLeft className="h-5 w-5" />
         </button>
       </div>
       <div className="absolute inset-y-0 right-0 z-20 flex items-center">
-  <button type="button" className="btn btn-secondary rounded-full shadow-sm h-10 w-10" aria-controls={id} aria-label="Next" onClick={()=>scrollByDir(1)}>
+        <button
+          type="button"
+          className="btn btn-secondary relative rounded-full shadow-sm h-10 w-10"
+          aria-controls={id}
+          aria-label="Next"
+          onClick={() => scrollByDir(1)}
+        >
+          <span className="absolute inset-[-4px]" aria-hidden />
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
-      <div id={id} ref={listRef} className="no-scrollbar flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-pl-4 -mx-4 px-4">
+      <div aria-live="polite" className="sr-only">{`Showing ${designers[active].name}`}</div>
+      <ul
+        id={id}
+        ref={listRef}
+        role="list"
+        aria-label="Designer styles"
+        className="no-scrollbar flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-pl-4 -mx-4 px-4"
+      >
         {designers.map((d, idx)=>{
           return (
-            <div key={d.id} className="snap-center relative min-w-[85%] md:min-w-[480px] lg:min-w-[540px]" data-card-index={idx}>
+            <li key={d.id} className="snap-center relative min-w-[85%] md:min-w-[480px] lg:min-w-[540px]" data-card-index={idx}>
               <motion.div initial={reduced? false : { opacity:0, y:10, scale:0.98 }} whileInView={reduced? {} : { opacity:1, y:0, scale:1 }} viewport={{ once:true, amount:0.6 }} transition={{ duration:0.28 }} className="rounded-3xl overflow-hidden border bg-[var(--bg-surface)] shadow-sm">
                 <div className="relative h-[420px] md:h-[480px]">
                   <Image src={d.heroImage} alt="" fill sizes="(max-width: 768px) 85vw, 540px" priority={idx===0} className="object-cover" />
@@ -101,10 +122,10 @@ export default function DesignersCarousel(){
                   <div className="absolute right-4 top-4 h-8 w-8 rounded-lg bg-[var(--bg-surface)]/60 backdrop-blur-sm border" aria-hidden />
                 </div>
               </motion.div>
-            </div>
+            </li>
           )
         })}
-      </div>
+      </ul>
 
     <div className="mt-4 flex items-center justify-center gap-2" aria-label="Slide position">
         {designers.map((_,i)=>(

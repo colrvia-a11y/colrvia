@@ -92,7 +92,7 @@ export default function Cinematic({ open, onExit, story }: CinematicProps){
                     </motion.div>
                   </Dialog.Description>
                   <div className="flex gap-4 pt-4">
-                    <button
+                    <button type="button"
                       autoFocus
                       onClick={end}
                       className="px-5 py-2 rounded-full bg-white text-neutral-900 text-sm font-medium hover:bg-neutral-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[.97] transition-transform"

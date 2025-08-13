@@ -17,7 +17,7 @@ export default function SwatchRibbon({ swatches }: SwatchRibbonProps){
       {swatches.slice(0,5).map((s,i)=> {
         const delay = reduced? 0 : i * 60
         return (
-        <button key={i} onClick={()=>copy(s.hex)} className={clsx('group relative h-14 w-14 rounded-xl border border-[var(--border)] shadow-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] transition-all duration-[var(--dur-swatch)] ease-colrvia will-change-transform origin-bottom', copied===s.hex && 'ring-2 ring-[var(--brand)]')} style={{background:s.hex, animation: reduced? undefined : `swatchIn var(--dur-swatch) ${delay}ms both`}} aria-label={`Copy ${s.name||'swatch'} ${s.hex}`}>
+        <button type="button" key={i} onClick={()=>copy(s.hex)} className={clsx('group relative h-14 w-14 rounded-xl border border-[var(--border)] shadow-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] transition-all duration-[var(--dur-swatch)] ease-colrvia will-change-transform origin-bottom', copied===s.hex && 'ring-2 ring-[var(--brand)]')} style={{background:s.hex, animation: reduced? undefined : `swatchIn var(--dur-swatch) ${delay}ms both`}} aria-label={`Copy ${s.name||'swatch'} ${s.hex}`}>
           <span className="sr-only">{copied===s.hex?'Copied ':''}{s.hex}</span>
           <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-medium text-muted-foreground whitespace-nowrap">{s.name||s.hex}</span>
         </button>

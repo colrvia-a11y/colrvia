@@ -17,8 +17,8 @@ export default function ActionsClient({ storyId, palette }: ActionsProps){
   }
   return (
     <div className="flex gap-3 pt-4 flex-wrap">
-      <button onClick={copyAll} className="btn btn-primary">Copy all codes</button>
-      <button onClick={openShare} className="btn btn-secondary">Share Image</button>
+      <button type="button" onClick={copyAll} className="btn btn-primary">Copy all codes</button>
+      <button type="button" onClick={openShare} className="btn btn-secondary">Share Image</button>
     </div>
   )
 }

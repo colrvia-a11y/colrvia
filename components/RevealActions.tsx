@@ -18,7 +18,7 @@ export function RevealActions({ storyId, tier }: { storyId:string; tier:'free'|'
   }
   return (
     <div className="flex gap-3 pt-4">
-      <button onClick={download} className="btn btn-secondary" disabled={downloading}>{downloading?'Creating…':'Download PDF'}</button>
+      <button type="button" onClick={download} className="btn btn-secondary" disabled={downloading}>{downloading?'Creating…':'Download PDF'}</button>
       <PaywallModal open={open} onClose={()=>setOpen(false)} />
     </div>
   )

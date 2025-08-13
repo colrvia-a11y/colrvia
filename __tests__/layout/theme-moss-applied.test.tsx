@@ -25,7 +25,7 @@ describe("Root layout applies moss theme globally", () => {
     // @ts-ignore invoking async server component for test
   const element = await RootLayout({ children: <div>child</div> })
     const html = renderToStaticMarkup(element as any)
-    expect(html).toContain('class="theme-moss"')
+    expect(html).toContain('theme-moss')
     expect(html).toContain('bg-[var(--color-bg)]')
     expect(html).toContain('text-[var(--color-fg)]')
   })
