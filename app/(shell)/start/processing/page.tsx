@@ -2,16 +2,21 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createPaletteFromInterview } from '@/lib/palette'
+import { moss } from '@/lib/ai/phrasing'
 
 export default function ProcessingPage() {
   const router = useRouter()
 
   useEffect(() => {
-    (async () => {
-      await createPaletteFromInterview()
-      router.replace('/reveal/test')
+    let active = true
+    ;(async () => {
+      const result = await createPaletteFromInterview()
+      if (active && result?.id) {
+        router.replace(`/reveal/${result.id}`)
+      }
     })()
+    return () => { active = false }
   }, [router])
 
-  return <div>Processing...</div>
+  return <div>{moss.working()}</div>
 }

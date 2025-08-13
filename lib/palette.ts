@@ -102,9 +102,47 @@ export function decodePalette(value: unknown): DecodedSwatch[] {
   return []
 }
 
-// Placeholder palette creation from interview answers.
-// In production this would call backend services to persist a palette
-// and return its identifier. For tests we simply return a mock id.
+// Create a palette (story) from previously saved interview answers.
+// Falls back to a mock id during tests so rendering the processing page
+// doesn't attempt a network request.
 export async function createPaletteFromInterview() {
-  return { id: 'mock' };
+  // Skip network work in tests
+  if (process.env.NODE_ENV === 'test') return { id: 'mock' };
+
+  try {
+    // Attempt to read persisted interview answers from storage
+    let answers: any = {};
+    if (typeof window !== 'undefined') {
+      try {
+        const raw =
+          localStorage.getItem('colrvia:interview') ||
+          localStorage.getItem('colrvia:interviewAnswers');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          answers = parsed?.answers ?? parsed;
+        }
+      } catch {
+        /* ignore parse errors */
+      }
+    }
+
+    const { mapAnswersToStoryInput } = await import('@/lib/ai/onboardingGraph');
+    const payload = mapAnswersToStoryInput(answers || {});
+    // Ensure we send at least one meaningful field for validation
+    if (!payload.vibe) payload.vibe = 'Custom';
+
+    const resp = await fetch('/api/stories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, source: 'interview' })
+    });
+    const data = await resp.json().catch(() => null);
+    if (resp.ok) {
+      const id = data?.id ?? data?.story?.id;
+      if (id) return { id };
+    }
+  } catch {
+    /* swallow to allow graceful fallback */
+  }
+  return null;
 }
