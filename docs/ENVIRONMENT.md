@@ -44,3 +44,35 @@ After adding or changing envs, redeploy the project.
 - Without `OPENAI_API_KEY` the system uses deterministic palette logic.
 - Service role key is required for backfill scripts & admin endpoints; never log it.
 
+---
+### Preview Guest Mode & Auth Flags
+
+To allow palette generation without login on Vercel Preview deployments while keeping Production locked:
+
+- Preview detection: `VERCEL_ENV=preview` (injected by Vercel) automatically:
+  - Disables auth gating (`isAuthDisabled()` returns true)
+  - Allows guest writes (`allowGuestWrites()` returns true)
+- Production: Auth required unless explicit overrides are set.
+
+Additional environment flags:
+- `NEXT_PUBLIC_AUTH_DISABLED` (optional): Force guest mode locally (e.g. `.env.local`) without altering production.
+- `ALLOW_GUEST_WRITES` (optional): Explicitly allow guest writes outside of preview (e.g. ephemeral staging). Leave **unset** in Production.
+
+Security safeguards:
+- Service role usage is server-only (`createAdminClient()` throws if imported in the browser).
+- Guest inserts tag rows with `guest=true` and `user_id=null` for auditing.
+- Health endpoint: `GET /api/health/auth` returns a JSON summary (no secrets) to confirm flag behavior in each environment.
+
+Example health response:
+```json
+{
+  "vercelEnv": "preview",
+  "authDisabled": true,
+  "allowGuestWrites": true,
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": true,
+    "SUPABASE_SERVICE_ROLE_KEY": true
+  }
+}
+```
+
