@@ -9,9 +9,10 @@ import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair';
 import { designPalette } from '@/lib/ai/orchestrator';
 import { mapV2ToLegacy } from '@/lib/ai/mapRoles';
 import type { DesignInput, Palette as V2Palette } from '@/lib/ai/schema';
-
 import { StoryBodySchema, type StoryBody } from "@/lib/validators"
 import type { StoriesPostRes } from "@/types/api"
+import { allowGuestWrites } from '@/lib/flags'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(req: Request) {
   // 1) Parse JSON safely
@@ -31,15 +32,13 @@ export async function POST(req: Request) {
   return NextResponse.json<StoriesPostRes>({ error: "INVALID_INPUT", issues }, { status: 422 })
   }
 
-  // 3) Auth (current behavior preserved): require user
+  // 3) Auth (allow guest in preview / when enabled)
   const supabase = supabaseServer()
-  const {
-    data: { user },
-    error: userErr,
-  } = await supabase.auth.getUser()
-  if (userErr || !user) {
-  return NextResponse.json<StoriesPostRes>({ error: "UNAUTH" }, { status: 401 })
+  const { data: { user }, error: userErr } = await supabase.auth.getUser()
+  if ((userErr || !user) && !allowGuestWrites()) {
+    return NextResponse.json<StoriesPostRes>({ error: "UNAUTH" }, { status: 401 })
   }
+  const acting = user ? supabase : createAdminClient()
 
   // 4) Build or repair palette using existing flow; guard to avoid 500s on downstream throws
   try {
@@ -95,10 +94,11 @@ export async function POST(req: Request) {
     }
 
     // 3. Persist
-    const { data: created, error: insertErr } = await supabase
+    const { data: created, error: insertErr } = await acting
       .from("stories")
       .insert({
-        user_id: user.id,
+        user_id: user?.id || null,
+        guest: !user,
         brand,
         prompt: body.prompt || null,
         vibe: body.vibe || null,

@@ -7,6 +7,7 @@ import { supabaseBrowser } from '@/lib/supabase/browser'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 import { getAuthCallbackUrl } from '@/lib/url'
+import { isAuthDisabled } from '@/lib/flags'
 
 type Mode = 'magic' | 'password'
 type PwPhase = 'signin' | 'signup'
@@ -24,6 +25,19 @@ export default function SignInPage() {
   const t = useTranslations('SignInPage')
   const searchParams = useSearchParams()
   const next = searchParams.get('next') || '/dashboard'
+  const guestMode = isAuthDisabled()
+
+  if (guestMode) {
+    return (
+      <main className="mx-auto max-w-md p-6 space-y-4">
+        <h1 className="text-2xl font-semibold">Guest mode (preview)</h1>
+        <p className="text-sm opacity-80">You can use the app without signing in.</p>
+        <Link href="/start" className="inline-flex items-center justify-center rounded-2xl px-4 py-2 border">
+          Continue as guest
+        </Link>
+      </main>
+    )
+  }
 
   async function sendMagicLink(e: React.FormEvent) {
     e.preventDefault()

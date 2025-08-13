@@ -7,5 +7,9 @@ export function supabaseAdmin() {
   if (!url || !key) {
     throw new Error("Supabase admin env missing")
   }
-  return createClient(url, key, { auth: { persistSession: false } })
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
+}
+
+export function createAdminClient() {
+  return supabaseAdmin()
 }

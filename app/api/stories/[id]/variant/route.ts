@@ -9,6 +9,8 @@ import { makeVariant } from '@/lib/ai/variants'
 import { decodePalette, normalizePalette } from '@/lib/palette'
 import { limitVariant } from '@/lib/rate-limit'
 import type { BrandName, PaletteArray } from '@/types/palette'
+import { allowGuestWrites } from '@/lib/flags'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const VariantBodySchema = z.object({
   mode: z.enum(['recommended', 'softer', 'bolder']).default('recommended'),
@@ -43,22 +45,25 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json<VariantPostRes>({ error: 'INVALID_INPUT', issues }, { status: 422 })
   }
 
-  // 3) Auth
+  // 3) Auth (guest allowed when flag true)
   const supabase = supabaseServer()
   const { data: { user }, error: userErr } = await supabase.auth.getUser()
-  if (userErr || !user) {
+  if ((userErr || !user) && !allowGuestWrites()) {
     console.warn('VARIANT_POST_UNAUTH', { storyId })
-  return NextResponse.json<VariantPostRes>({ error: 'UNAUTH' }, { status: 401 })
+    return NextResponse.json<VariantPostRes>({ error: 'UNAUTH' }, { status: 401 })
+  }
+  const acting = user ? supabase : createAdminClient()
+
+  // 4) Rate limit (skip for guest for now)
+  if (user) {
+    const limit = limitVariant(user.id)
+    if (!limit.ok) {
+      return NextResponse.json<VariantPostRes>({ error: 'RATE_LIMIT', scope: limit.scope, retryAfter: limit.retryAfter } as any, { status: 429 })
+    }
   }
 
-  // 4) Rate limit
-  const limit = limitVariant(user.id)
-  if (!limit.ok) {
-  return NextResponse.json<VariantPostRes>({ error: 'RATE_LIMIT', scope: limit.scope, retryAfter: limit.retryAfter } as any, { status: 429 })
-  }
-
-  // 5) Load story (RLS ensures ownership)
-  const { data: story, error } = await supabase
+  // 5) Load story (RLS ensures ownership for authed; for guest we rely on service role bypass)
+  const { data: story, error } = await acting
     .from('stories')
     .select('id, palette, brand')
     .eq('id', storyId)
