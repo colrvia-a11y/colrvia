@@ -2,11 +2,13 @@
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { Skeleton } from "@/components/Skeleton";
+import { ActionsBar } from "@/components/reveal/ActionsBar";
+import { ResultCard } from "@/components/reveal/ResultCard";
 
 type Story = {
   id: string;
   status: "draft" | "queued" | "processing" | "ready" | "failed";
-  result: null | { images: { url: string }[]; meta?: any };
+  result: null | { images: { url: string; width?: number; height?: number }[]; meta?: any };
   error?: string | null;
 };
 
@@ -70,19 +72,18 @@ export default function RevealPage({ params }: { params: { id: string } }) {
       )}
       {ready && (
         <>
-          <h1 className="text-xl font-semibold mb-4">Your designs</h1>
+          <ActionsBar jobId={story!.id} />
+          <h1 className="text-xl font-semibold mb-3">Your designs</h1>
           <div className="grid md:grid-cols-2 gap-4">
             {story?.result?.images?.map((img, i) => (
-              <figure key={i} className="rounded-xl border overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={img.url}
-                  alt={`Variation ${i + 1}`}
-                  className="w-full h-auto"
-                  loading={i > 1 ? "lazy" : "eager"}
-                />
-                <figcaption className="p-2 text-sm text-neutral-600">Variation {i + 1}</figcaption>
-              </figure>
+              <ResultCard
+                key={i}
+                url={img.url}
+                index={i}
+                storyId={story!.id}
+                width={img.width ?? 1600}
+                height={img.height ?? 900}
+              />
             ))}
           </div>
         </>
