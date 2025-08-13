@@ -29,8 +29,8 @@ export function PaywallModal({ open, onClose }: { open:boolean; onClose:()=>void
           <li>Priority features</li>
         </ul>
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="btn btn-secondary flex-1">Close</button>
-          <button onClick={upgrade} disabled={busy} className="btn btn-primary flex-1">{busy?'Redirect…':'Upgrade to Pro'}</button>
+          <button type="button" onClick={onClose} className="btn btn-secondary flex-1">Close</button>
+          <button type="button" onClick={upgrade} disabled={busy} className="btn btn-primary flex-1">{busy?'Redirect…':'Upgrade to Pro'}</button>
         </div>
         <p className="text-[11px] text-neutral-500">Secure Stripe checkout. Test mode.</p>
       </div>

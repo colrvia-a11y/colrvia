@@ -26,7 +26,7 @@ export function SubscribeButton({ priceId }: { priceId: string }) {
   }
 
   return (
-    <button
+  <button type="button"
       onClick={go}
       disabled={busy}
       className="rounded-2xl px-4 py-2 bg-black text-white"

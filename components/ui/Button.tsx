@@ -14,6 +14,7 @@ export default function Button({ className, variant='primary', as:Comp='button',
     ghost: 'text-foreground hover:bg-paper hover:text-foreground'
   } as const
   const styles = clsx(base, variants[variant], className)
-  if (Comp !== 'button') return <Comp href={href} type={type} className={twMerge(styles)} {...rest} />
-  return <button type={type ?? 'button'} className={twMerge(styles)} {...rest} />
+  if (Comp !== 'button') return <Comp href={href} type={type || 'button'} className={twMerge(styles)} {...rest} />
+  // Native button variant always uses type="button" to avoid accidental form submission.
+  return <button type="button" className={twMerge(styles)} {...rest} />
 }

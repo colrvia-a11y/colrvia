@@ -117,7 +117,7 @@ export default function SaveStoryToProject() {
             </select>
           )}
           <div className="flex items-center gap-3">
-            <button onClick={save} disabled={!story || !selected || saving} className="rounded-xl px-4 py-2 bg-black text-white disabled:opacity-50 text-sm">
+            <button type="button" onClick={save} disabled={!story || !selected || saving} className="rounded-xl px-4 py-2 bg-black text-white disabled:opacity-50 text-sm">
               {saving ? 'Saving…' : 'Save'}
             </button>
             <button onClick={createProject} type="button" className="text-sm underline">+ New project</button>

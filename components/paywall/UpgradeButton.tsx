@@ -27,7 +27,7 @@ export function UpgradeButton({ className }: { className?: string }) {
     }
   }
   return (
-    <button onClick={go} disabled={busy} className={className || 'btn btn-primary'}>
+  <button type="button" onClick={go} disabled={busy} className={className || 'btn btn-primary'}>
       {busy ? 'Redirecting…' : 'Upgrade to Pro'}
     </button>
   )

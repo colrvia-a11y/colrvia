@@ -32,7 +32,7 @@ export default function QuestionRenderer({ turn, onAnswer, onComplete, completeB
           <div className="text-sm text-neutral-600 mt-1">{turn.explain_why}</div>
         )}
         {onComplete && (
-          <button
+          <button type="button"
             className="btn btn-primary mt-3"
             onClick={onComplete}
             disabled={completeBusy}
@@ -58,11 +58,11 @@ export default function QuestionRenderer({ turn, onAnswer, onComplete, completeB
         return (
           <div className="flex flex-wrap gap-2 mt-3">
             {turn.choices?.map((c) => (
-              <button key={c} className="px-3 py-2 rounded-lg border" onClick={() => send(c)}>
+              <button type="button" key={c} className="px-3 py-2 rounded-lg border" onClick={() => send(c)}>
                 {c}
               </button>
             ))}
-            <button className="px-3 py-2 rounded-lg border opacity-80" onClick={() => send("Not sure")}>
+            <button type="button" className="px-3 py-2 rounded-lg border opacity-80" onClick={() => send("Not sure")}>
               I’m not sure
             </button>
           </div>
@@ -70,9 +70,9 @@ export default function QuestionRenderer({ turn, onAnswer, onComplete, completeB
       case "yesNo":
         return (
           <div className="flex gap-2 mt-3">
-            <button className="px-3 py-2 rounded-lg border" onClick={() => send("Yes")}>Yes</button>
-            <button className="px-3 py-2 rounded-lg border" onClick={() => send("No")}>No</button>
-            <button className="px-3 py-2 rounded-lg border opacity-80" onClick={() => send("Not sure")}>I’m not sure</button>
+            <button type="button" className="px-3 py-2 rounded-lg border" onClick={() => send("Yes")}>Yes</button>
+            <button type="button" className="px-3 py-2 rounded-lg border" onClick={() => send("No")}>No</button>
+            <button type="button" className="px-3 py-2 rounded-lg border opacity-80" onClick={() => send("Not sure")}>I’m not sure</button>
           </div>
         );
       case "slider":
@@ -88,8 +88,8 @@ export default function QuestionRenderer({ turn, onAnswer, onComplete, completeB
               className="w-full"
             />
             <div className="mt-2 flex gap-2">
-              <button className="px-3 py-2 rounded-lg border" onClick={() => send(text || String(turn.validation?.min ?? 0))}>Continue</button>
-              <button className="px-3 py-2 rounded-lg border opacity-80" onClick={() => send("Not sure")}>Skip / I’m not sure</button>
+              <button type="button" className="px-3 py-2 rounded-lg border" onClick={() => send(text || String(turn.validation?.min ?? 0))}>Continue</button>
+              <button type="button" className="px-3 py-2 rounded-lg border opacity-80" onClick={() => send("Not sure")}>Skip / I’m not sure</button>
             </div>
           </div>
         );

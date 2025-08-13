@@ -1,5 +1,14 @@
 import './globals.css'
 import React from 'react'
+// Guarded font imports so Vitest (node env) doesn't throw if next/font/google mocked.
+let InterFn: any = () => ({ variable: '' })
+let FrauncesFn: any = () => ({ variable: '' })
+try {
+  // Dynamic require to avoid bundler evaluating in unsupported contexts
+  const mod = require('next/font/google')
+  InterFn = mod.Inter || InterFn
+  FrauncesFn = mod.Fraunces || FrauncesFn
+} catch {}
 import { initSentry } from '@/lib/monitoring/sentry'
 import type { Metadata } from 'next'
 import { cn } from "@/lib/utils"
@@ -55,6 +64,9 @@ export const metadata: Metadata = {
  * Root layout for the app. Wraps all pages and applies global styles. See
  * https://beta.nextjs.org/docs/routing/pages-and-layouts for details.
  */
+const inter = InterFn({ subsets:['latin'], display:'swap', variable:'--font-inter' })
+const fraunces = FrauncesFn({ subsets:['latin'], display:'swap', variable:'--font-fraunces' })
+
 export default async function RootLayout({
   children
 }: {
@@ -65,7 +77,7 @@ export default async function RootLayout({
   const t = createTranslator({ locale, messages })
 
   return (
-    <html lang={locale} className="theme-moss">
+  <html lang={locale} className={['theme-moss', inter.variable, fraunces.variable].filter(Boolean).join(' ')}>
       <head>
         <meta name="theme-color" content="#F7F5EF" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />

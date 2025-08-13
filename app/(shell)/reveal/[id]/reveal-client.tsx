@@ -6,7 +6,7 @@ export default function RevealClient({ story }:{ story:{ id:string; title:string
   const [open,setOpen]=useState(false)
   return (
     <>
-      <button onClick={()=>setOpen(true)} className="btn btn-secondary text-xs">Play Reveal</button>
+  <button type="button" onClick={()=>setOpen(true)} className="btn btn-secondary text-xs">Play Reveal</button>
       <Cinematic open={open} onExit={()=>setOpen(false)} story={story} />
     </>
   )

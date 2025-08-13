@@ -32,7 +32,7 @@ export default function MorePage(){
           </li>
         ))}
         <li>
-          <button onClick={logout} className="w-full text-left px-5 py-4 hover:bg-[var(--linen)]/60">Log out</button>
+          <button type="button" onClick={logout} className="w-full text-left px-5 py-4 hover:bg-[var(--linen)]/60">Log out</button>
         </li>
       </ul>
   <div className="text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Colrvia</div>

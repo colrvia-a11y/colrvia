@@ -134,8 +134,8 @@ export default function SignInPage() {
       <div className="text-sm tracking-widest font-medium mb-6">{t('brand')}</div>
       <h1 className="text-2xl font-semibold mb-2">{mode==='magic' ? t('titleSignIn') : (pwPhase==='signin'? t('titleSignIn') : t('titleCreate'))}</h1>
       <div className="flex gap-3 mb-6 text-sm" role="tablist">
-        <button role="tab" aria-selected={mode==='magic'} onClick={()=>{ setMode('magic'); setMsg(null) }} className={`px-3 py-1 rounded-full border ${mode==='magic'?'bg-black text-white':'bg-white'}`}>{t('magicLinkTab')}</button>
-        <button role="tab" aria-selected={mode==='password'} onClick={()=>{ setMode('password'); setMsg(null) }} className={`px-3 py-1 rounded-full border ${mode==='password'?'bg-black text-white':'bg-white'}`}>{t('passwordTab')}</button>
+  <button type="button" role="tab" aria-selected={mode==='magic'} onClick={()=>{ setMode('magic'); setMsg(null) }} className={`px-3 py-1 rounded-full border ${mode==='magic'?'bg-black text-white':'bg-white'}`}>{t('magicLinkTab')}</button>
+  <button type="button" role="tab" aria-selected={mode==='password'} onClick={()=>{ setMode('password'); setMsg(null) }} className={`px-3 py-1 rounded-full border ${mode==='password'?'bg-black text-white':'bg-white'}`}>{t('passwordTab')}</button>
       </div>
 
       {mode==='magic' && (
@@ -185,7 +185,7 @@ export default function SignInPage() {
         <div className="h-px flex-1 bg-neutral-200" />
       </div>
 
-      <button onClick={continueWithGoogle} disabled={busy} className="w-full rounded-2xl py-3 border">{t('continueWithGoogle')}</button>
+  <button type="button" onClick={continueWithGoogle} disabled={busy} className="w-full rounded-2xl py-3 border">{t('continueWithGoogle')}</button>
 
       {msg && <p className="mt-4 text-sm text-neutral-700 whitespace-pre-line">{msg}</p>}
       <p className="mt-2 text-xs text-neutral-400">{t('redirectOrigin', { origin })}</p>

@@ -73,7 +73,7 @@ export default function IntakePage() {
           <div className="text-lg font-medium">
             Got everything I need! I’ll build a palette that fits your mood, style, light, and the items you’re keeping.
           </div>
-          <button
+          <button type="button"
             className="mt-4 px-4 py-2 rounded-md border bg-brand text-white"
             onClick={handleReveal}
           >
