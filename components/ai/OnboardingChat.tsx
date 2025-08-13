@@ -6,7 +6,13 @@ export default function OnboardingChat({ designerId }: { designerId: string }) {
   const { currentNode, input, setInput, busy, done, statusText, submit } = useIntakeChat(designerId)
   const API_MODE = process.env.NEXT_PUBLIC_ONBOARDING_MODE === 'api'
 
-  if (!API_MODE) return null
+  if (!API_MODE) {
+    return (
+      <div role="alert" className="rounded-2xl border border-white/15 bg-white/5 p-4 text-white/95">
+        NEXT_PUBLIC_ONBOARDING_MODE must be set to &quot;api&quot; to enable live intake.
+      </div>
+    )
+  }
 
   return (
     <div role="dialog" aria-label="Preferences chat" className="rounded-2xl border border-white/15 bg-white/5 p-4 text-white/95">

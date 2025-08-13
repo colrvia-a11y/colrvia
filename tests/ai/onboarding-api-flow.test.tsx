@@ -37,3 +37,18 @@ describe('OnboardingChat API mode', () => {
     await waitFor(()=> expect(fetchMock).toHaveBeenCalledWith('/api/intakes/finalize', expect.any(Object)))
   })
 })
+
+describe('OnboardingChat env warning', () => {
+  it('shows a warning when NEXT_PUBLIC_ONBOARDING_MODE is not set to api', () => {
+    const original = process.env.NEXT_PUBLIC_ONBOARDING_MODE
+    // @ts-ignore
+    delete process.env.NEXT_PUBLIC_ONBOARDING_MODE
+
+    const { getByText } = render(<PreferencesChat designerId="emily" />)
+    expect(
+      getByText(/NEXT_PUBLIC_ONBOARDING_MODE must be set to "api"/i)
+    ).toBeInTheDocument()
+
+    process.env.NEXT_PUBLIC_ONBOARDING_MODE = original
+  })
+})
