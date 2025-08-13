@@ -128,7 +128,7 @@ export default function VoiceMic({ onActiveChange, greet }: Props) {
       <button
         type="button"
         onClick={active ? stop : start}
-        className={`px-4 py-2 rounded-full border ${active ? "bg-black text-white dark:bg-white dark:text-black" : "bg-white/70 dark:bg-neutral-900/70"}`}
+        className={`px-4 py-2 rounded-full border transition-transform motion-reduce:transition-none hover:scale-105 active:scale-95 ${active ? "bg-black text-white dark:bg-white dark:text-black" : "bg-white/70 dark:bg-neutral-900/70"}`}
         aria-pressed={active}
         aria-keyshortcuts="Shift+M"
       >
