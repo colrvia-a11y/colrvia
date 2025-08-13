@@ -7,6 +7,8 @@
     "dev:restart": "node scripts/restart-dev.mjs",
     "build": "next build",
     "start": "next start",
+    "build:sw": "esbuild sw/index.ts --bundle --outfile=public/sw.js --format=iife --minify",
+    "postbuild": "npm run build:sw",
     "dev:clean": "rm -rf .next && next dev --turbo",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -54,8 +56,8 @@
     "zod": "3.23.8"
   },
   "devDependencies": {
-    "@playwright/test": "^1.46.0",
     "@axe-core/playwright": "^4.9.0",
+    "@playwright/test": "^1.46.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
@@ -69,12 +71,13 @@
     "eslint": "8.55.0",
     "eslint-config-next": "14.1.0",
     "eslint-plugin-jsx-a11y": "^6.9.0",
+    "husky": "^9.0.0",
     "jsdom": "^26.1.0",
     "postcss": "^8.5.6",
+    "service-worker-mock": "^2.0.5",
     "tailwindcss": "^4.1.11",
     "tsx": "^4.19.1",
     "typescript": "5.3.3",
-    "vitest": "^1.6.0",
-    "husky": "^9.0.0"
+    "vitest": "^1.6.0"
   }
 }
