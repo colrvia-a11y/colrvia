@@ -6,6 +6,7 @@ import { buildQuestionQueue } from "@/lib/intake/engine";
 import { QUESTIONS } from "@/lib/intake/questions";
 import type { Answers, QuestionId } from "@/lib/intake/types";
 import { uid } from '@/lib/uid'
+import { track } from '@/lib/analytics/client'
 
 export default function IntakePage() {
   const [answers, setAnswers] = React.useState<Answers & Record<string, any>>({});
@@ -40,9 +41,16 @@ export default function IntakePage() {
   }, 0);
   const progress = queue.length ? Math.round((answeredCount / queue.length) * 100) : 0;
 
+  function applyTemplate(v: Record<string, any>) {
+    Object.entries(v).forEach(([k,val]) => setAnswers(prev => ({ ...prev, [k]: val })) )
+    track('intake_start', { template: v.style || undefined })
+  }
+
   async function handleReveal() {
+    const t0 = performance.now()
     const optimisticId = uid('job_')
-    router.push(`/reveal/${optimisticId}`)
+    track('intake_submit', { fields: Object.keys(answers).length })
+    router.push(`/reveal/${optimisticId}?optimistic=1`)
     try {
       const res = await fetch('/api/render', {
         method: 'POST',
@@ -51,8 +59,9 @@ export default function IntakePage() {
       })
       const data = await res.json().catch(()=>null)
       if(res.ok && data?.jobId){
-        // Replace current optimistic route with real job id (shallow)
+        track('render_started', { job_id: data.jobId })
         router.replace(`/reveal/${data.jobId}`)
+        // Completion tracked by JobWatcherClient once story present (TODO: add hook there)
       }
     } catch {/* ignore */}
   }

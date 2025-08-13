@@ -18,6 +18,10 @@ export interface AnalyticsEventMap {
   answer_saved: { id: string; priority: 'P1' | 'P2' | 'P3' | 'P4' }
   question_dropped: { id: string; priority: 'P1' | 'P2' | 'P3' | 'P4'; reason: string }
   flow_capped: { id: string; priority: 'P1' | 'P2' | 'P3' | 'P4'; reason: string }
+  intake_start: { template?: string }
+  intake_submit: { fields: number }
+  render_started: { job_id: string }
+  render_complete: { job_id: string; ms: number }
 }
 
 export type AnalyticsEventName = keyof AnalyticsEventMap

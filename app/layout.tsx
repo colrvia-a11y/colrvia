@@ -81,6 +81,7 @@ export default async function RootLayout({
       <head>
         <meta name="theme-color" content="#F7F5EF" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
+  <meta name="color-scheme" content="light dark" />
       </head>
       <body
         className={cn(
