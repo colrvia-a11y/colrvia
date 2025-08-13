@@ -43,7 +43,7 @@ export default function HowItWorksModal({ open, onOpenChange, origin='unknown' }
         <div className="overflow-auto pr-1">
           <HowItWorksContent compact />
           <div className="mt-6">
-            <Button as={"a"} href="/designers" variant="primary" onClick={()=>{ const ms = timer.peek(); try { track('howitworks_start', { where:'modal', origin, ms }) } catch {} }}>Start Color Story</Button>
+            <Button as={"a"} href="/start/interview-intro" variant="primary" onClick={()=>{ const ms = timer.peek(); try { track('howitworks_start', { where:'modal', origin, ms }) } catch {} }}>Start Color Story</Button>
           </div>
         </div>
       </DialogContent>

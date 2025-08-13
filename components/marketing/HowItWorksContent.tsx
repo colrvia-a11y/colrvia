@@ -36,7 +36,7 @@ export default function HowItWorksContent({ compact = false }: { compact?: boole
             </li>
           </ol>
           <div className="mt-5">
-            <Button as={Link} href="/designers" variant="primary" onClick={() => track('howitworks_start', { where: compact ? 'modal' : 'page' })}>Start Color Story</Button>
+            <Button as={Link} href="/start/interview-intro" variant="primary" onClick={() => track('howitworks_start', { where: compact ? 'modal' : 'page' })}>Start Color Story</Button>
           </div>
         </div>
         <div className="order-1 md:order-2">
