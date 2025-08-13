@@ -1,6 +1,3 @@
-import React from 'react'
-import VoiceInterview from '@/components/voice/VoiceInterview'
-
 export default function InterviewPage() {
-  return <VoiceInterview />
+  return <div data-testid="voice-shell">Voice shell</div>
 }
