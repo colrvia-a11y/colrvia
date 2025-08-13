@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react'
 import { supabaseBrowser } from '@/lib/supabase/browser'
 import { Skeleton } from '@/components/Skeleton'
+import { ActionsBar } from '@/components/reveal/ActionsBar'
+import { ResultCard } from '@/components/reveal/ResultCard'
 
 type Job = { id:string; status:'queued'|'processing'|'ready'|'failed'; result: null | { images:{ url:string }[]; meta?:any }; error?: string | null }
 
@@ -51,18 +53,15 @@ export default function RevealJobPage({ params }:{ params:{ id:string } }){
         </div>
       )}
       {ready && (
-        <div>
-          <h1 className="text-xl font-semibold mb-4">Your designs</h1>
+        <>
+          <ActionsBar jobId={job!.id} />
+          <h1 className="text-xl font-semibold mb-3">Your designs</h1>
           <div className="grid md:grid-cols-2 gap-4">
             {job?.result?.images?.map((img,i)=>(
-              <figure key={i} className="rounded-xl border overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img.url} alt={`Variation ${i+1}`} className="w-full h-auto" loading={i>1? 'lazy':'eager'} />
-                <figcaption className="p-2 text-sm text-neutral-600">Variation {i+1}</figcaption>
-              </figure>
+              <ResultCard key={i} url={img.url} index={i} jobId={job!.id} />
             ))}
           </div>
-        </div>
+        </>
       )}
     </div>
   )
