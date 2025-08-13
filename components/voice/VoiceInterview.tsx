@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import ChatCaptions from '@/components/ai/ChatCaptions'
 import MicButton from './MicButton'
 import { moss } from '@/lib/ai/phrasing'
-import { listenOnce, speak, startVoiceSession } from '@/lib/voice/session'
+import { listenOnce, speak, startVoiceSession, stopSpeak } from '@/lib/voice/session'
 import { nluParse } from '@/lib/intake/nlu'
 import { buildQuestionQueue } from '@/lib/intake/engine'
 import { getSection } from '@/lib/intake/sections'
@@ -97,6 +97,7 @@ export default function VoiceInterview() {
 
   async function handleMic() {
     if (!currentId) return
+    await stopSpeak()
     setIsListening(true)
     const text = await listenOnce()
     setCaptions(text)
