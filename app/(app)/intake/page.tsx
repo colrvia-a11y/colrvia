@@ -62,7 +62,7 @@ export default function IntakePage() {
       const json = (await res.json()) as { storyId?: string };
       if (json.storyId) {
         track("render_started", { story_id: json.storyId });
-        router.replace(`/reveal/${json.storyId}`);
+        router.replace(`/reveal/${json.storyId}?optimistic=1`); // keep skeleton until ready
         return;
       }
     } catch (e) {

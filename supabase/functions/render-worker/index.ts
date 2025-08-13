@@ -20,10 +20,10 @@ Deno.serve(async (req) => {
     await new Promise((r) => setTimeout(r, 4000));
     const result = {
       images: [
-        { url: "https://picsum.photos/seed/a/1600/900" },
-        { url: "https://picsum.photos/seed/b/1600/900" },
-        { url: "https://picsum.photos/seed/c/1600/900" },
-        { url: "https://picsum.photos/seed/d/1600/900" },
+        { url: "https://picsum.photos/seed/a/1600/900", width: 1600, height: 900 },
+        { url: "https://picsum.photos/seed/b/1600/900", width: 1600, height: 900 },
+        { url: "https://picsum.photos/seed/c/1600/900", width: 1600, height: 900 },
+        { url: "https://picsum.photos/seed/d/1600/900", width: 1600, height: 900 },
       ],
       meta: { variations: 4, colorways: 2 },
     };

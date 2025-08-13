@@ -1,0 +1,17 @@
+import { NextResponse } from "next/server";
+import { createSupabaseServer } from "@/lib/supabase/server";
+
+export async function GET(_: Request, { params }: { params: { id: string } }) {
+  const supabase = createSupabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const { data, error } = await supabase
+    .from("stories")
+    .select("status")
+    .eq("id", params.id)
+    .single();
+
+  if (error || !data) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  return NextResponse.json({ status: data.status });
+}
