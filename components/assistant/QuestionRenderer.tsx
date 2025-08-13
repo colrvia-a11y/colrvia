@@ -34,6 +34,7 @@ export default function QuestionRenderer({ turn, onAnswer, onComplete, completeB
         )}
         {onComplete && (
           <button
+            type="button"
             className="btn btn-primary mt-3"
             onClick={() => onComplete?.()}
             disabled={completeBusy}

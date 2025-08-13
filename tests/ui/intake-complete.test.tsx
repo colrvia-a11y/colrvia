@@ -19,5 +19,23 @@ describe('QuestionRenderer completion', () => {
     fireEvent.click(btn)
     expect(onComplete).toHaveBeenCalledTimes(1)
   })
+
+  it('renders reveal button as a non-submitting button', () => {
+    const onComplete = vi.fn()
+    const turn = {
+      field_id: '_complete',
+      next_question: 'Ready?',
+      input_type: 'text'
+    } as any
+    render(
+      <form>
+        <QuestionRenderer turn={turn} onAnswer={() => {}} onComplete={onComplete} />
+      </form>
+    )
+    const btn = screen.getByRole('button', { name: /reveal my palette/i })
+    expect(btn).toHaveAttribute('type', 'button')
+    fireEvent.click(btn)
+    expect(onComplete).toHaveBeenCalledTimes(1)
+  })
 })
 
