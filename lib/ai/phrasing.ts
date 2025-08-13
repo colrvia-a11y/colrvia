@@ -85,3 +85,14 @@ export function buildStartUtterance(designerId: string, rngSeed: string, firstPr
 export function buildNextUtterance(ack: string, nextPrompt: string){
   return `${ack} ${nextPrompt}`
 }
+
+export const moss = {
+  greet: () => "Hey, I’m Moss—your personal paint matchmaker 🌿 Let’s craft something that feels like you.",
+  ask: (corePrompt: string) => `Okay, quick one—${corePrompt}`,
+  empathize: (ack: string) => `${ack} Love that direction.`,
+  typingHint: () => "You can just type—I'll keep it breezy.",
+  progressLabel: (section: "style"|"room", i: number, total: number) => `${section === "style" ? "Style" : "Room"} ${i}/${total}`,
+  working: () => "Balancing light, undertones, and your vibe… one sec while I blend 🎨",
+  revealTitle: (ctx: string) => `Moss’s palette for your ${ctx}`,
+  teaserOtherDesigners: () => "Curious how another eye would tune this? Try other designers’ takes.",
+};
