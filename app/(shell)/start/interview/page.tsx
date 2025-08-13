@@ -1,3 +1,5 @@
+import VoiceInterview from '@/components/voice/VoiceInterview'
+
 export default function InterviewPage() {
-  return <div data-testid="voice-shell">Voice shell</div>
+  return <VoiceInterview />
 }
