@@ -7,11 +7,11 @@ export type PaletteColor = {
 export type DesignerId = 'emily' | 'zane' | 'marisol' | 'therapist';
 
 export type ColorStory = {
-  id: string;
+  id: string | null;
   title: string;
   narrative: string;
   palette: PaletteColor[];
-  designer: DesignerId;
+  designer?: DesignerId;
   createdAt: string;
 };
 export type DesignerProfile = {
