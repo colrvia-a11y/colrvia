@@ -1,15 +1,13 @@
-import PreferencesChat from '@/components/ai/OnboardingChat'
+import PreferencesChat from '@/components/ai/PreferencesChat'
 import { getDesigner, DEFAULT_DESIGNER_ID, isDesignerLocked } from '@/lib/ai/designers'
 import { getUserTier } from '@/lib/profile'
 import Link from 'next/link'
 import { UpgradeButton } from '@/components/paywall/UpgradeButton'
-import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
 export default async function PreferencesPage({ params }: { params:{ designerId:string } }){
   const id = (params.designerId || '').toLowerCase()
-  if (id === 'therapist') redirect('/intake')
   const designer = getDesigner(id)
   if(!designer) return <div className="p-10">Designer not found.</div>
   const { tier, user } = await getUserTier()

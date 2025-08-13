@@ -54,13 +54,9 @@ Algorithm uses LAB-based lightness shifts + contrast guards (walls/trim >=3:1, a
 Tests: `tests/ai.test.ts` + decoder/contract tests (`tests/variant-route.test.ts`, `tests/variant-post.test.ts`).
 `has_variants` column (optional) plus `lib/db/stories.ts` computes & persists flags for dashboard badges.
 
-| NEXT_PUBLIC_ONBOARDING_MODE | yes (api mode) | Set to `api` to enable live rule-driven intake |
 ## Share Images
-## API-driven onboarding setup
-1. **Create tables**: open Supabase → SQL Editor → paste contents of `db/migrations/2025-08-11_api-intake.sql` → Run.
-2. **Set envs (Vercel)**: see `docs/ENVIRONMENT.md`. At minimum set `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `NEXT_PUBLIC_ONBOARDING_MODE=api`.
-3. **Verify**: deploy, then visit `/api/health/intake` — you should see `{ ok: true, counts: ... }`.
-4. **Try it**: go to `/designers` → pick a designer → the chat asks one question at a time. On completion, palette is generated and you land on the reveal page.
+## Preferences onboarding
+The legacy `/api/intakes/*` flow has been removed. Preferences are now gathered via the AI phrased interview at `POST /api/ai/preferences`, which returns the next utterance and updated state.
 OG/Twitter image endpoint: `/api/share/[id]/image` (edge, 1200×630). `generateMetadata` in reveal page attaches dynamic OG image (variant param aware). Place fonts (`/public/fonts/Inter-Regular.ttf`, `Fraunces-SemiBold.ttf`) for branded output; falls back if absent. Text normalization (length cap, trimming, fallbacks) covered by `buildOgText` in `lib/og.ts` with tests.
 
 ## Cinematic Reveal & Motion Accessibility
@@ -123,9 +119,7 @@ Run `npm test` to execute vitest suite verifying contrast rules & variant shifts
 Initial UI tests live in `tests/ui/`. Add new tests colocated under `tests/ui/your-component.test.tsx`. The test environment is jsdom (configured in `vite.config.ts`) with jest‑dom assertions (`tests/setup.ts`). Keep component APIs small and accessible (roles / aria-* used in assertions).
 
 ## End-to-end Tests
-Playwright drives browser-based flows. Before running:
-- install browsers with `npx playwright install`
-- set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `NEXT_PUBLIC_ONBOARDING_MODE=api`
+Playwright drives browser-based flows. Before running, install browsers with `npx playwright install`.
 
 Then run `npm run test:e2e`.
 
@@ -352,11 +346,6 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 }
 ```
 
-### Preferences interview persistence
-- Each preferences interview run (formerly “onboarding”) creates an `intakes` row keyed by a secure, httpOnly cookie token (no auth required).
-- Routes: `POST /api/intakes/start`, `GET /api/intakes/resume`, `POST /api/intakes/patch`, `POST /api/intakes/finalize`.
-- State (answers + chat messages) is saved after every turn; on finalize the created `story_id` is linked and the cookie cleared.
-
 ### AI configuration
 - `AI_ENABLE=true|false` — master switch for LLM calls (defaults to deterministic if false or key missing)
 - `AI_MODEL` — OpenAI model id (default `gpt-4o-mini`)
@@ -366,7 +355,7 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 
 ### Analytics (optional)
 - PostHog instrumentation is gated by `NEXT_PUBLIC_POSTHOG_KEY` and never sends raw free‑text answers.
-- Events: `designer_select`, `intake_start`, `intake_resume`, `preferences_question`, `preferences_answer` (choices or length only), `voice_toggle`, `mic_toggle`, `tts_speak`, `preferences_complete`.
+- Events: `designer_select`, `preferences_question`, `preferences_answer` (choices or length only), `voice_toggle`, `mic_toggle`, `tts_speak`, `preferences_complete`.
 - Env vars:
 	- `NEXT_PUBLIC_POSTHOG_KEY` (key)
 	- `NEXT_PUBLIC_POSTHOG_HOST` (optional host, defaults US cloud)
@@ -404,9 +393,3 @@ npm run test:e2e:ui
 ```
 
 The smoke spec (`e2e/smoke.pw.ts`) covers: home render, start CTA, sign-in reachability, and unauthenticated dashboard redirect. Extend with additional journeys as needed.
-
-### API-driven onboarding (interactive AI)
-- Set `NEXT_PUBLIC_ONBOARDING_MODE=api` to route the onboarding chat through live server APIs with editable rules.
-- Tables: `intake_flows` (rules), `intake_sessions` (progress), `palette_guidelines` (design constraints).
-- Rules DSL: minimal JSON-logic (`==`, `!=`, `>=`, `<=`, `in`, `and`, `or`, `!`, `var` on `answers.*`).
-- You can edit rules & guidelines in the DB without redeploy; make a row `is_active=true` to switch.

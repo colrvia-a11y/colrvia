@@ -8,7 +8,6 @@ Required runtime variables:
 - NEXT_PUBLIC_SUPABASE_URL: Supabase project URL
 - NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anon key for client
 - SUPABASE_SERVICE_ROLE_KEY: Service role key (never expose to client)
-- NEXT_PUBLIC_ONBOARDING_MODE=api: enables live API-driven intake
 - STRIPE_SECRET_KEY: Server secret for Stripe
 - STRIPE_PRICE_ID: Subscription price ID
 - STRIPE_WEBHOOK_SECRET: Webhook signing secret
@@ -29,7 +28,6 @@ If OPENAI_API_KEY is absent, onboarding uses a deterministic finite state machin
 - `NEXT_PUBLIC_SUPABASE_URL` — from Supabase (Project Settings → API)
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — anon key (public, still treat as sensitive)
 - `SUPABASE_SERVICE_ROLE_KEY` — service_role (server-only; NEVER expose client-side)
-- `NEXT_PUBLIC_ONBOARDING_MODE=api` — enables live API-driven intake
 - `STRIPE_SECRET_KEY` — Stripe server secret
 - `STRIPE_PRICE_ID` — Subscription price ID
 - `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret

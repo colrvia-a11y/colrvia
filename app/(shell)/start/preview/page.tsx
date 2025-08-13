@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 
 export default function PreviewPage(){
-  // Placeholder: would fetch latest draft palette from server / intakes
+  // Placeholder: would fetch latest draft palette from server / preferences
   return (
     <main className="max-w-2xl mx-auto px-4 py-12 space-y-8">
       <header>
