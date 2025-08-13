@@ -10,7 +10,7 @@ export const isPaletteImg = (req: Request) =>
   req.url.includes('/api/share/') && req.destination === 'image';
 
 export function broadcastStatus(status: string) {
-  self.clients
+  (self as any).clients
     .matchAll()
-    .then((clients) => clients.forEach((c) => c.postMessage(status)));
+    .then((clients: any[]) => clients.forEach((c: any) => c.postMessage(status)));
 }

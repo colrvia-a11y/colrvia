@@ -22,7 +22,7 @@ export interface AnalyticsEventMap {
   intake_submit: { fields: number }
   render_started: { story_id: string }
   render_complete: { story_id: string; ms?: number }
-  reveal_action: { story_id: string; action: 'download_all' | 'share' | 'retry' }
+  reveal_action: { story_id: string; action: 'download_all' | 'share' | 'retry' | 'more_like' | 'compare_open' }
 }
 
 export type AnalyticsEventName = keyof AnalyticsEventMap
