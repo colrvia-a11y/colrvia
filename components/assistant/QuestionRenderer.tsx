@@ -35,7 +35,7 @@ export default function QuestionRenderer({ turn, onAnswer, onComplete, completeB
         {onComplete && (
           <button
             className="btn btn-primary mt-3"
-            onClick={onComplete}
+            onClick={() => onComplete?.()}
             disabled={completeBusy}
           >
             {completeBusy ? "Generating…" : "Reveal My Palette"}
