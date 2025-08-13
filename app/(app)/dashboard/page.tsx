@@ -1,4 +1,5 @@
 import { supabaseServer } from "@/lib/supabase/server";
+import { isAuthDisabled } from '@/lib/flags'
 import { redirect } from "next/navigation";
 import Link from 'next/link'
 import { getIndexForUser } from '@/lib/db/stories'
@@ -13,10 +14,10 @@ export default async function Dashboard() {
   try {
     const supabase = supabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return redirect('/sign-in?next=/dashboard')
-    userId = user.id
+  if (!user && !isAuthDisabled()) return redirect('/sign-in?next=/dashboard')
+  if (user) userId = user.id
   } catch {
-    return redirect('/sign-in?next=/dashboard')
+  if (!isAuthDisabled()) return redirect('/sign-in?next=/dashboard')
   }
 
   let stories: any[] = [];

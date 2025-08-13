@@ -2,6 +2,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { captureException } from '@/lib/monitoring/sentry'
+import { isAuthDisabled } from '@/lib/flags'
 
 const billingOn =
   (process.env.NEXT_PUBLIC_FEATURE_BILLING || '').toLowerCase() === 'true' ||
@@ -30,7 +31,7 @@ export function middleware(req: NextRequest) {
 
     // Protect dashboard routes: redirect unauthenticated users to sign-in with next param
     const dashboardPath = pathname === '/dashboard' || pathname.startsWith('/dashboard/')
-    if (dashboardPath) {
+  if (dashboardPath && !isAuthDisabled()) {
       const hasSbAccess =
         cookies.has('sb-access-token') ||
         cookies.has('sb:token') ||

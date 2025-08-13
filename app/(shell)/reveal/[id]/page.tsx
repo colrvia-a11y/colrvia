@@ -1,4 +1,5 @@
 import { supabaseServer } from '@/lib/supabase/server'
+import { isAuthDisabled } from '@/lib/flags'
 export const runtime = 'nodejs'
 import Link from 'next/link'
 import VariantTabs from './variant-tabs'
@@ -55,7 +56,7 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
   }
   const supabase = supabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return <main className="mx-auto max-w-xl p-6"><p className="mb-4">Sign in to view this story.</p><Link href="/sign-in" className="btn btn-primary">Sign in</Link></main>
+  if (!user && !isAuthDisabled()) return <main className="mx-auto max-w-xl p-6"><p className="mb-4">Sign in to view this story.</p><Link href="/sign-in" className="btn btn-primary">Sign in</Link></main>
   let { data, error } = await supabase.from('stories').select('*').eq('id', id).single()
   if (error || !data) return <main className="mx-auto max-w-xl p-6"><p className="text-neutral-600">Story not found.</p></main>
   let palette: any[] = []
