@@ -1,115 +1,135 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ChatCaptions from '@/components/ai/ChatCaptions'
-import MicButton from './MicButton'
-import { moss } from '@/lib/ai/phrasing'
-import { listenOnce, speak, startVoiceSession, stopSpeak } from '@/lib/voice/session'
-import { nluParse } from '@/lib/intake/nlu'
-import { buildQuestionQueue } from '@/lib/intake/engine'
-import { getSection } from '@/lib/intake/sections'
+import { IntakeTurnZ } from '@/lib/model-schema'
 import type { Answers } from '@/lib/intake/types'
 import { track } from '@/lib/analytics'
 
-const PROMPTS: Record<string, string> = {
-  style_primary: 'How would you describe your style?',
-  mood_words: 'Give up to three mood words.',
-  dark_stance: 'How do you feel about dark colors?',
-  dark_locations: 'Where could we use dark colors?',
-  room_type: 'Which room are we working on?',
-  light_level: 'How is the light in this room?',
-  window_aspect: 'Which direction do the windows face?',
-  constraints: 'Any constraints or rules we should know about?',
-  avoid_colors: 'Any colors to avoid?',
-  adjacent_primary_color: 'What color is the adjacent room?',
-  K1: 'Tell me about your kitchen details.',
-  K1a: 'Any more kitchen details?',
-  B1: 'Tell me about your bathroom details.',
-  B1a: 'Any more bathroom details?',
-  L1: 'Tell me about your living area.',
-  L1a: 'Any more living area details?',
-  O1: 'Tell me about the open concept space.',
-  O2: 'Any specific zones in the open space?',
-  N1: 'Tell me about the kids room.',
-  H1: 'Tell me about the hallway or entry.',
-}
-
-function promptFor(id: string): string {
-  return PROMPTS[id] || id
-}
-
 export default function VoiceInterview() {
   const router = useRouter()
-  const [answers, setAnswers] = useState<Answers>({})
-  const [queue, setQueue] = useState<string[]>([])
-  const [currentId, setCurrentId] = useState<string | null>(null)
   const [currentQuestion, setCurrentQuestion] = useState('')
   const [activeSection, setActiveSection] = useState<'style' | 'room'>('style')
   const [captions, setCaptions] = useState('')
-  const [isListening, setIsListening] = useState(false)
+  const answersRef = useRef<Answers>({})
+  const currentIdRef = useRef<string | null>(null)
+  const modelTextRef = useRef('')
+  const userTextRef = useRef('')
+  const pcRef = useRef<RTCPeerConnection | null>(null)
 
   useEffect(() => {
-    startVoiceSession()
-    speak(moss.greet())
-    const q = buildQuestionQueue({})
-    setQueue(q)
-    if (q.length) {
-      const id = q[0]
-      setCurrentId(id)
-      setCurrentQuestion(promptFor(id))
-      const section = getSection(id)
-      setActiveSection(section)
-      track('question_shown', { id, priority: 'P1' })
-      speak(moss.ask(promptFor(id)))
-    } else {
-      speak(moss.complete())
-      router.replace('/start/processing')
+    let cancelled = false
+    async function start() {
+      try {
+        const tokenRes = await fetch('/api/realtime/session', { method: 'POST' })
+        if (!tokenRes.ok) throw new Error('session init failed')
+        const tokenData = await tokenRes.json()
+        const clientSecret = tokenData?.client_secret?.value
+        if (!clientSecret) throw new Error('missing token')
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        if (cancelled) return
+
+        const pc = new RTCPeerConnection({
+          iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
+          iceTransportPolicy: 'all',
+        })
+        pcRef.current = pc
+
+        const audioEl = new Audio()
+        audioEl.autoplay = true
+        pc.ontrack = (e) => { audioEl.srcObject = e.streams[0] }
+        pc.addTransceiver('audio', { direction: 'sendrecv' })
+        pc.addTrack(stream.getTracks()[0], stream)
+
+        const dc = pc.createDataChannel('oai-events')
+        dc.onmessage = (ev) => {
+          try {
+            const msg = JSON.parse(ev.data)
+            if (msg.type === 'response.output_text.delta') {
+              modelTextRef.current += msg.delta
+            } else if (msg.type === 'response.completed') {
+              const raw = modelTextRef.current.trim()
+              modelTextRef.current = ''
+              if (!raw) return
+              try {
+                const turn = IntakeTurnZ.parse(JSON.parse(raw))
+                currentIdRef.current = turn.field_id
+                setCurrentQuestion(turn.next_question)
+                setActiveSection(turn.field_id.includes('room') ? 'room' : 'style')
+                track('question_shown', { id: turn.field_id, priority: 'P1' })
+              } catch (err) {
+                console.error('parse', err)
+              }
+            } else if (msg.type === 'conversation.item.input_audio.transcription.delta') {
+              userTextRef.current += msg.delta
+              setCaptions((c) => c + msg.delta)
+            } else if (msg.type === 'conversation.item.completed') {
+              if (msg.item?.role === 'user' && currentIdRef.current) {
+                const t = userTextRef.current.trim()
+                userTextRef.current = ''
+                setCaptions('')
+                answersRef.current = {
+                  ...answersRef.current,
+                  [currentIdRef.current]: t,
+                }
+                track('answer_saved', { id: currentIdRef.current, priority: 'P1' })
+              } else if (msg.item?.role === 'assistant' && currentQuestion === '') {
+                // no question means conversation complete
+                router.replace('/start/processing')
+              }
+            }
+          } catch {}
+        }
+        dc.onopen = () => {
+          dc.send(
+            JSON.stringify({
+              type: 'response.create',
+              response: {
+                modalities: ['audio', 'text'],
+                instructions: 'BEGIN',
+              },
+            }),
+          )
+        }
+
+        const offer = await pc.createOffer()
+        await pc.setLocalDescription(offer)
+        await new Promise<void>((resolve) => {
+          if (pc.iceGatheringState === 'complete') return resolve()
+          const check = () => {
+            if (pc.iceGatheringState === 'complete') {
+              pc.removeEventListener('icegatheringstatechange', check)
+              resolve()
+            }
+          }
+          pc.addEventListener('icegatheringstatechange', check)
+          setTimeout(resolve, 1200)
+        })
+
+        const res = await fetch('/api/realtime/offer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sdp: pc.localDescription?.sdp || '', token: clientSecret }),
+        })
+        if (!res.ok) throw new Error('offer failed')
+        const answerSDP = await res.text()
+        await pc.setRemoteDescription({ type: 'answer', sdp: answerSDP })
+      } catch (e) {
+        console.error(e)
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  function advance(a: Answers) {
-    const q = buildQuestionQueue(a)
-    setQueue(q)
-    if (!q.length) {
-      speak(moss.complete())
-      router.replace('/start/processing')
-      return
+    start()
+    return () => {
+      cancelled = true
+      try {
+        pcRef.current?.getSenders().forEach((s) => (s.track as MediaStreamTrack | undefined)?.stop())
+        pcRef.current?.close()
+      } catch {}
+      pcRef.current = null
     }
-    const id = q[0]
-    setCurrentId(id)
-    setCurrentQuestion(promptFor(id))
-    const section = getSection(id)
-    setActiveSection(section)
-    track('question_shown', { id, priority: 'P1' })
-    speak(moss.ask(promptFor(id)))
-  }
-
-  async function processAnswer(text: string) {
-    if (!currentId) return
-    const parsed = nluParse(currentId, text)
-    const a = { ...answers, [currentId]: parsed }
-    setAnswers(a)
-    track('answer_saved', { id: currentId, priority: 'P1' })
-    advance(a)
-  }
-
-  async function handleMic() {
-    if (!currentId) return
-    await stopSpeak()
-    setIsListening(true)
-    const text = await listenOnce()
-    setCaptions(text)
-    setIsListening(false)
-    await processAnswer(text)
-  }
-
-  async function handleNotSure() {
-    if (!currentId) return
-    setCaptions('')
-    await processAnswer('not sure')
-  }
+  }, [router])
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-6 p-4">
@@ -142,14 +162,6 @@ export default function VoiceInterview() {
 
       <main className="flex flex-col items-center gap-4">
         <p className="mt-2 text-center text-base">{currentQuestion}</p>
-        <MicButton onClick={handleMic} isListening={isListening} />
-        <button
-          type="button"
-          className="text-sm text-ink-subtle"
-          onClick={handleNotSure}
-        >
-          Not sure
-        </button>
       </main>
 
       <ChatCaptions text={captions} />
