@@ -8,6 +8,7 @@ Required runtime variables:
 - NEXT_PUBLIC_SUPABASE_URL: Supabase project URL
 - NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anon key for client
 - SUPABASE_SERVICE_ROLE_KEY: Service role key (never expose to client)
+- NEXT_PUBLIC_ONBOARDING_MODE=api: enables live API-driven intake
 - STRIPE_SECRET_KEY: Server secret for Stripe
 - STRIPE_PRICE_ID: Subscription price ID
 - STRIPE_WEBHOOK_SECRET: Webhook signing secret
