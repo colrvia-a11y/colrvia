@@ -1,6 +1,6 @@
 // lib/analytics/index.ts
 // SSR-safe shim; dynamically loads client in browser
-import type { AnalyticsEventName, AnalyticsEventPayload } from "./events"
+import type { AnalyticsEventName, AnalyticsEventPayload } from "./types"
 
 let _track = <E extends AnalyticsEventName>(_name: E, _props: AnalyticsEventPayload<E>) => {}
 if (typeof window !== "undefined") {

@@ -9,6 +9,7 @@ import { Progress } from "@/components/intake/Progress";
 import { LivePreview } from "@/components/intake/LivePreview";
 import { StickyCTA } from "@/components/intake/StickyCTA";
 import { track } from "@/lib/analytics/client";
+import { uid } from "@/lib/uid";
 
 const IntakeSchema = z.object({
   room: z.enum(["Living room", "Bedroom", "Kitchen", "Bathroom", "Workspace"], { required_error: "Pick a room" }),
@@ -48,9 +49,9 @@ export default function IntakePage() {
   }
 
   async function onSubmit(data: Intake) {
-    // track("intake_submit", { fields: Object.keys(data).length });
-    const tmpId = `tmp_${Math.random().toString(36).slice(2, 9)}`;
-    router.push(`/reveal/${tmpId}?optimistic=1`);
+    track("intake_submit", { fields: Object.keys(data).length });
+    const tempId = uid("tmp");
+    router.push(`/reveal/${tempId}?optimistic=1`);
 
     try {
       const res = await fetch("/api/story", {
@@ -60,12 +61,12 @@ export default function IntakePage() {
       });
       const json = (await res.json()) as { storyId?: string };
       if (json.storyId) {
-        // track("render_started", { story_id: json.storyId });
+        track("render_started", { story_id: json.storyId });
         router.replace(`/reveal/${json.storyId}`);
         return;
       }
     } catch (e) {
-      // no-op
+      /* no-op */
     }
     router.replace(`/reveal/error?reason=story-create-failed`);
   }

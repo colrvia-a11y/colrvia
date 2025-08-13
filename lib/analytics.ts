@@ -1,5 +1,5 @@
 import type { PostHog } from 'posthog-js'
-import type { AnalyticsEventName, AnalyticsEventPayload } from './analytics/events'
+import type { AnalyticsEventName, AnalyticsEventPayload } from './analytics/types'
 
 let client: PostHog | null = null
 const QUEUE_KEY = 'ph_queue'
