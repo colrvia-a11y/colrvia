@@ -1,3 +1,5 @@
+import * as React from "react";
+
 export function EmptyState({ title, desc, ctaLabel, href }:{ title:string; desc:string; ctaLabel?:string; href?:string }) {
   return (
     <div className="text-center border rounded-xl p-8">

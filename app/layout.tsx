@@ -10,7 +10,7 @@ import AuthSyncBridge from '@/components/providers/AuthSyncBridge'
 import RegisterSW from '@/components/pwa/RegisterSW'
 import SupabaseListener from '@/components/providers/SupabaseListener'
 import { ThemeProvider } from 'next-themes'
-import { Analytics } from '@vercel/analytics/react'
+import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider'
 import { MotionProvider } from '@/components/theme/MotionSettings'
 import AmbientEdge from '@/components/ui/ambient-edge'
 import dynamic from 'next/dynamic'
@@ -109,11 +109,12 @@ export default async function RootLayout({
               <AuthSyncBridge />
               <StartStoryPortalProvider>
                 <FirstRunGate />
-                <main id="main" className="min-h-dvh">
-                  <AppShell><RouteTransition>{children}</RouteTransition></AppShell>
-                </main>
+                <AnalyticsProvider>
+                  <main id="main" className="min-h-dvh">
+                    <AppShell><RouteTransition>{children}</RouteTransition></AppShell>
+                  </main>
+                </AnalyticsProvider>
               </StartStoryPortalProvider>
-              <Analytics />
               <SupabaseListener />
             </MotionProvider>
           </ThemeProvider>

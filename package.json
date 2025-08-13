@@ -3,30 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
-    "dev:restart": "node scripts/restart-dev.mjs",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "build:sw": "esbuild sw/index.ts --bundle --outfile=public/sw.js --format=iife --minify",
-    "postbuild": "npm run build:sw",
-    "dev:clean": "rm -rf .next && next dev --turbo",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:e2e": "playwright test --reporter=list",
-    "test:e2e:ui": "playwright test --ui",
-    "prepare": "husky install",
-    "precommit": "npm run lint && npm run typecheck",
-    "smoke:generate": "node -e \"fetch('http://localhost:3000/api/stories',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({designer:'Marisol',vibe:'Cozy Neutral',brand:'SW',lighting:'mixed',hasWarmWood:true,photoUrl:null})}).then(r=>r.text()).then(console.log).catch(console.error)\"",
-    "db:migrate:print": "echo 'Run SQL in Supabase → SQL Editor → paste → Run'",
-    "smoke:insert": "tsx scripts/smoke-insert.ts",
-    "backfill:palettes": "tsx scripts/backfill-missing-palettes.ts",
-    "seed:sw": "tsx scripts/seed-sw.ts",
-    "inspect:sw": "tsx scripts/inspect-sw.ts",
-    "diag:palettes": "tsx scripts/diag-palettes.ts",
-    "diag:invalid": "tsx scripts/diag-invalid-stories.ts",
-    "migrate:sw": "tsx scripts/migrate-sw-only.ts",
-    "fix:invalid": "tsx scripts/force-fix-invalid-stories.ts"
+    "test": "playwright test"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -57,7 +39,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.9.0",
-    "@playwright/test": "^1.46.0",
+    "@playwright/test": "^1.45.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
@@ -77,7 +59,7 @@
     "service-worker-mock": "^2.0.5",
     "tailwindcss": "^4.1.11",
     "tsx": "^4.19.1",
-    "typescript": "5.3.3",
+    "typescript": "^5.5.4",
     "vitest": "^1.6.0"
   }
 }

@@ -40,7 +40,7 @@ export async function handleStoryOrPalette(
       cache.put(req, res.clone());
       return res;
     })
-    .catch(() => cached);
+    .catch(() => cached as Response);
   if (cached) {
     event.waitUntil(fetchPromise);
     return cached;
