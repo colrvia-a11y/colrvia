@@ -2,15 +2,19 @@ import { test, expect } from "@playwright/test"
 
 test.describe("Intake flow", () => {
   test("designer selection redirects to intake", async ({ page }) => {
-    await page.route("**/api/chat", route =>
+    await page.route("**/api/intakes/start", route =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          field_id: "room",
-          next_question: "Which room?",
-          input_type: "singleSelect",
-          choices: ["Living room", "Bedroom"]
+          sessionId: "sess1",
+          step: {
+            type: "question",
+            node: {
+              question: "Which room?",
+              options: ["Living room", "Bedroom"]
+            }
+          }
         })
       })
     )
@@ -18,20 +22,41 @@ test.describe("Intake flow", () => {
     await page.goto("/designers")
     await page.getByRole("link", { name: /start with color therapist/i }).click()
 
-    await expect(page).toHaveURL(/\/intake$/)
+    await expect(page).toHaveURL(/\/preferences\/therapist$/)
     await expect(page.getByText("Which room?")).toBeVisible()
   })
 
   test("unauthenticated reveal round-trips through sign-in", async ({ page }) => {
-    await page.route("**/api/chat", route =>
+    await page.route("**/api/intakes/start", route =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          field_id: "_complete",
-          next_question: "Ready?",
-          input_type: "text"
+          sessionId: "sess1",
+          step: {
+            type: "question",
+            node: {
+              question: "Brand?",
+              options: ["Sherwin-Williams", "Behr"]
+            }
+          }
         })
+      })
+    )
+
+    await page.route("**/api/intakes/step", route =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ step: { type: "done" } })
+      })
+    )
+
+    await page.route("**/api/intakes/finalize", route =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ input: {}, palette_v2: { swatches: [] } })
       })
     )
 
@@ -45,15 +70,13 @@ test.describe("Intake flow", () => {
       }
     })
 
-    await page.goto("/intake")
-    await page.getByRole("button", { name: /reveal my palette/i }).click()
+    await page.goto("/preferences/therapist")
+    await page.getByRole("button", { name: /sherwin/i }).click()
 
-    await expect(page).toHaveURL(/\/sign-in\?next=%2Fintake%3Fresume%3Dreveal/)
+    await expect(page).toHaveURL(/\/sign-in$/)
 
-    await page.evaluate(() => {
-      const p = new URLSearchParams(window.location.search)
-      window.location.href = p.get("next")!
-    })
+    await page.goto("/preferences/therapist")
+    await page.getByRole("button", { name: /sherwin/i }).click()
 
     await expect(page).toHaveURL(/\/reveal\/story-123/)
   })
