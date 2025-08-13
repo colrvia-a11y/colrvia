@@ -17,7 +17,6 @@ import { normalizePalette } from '@/lib/palette'
 import { repairStoryPalette } from '@/lib/palette/repair'
 import RevealPaletteClient from './RevealPaletteClient'
 import NextDynamic from 'next/dynamic'
-import JobWatcherClient from './JobWatcherClient'
 const NarrativeCard = NextDynamic(() => import('@/components/reveal/NarrativeCard'), { ssr:false })
 export async function generateMetadata({ params, searchParams }:{ params:{id:string}; searchParams:Record<string,string|undefined> }): Promise<Metadata> {
   const id = params.id
@@ -59,7 +58,6 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
         <div className="h-4 w-1/3 rounded bg-[var(--bg-skeleton)]" />
       </div>
       <p className="text-sm text-muted-foreground">Preparing your palette…</p>
-      <JobWatcherClient jobId={id} />
     </main>
   }
   if (id === 'mock') {
@@ -99,6 +97,7 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
   const displayTitle = data.title || 'Your Color Story'
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 space-y-10">
+  <ActionsBar storyId={data.id} />
       <div className="rounded-2xl overflow-hidden relative" aria-label={displayTitle}>
   <StoryHeroCard imageSrc={heroImage} title={displayTitle} meta={`${data.brand} · ${data.vibe}`} href="#palette" palette={palette.filter(p=>p.hex).map(p=>({ hex:p.hex!, name:p.name }))} ctaLabel="Open" />
         <div className="absolute bottom-4 right-4"><PdfButton storyId={data.id} /></div>
@@ -133,6 +132,16 @@ export default async function RevealStoryPage({ params }:{ params:{ id:string }}
           <div className="mt-6">
             <NarrativeCard storyId={data.id} />
           </div>
+          {Array.isArray((data as any).result?.images) && (data as any).result.images.length>0 && (
+            <section className="space-y-4" aria-label="Generated variations">
+              <h2 className="text-lg font-semibold">Your designs</h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                {(data as any).result.images.map((img:any,i:number)=> (
+                  <ResultCard key={i} url={img.url} index={i} storyId={data.id} width={img.width||1600} height={img.height||900} />
+                ))}
+              </div>
+            </section>
+          )}
         </>
       ) : (
         <div className="rounded-xl border border-dashed border-[var(--border)] p-8 text-center space-y-4 bg-[var(--bg-surface)]">

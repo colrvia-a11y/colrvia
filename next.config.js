@@ -7,6 +7,15 @@ if (process.env.VITEST_WORKER_ID == null) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    domains: [
+      'picsum.photos'
+    ],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'picsum.photos' },
+      { protocol: 'https', hostname: '**.supabase.co' }
+    ]
+  },
   async redirects() {
     return [
       { source: '/projects', destination: '/dashboard', permanent: true },

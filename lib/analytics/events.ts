@@ -20,8 +20,8 @@ export interface AnalyticsEventMap {
   flow_capped: { id: string; priority: 'P1' | 'P2' | 'P3' | 'P4'; reason: string }
   intake_start: { template?: string }
   intake_submit: { fields: number }
-  render_started: { job_id: string }
-  render_complete: { job_id: string; ms: number }
+  render_started: { story_id: string }
+  render_complete: { story_id: string; ms: number }
 }
 
 export type AnalyticsEventName = keyof AnalyticsEventMap

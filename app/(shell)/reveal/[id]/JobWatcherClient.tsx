@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase/browser';
+import { track } from '@/lib/analytics/client';
 
 interface Props { jobId: string }
 
@@ -20,6 +21,10 @@ export default function JobWatcherClient({ jobId }: Props) {
         if(row.status) setStatus(row.status);
         if(row.error) setError(row.error);
         if(row.status === 'ready' && row.story_id){
+          const t0 = (window as any).__intakeStartTs as number | undefined;
+          if(t0){
+            track('render_complete', { story_id: row.story_id || row.id, ms: Math.round(performance.now() - t0) });
+          }
           router.replace(`/reveal/${row.story_id}`);
         }
       })
@@ -29,6 +34,10 @@ export default function JobWatcherClient({ jobId }: Props) {
         setStatus(data.status as string);
         if(data.error) setError(data.error);
         if(data.status === 'ready' && (data as any).story_id){
+          const t0 = (window as any).__intakeStartTs as number | undefined;
+          if(t0){
+            track('render_complete', { story_id: (data as any).story_id || jobId, ms: Math.round(performance.now() - t0) });
+          }
           router.replace(`/reveal/${(data as any).story_id}`);
         }
       }

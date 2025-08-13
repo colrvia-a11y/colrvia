@@ -2,6 +2,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import QuestionRenderer from "@/components/intake/QuestionRenderer";
+import TemplateChips from '@/components/intake/TemplateChips'
 import { buildQuestionQueue } from "@/lib/intake/engine";
 import { QUESTIONS } from "@/lib/intake/questions";
 import type { Answers, QuestionId } from "@/lib/intake/types";
@@ -48,22 +49,24 @@ export default function IntakePage() {
 
   async function handleReveal() {
     const t0 = performance.now()
-    const optimisticId = uid('job_')
+    const optimisticId = 'tmp_'+Math.random().toString(36).slice(2,9)
     track('intake_submit', { fields: Object.keys(answers).length })
+    ;(window as any).__intakeStartTs = t0
     router.push(`/reveal/${optimisticId}?optimistic=1`)
     try {
-      const res = await fetch('/api/render', {
+      const res = await fetch('/api/story', {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ brand: 'sherwin_williams', source: 'intake', answers })
+        body: JSON.stringify(answers)
       })
       const data = await res.json().catch(()=>null)
-      if(res.ok && data?.jobId){
-        track('render_started', { job_id: data.jobId })
-        router.replace(`/reveal/${data.jobId}`)
-        // Completion tracked by JobWatcherClient once story present (TODO: add hook there)
+      if(res.ok && data?.storyId){
+  track('render_started', { story_id: data.storyId })
+        router.replace(`/reveal/${data.storyId}`)
+        return
       }
     } catch {/* ignore */}
+    router.replace('/reveal/error?reason=story-create-failed')
   }
 
   return (
@@ -74,6 +77,13 @@ export default function IntakePage() {
           <div className="text-sm text-neutral-600">{progress}% complete</div>
         </div>
       </div>
+      <TemplateChips
+        templates={[
+          { id:'cozy_neutral', label:'Cozy Neutral', values:{ vibe:'Cozy Neutral' } },
+          { id:'modern_bold', label:'Modern Bold', values:{ vibe:'Modern Bold' } },
+        ]}
+        onApply={applyTemplate}
+      />
       {currentQuestion ? (
         <QuestionRenderer
           question={currentQuestion}
