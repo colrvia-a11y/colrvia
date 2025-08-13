@@ -67,6 +67,7 @@ export default async function RootLayout({
   const locale = getLocale()
   const messages = await getMessages(locale)
   const t = createTranslator({ locale, messages })
+  const imgHost = process.env.NEXT_PUBLIC_SUPABASE_URL
 
   return (
     <html lang={locale} className={cn('theme-moss', inter.variable, fraunces.variable)}>
@@ -74,6 +75,7 @@ export default async function RootLayout({
         <meta name="theme-color" content="#F7F5EF" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
         <meta name="color-scheme" content="light dark" />
+        {imgHost && <link rel="preconnect" href={imgHost} crossOrigin="" />}
       </head>
       <body
         className={cn(
