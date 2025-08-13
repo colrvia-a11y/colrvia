@@ -87,8 +87,10 @@ export function buildNextUtterance(ack: string, nextPrompt: string){
 }
 
 export const moss = {
-  greet: () => "Hey, I’m Moss—your personal paint matchmaker 🌿 Let’s craft something that feels like you.",
-  ask: (corePrompt: string) => `Okay, quick one—${corePrompt}`,
+  greet: () => "Hey, I’m Moss—your personal paint matchmaker. Ready to craft your palette?",
+  ask: (corePrompt: string) => `Quick one—${corePrompt}. You can just answer naturally.`,
+  reprompt: (corePrompt: string) => `No rush. ${corePrompt}?`,
+  complete: () => "Got everything I need. I’ll build the palette now.",
   empathize: (ack: string) => `${ack} Love that direction.`,
   typingHint: () => "You can just type—I'll keep it breezy.",
   progressLabel: (section: "style"|"room", i: number, total: number) => `${section === "style" ? "Style" : "Room"} ${i}/${total}`,
