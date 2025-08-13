@@ -31,5 +31,7 @@ describe('nluParse', () => {
     expect(nluParse('window_aspect', 'not sure')).toBe('unknown')
     expect(nluParse('dark_stance', 'not sure')).toBe('open')
     expect(nluParse('fixed_details', 'not sure')).toBe('unsure')
+    expect(nluParse('style_primary', 'not sure')).toBe('mix')
+    expect(nluParse('dark_locations', 'not sure')).toEqual(['designer_suggest'])
   })
 })
