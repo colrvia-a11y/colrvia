@@ -1,4 +1,5 @@
 import { Answers } from './types';
+import { getSection } from './sections';
 
 function pushIfUnanswered(q: string[], a: Answers, id: string) {
   if (a[id] === undefined) q.push(id);
@@ -86,5 +87,10 @@ export function buildQuestionQueue(a: Answers): string[] {
   if (hasColorRules(a)) q.push('avoid_colors');
 
   capByPriority(q, a);
-  return q;
+  const style: string[] = [];
+  const room: string[] = [];
+  for (const id of q) {
+    (getSection(id) === 'style' ? style : room).push(id);
+  }
+  return [...style, ...room];
 }
