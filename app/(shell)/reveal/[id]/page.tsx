@@ -43,13 +43,30 @@ export async function generateMetadata({ params, searchParams }:{ params:{id:str
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export default async function RevealStoryPage({ params }:{ params:{ id:string }}) {
+export default async function RevealStoryPage({ params, searchParams }:{ params:{ id:string }, searchParams:{ optimistic?:string }}) {
   const id = params.id
+  const optimistic = searchParams?.optimistic === "1" || id.startsWith("tmp_")
+  if (optimistic) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 md:px-6 py-6">
+        <h1 className="text-xl font-semibold mb-4">Generating your designs…</h1>
+        <div className="grid md:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_,i) => (
+            <div key={i} className="rounded-xl border p-3">
+              <div className="aspect-video rounded-lg bg-neutral-200 animate-pulse mb-2" />
+              <div className="h-3 w-2/3 rounded bg-neutral-200 animate-pulse" />
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-neutral-500">This takes about 8–15 seconds. You can keep browsing.</p>
+      </div>
+    )
+  }
   if (id === 'mock') {
     return (
       <main className="mx-auto max-w-3xl p-6 space-y-6">
         <h1 className="text-3xl font-semibold">Mock Story</h1>
-  <p className="text-neutral-600 text-sm">Placeholder story. Create a real one from the start flow.</p>
+        <p className="text-neutral-600 text-sm">Placeholder story. Create a real one from the start flow.</p>
       </main>
     )
   }
