@@ -28,16 +28,24 @@ export default function NewProjectForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3">
+    <form onSubmit={onSubmit} aria-describedby="np-help" className="space-y-3">
+      <label htmlFor="project-name" className="text-sm text-neutral-700">
+        Project name
+      </label>
       <input
+        id="project-name"
         type="text"
-        placeholder="New project name"
+        placeholder="e.g., Living room refresh"
         value={name}
         onChange={e => setName(e.target.value)}
         className="w-full rounded-xl border px-3 py-2"
         disabled={loading}
         required
+        aria-describedby="np-help"
       />
+      <p id="np-help" className="mt-1 text-xs text-neutral-500">
+        You can rename this later.
+      </p>
       <button
         type="submit"
         disabled={loading}

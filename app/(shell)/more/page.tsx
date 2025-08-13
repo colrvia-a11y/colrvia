@@ -46,7 +46,7 @@ export default function MorePage(){
         ))}
         <li>
           {session ? (
-            <button onClick={logout} className="w-full text-left px-5 py-4 hover:bg-[var(--linen)]/60">Log out</button>
+            <button type="button" onClick={logout} className="w-full text-left px-5 py-4 hover:bg-[var(--linen)]/60">Log out</button>
           ) : (
             <Link href="/sign-in" className="w-full block text-left px-5 py-4 hover:bg-[var(--linen)]/60">Log in</Link>
           )}

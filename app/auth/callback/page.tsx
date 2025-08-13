@@ -40,7 +40,7 @@ function Inner(){
   return (
   <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
       {status==='working' && <div>Signing you in…</div>}
-      {status==='error' && <div>Sign-in failed. <button onClick={()=>router.replace('/sign-in')} className="underline">Return to sign-in</button></div>}
+      {status==='error' && <div>Sign-in failed. <button type="button" onClick={()=>router.replace('/sign-in')} className="underline">Return to sign-in</button></div>}
       {status==='done' && <div>Redirecting…</div>}
     </div>
   )

@@ -45,12 +45,21 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
           <nav className="hidden md:flex items-center gap-6 text-sm" aria-label="Primary">
             <Link href="/designers" className="hover:underline">Designers</Link>
             {!checking && !user && <Link href="/sign-in" className="hover:underline">Sign in / Sign up</Link>}
-            {user && <Link href="/account" aria-label="Account" className="rounded-full border border-white/15 bg-white/5 p-2 hover:bg-white/10 transition-colors"><User size={18} /><span className="sr-only">Account</span></Link>}
-            {user && <button onClick={signOut} className="text-sm hover:underline">Sign out</button>}
+            {user && (
+              <Link
+                href="/account"
+                aria-label="Account"
+                className="relative inline-flex rounded-full border border-white/15 bg-white/5 p-2 hover:bg-white/10 transition-colors"
+              >
+                <span className="absolute inset-[-6px]" aria-hidden />
+                <User size={18} />
+              </Link>
+            )}
+            {user && <button type="button" onClick={signOut} className="text-sm hover:underline">Sign out</button>}
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <button aria-label="Menu" className="md:hidden btn btn-secondary" onClick={()=>setMenuOpen(o=>!o)}><Menu size={18} /></button>
+            <button type="button" aria-label="Menu" className="md:hidden btn btn-secondary" onClick={()=>setMenuOpen(o=>!o)}><Menu size={18} /></button>
           </div>
         </div>
         {menuOpen && (
@@ -58,8 +67,17 @@ export default function AppShell({ children }: { children:React.ReactNode }) {
             <div className="flex flex-col gap-2 text-sm">
               <Link href="/designers" className="py-2">Designers</Link>
               {!user && <Link href="/sign-in" className="py-2">Sign in / Sign up</Link>}
-              {user && <Link href="/account" className="py-2 flex items-center gap-2"><User size={16} /><span className="sr-only">Account</span></Link>}
-              {user && <button onClick={signOut} className="py-2 text-left">Sign out</button>}
+              {user && (
+                <Link
+                  href="/account"
+                  aria-label="Account"
+                  className="relative inline-flex items-center py-2 gap-2"
+                >
+                  <span className="absolute inset-[-6px]" aria-hidden />
+                  <User size={16} />
+                </Link>
+              )}
+              {user && <button type="button" onClick={signOut} className="py-2 text-left">Sign out</button>}
             </div>
           </div>
         )}

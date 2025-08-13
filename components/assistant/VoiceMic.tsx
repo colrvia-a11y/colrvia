@@ -124,11 +124,13 @@ export default function VoiceMic({ onActiveChange, greet }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3" aria-busy={active || undefined}>
       <button
+        type="button"
         onClick={active ? stop : start}
         className={`px-4 py-2 rounded-full border ${active ? "bg-black text-white dark:bg-white dark:text-black" : "bg-white/70 dark:bg-neutral-900/70"}`}
         aria-pressed={active}
+        aria-keyshortcuts="Shift+M"
       >
         {active ? "Stop voice" : "Talk to designer"}
       </button>

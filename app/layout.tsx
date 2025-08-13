@@ -16,8 +16,16 @@ import AmbientEdge from '@/components/ui/ambient-edge'
 import dynamic from 'next/dynamic'
 import { NextIntlClientProvider, createTranslator } from 'next-intl'
 import { getLocale, getMessages } from '@/lib/i18n'
+import { Inter as InterFont, Fraunces as FrauncesFont } from 'next/font/google'
 
 initSentry()
+
+const inter = typeof InterFont === 'function'
+  ? InterFont({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
+  : { variable: '--font-inter' }
+const fraunces = typeof FrauncesFont === 'function'
+  ? FrauncesFont({ subsets: ['latin'], display: 'swap', variable: '--font-fraunces' })
+  : { variable: '--font-fraunces' }
 
 const RouteTransition = dynamic(() => import('@/components/ux/RouteTransition'), { ssr:false })
 const StartStoryPortalProvider = dynamic(()=> import('@/components/ux/StartStoryPortal').then(m=> m.StartStoryPortalProvider), { ssr:false })
@@ -65,10 +73,11 @@ export default async function RootLayout({
   const t = createTranslator({ locale, messages })
 
   return (
-    <html lang={locale} className="theme-moss">
+    <html lang={locale} className={`${inter.variable} ${fraunces.variable} theme-moss`}>
       <head>
         <meta name="theme-color" content="#F7F5EF" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
+        <meta name="color-scheme" content="light dark" />
       </head>
       <body
         className={cn(

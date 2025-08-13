@@ -25,13 +25,13 @@ export function AuthButtons() {
 
   return (
     <div className="flex gap-3">
-      <button
+      <button type="button"
         onClick={signIn}
         className="rounded-xl px-4 py-2 bg-black text-white"
       >
         Sign in
       </button>
-      <button
+      <button type="button"
         onClick={signOut}
         className="rounded-xl px-4 py-2 border"
       >

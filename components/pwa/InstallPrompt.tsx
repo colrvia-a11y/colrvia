@@ -21,8 +21,8 @@ export default function InstallPrompt(){
   return (
     <div className="fixed bottom-4 left-4 bg-neutral-900 text-white text-sm px-4 py-3 rounded shadow-lg flex items-center gap-3">
       <span>Install Colrvia?</span>
-      <button className="underline" onClick={async()=>{ if(deferred){ deferred.prompt(); const choice = await deferred.userChoice; } setVisible(false)}}>Install</button>
-      <button aria-label="Dismiss" onClick={()=>{ localStorage.setItem('installDismissedAt', Date.now().toString()); setVisible(false)}} className="opacity-70 hover:opacity-100">×</button>
+      <button type="button" className="underline" onClick={async()=>{ if(deferred){ deferred.prompt(); const choice = await deferred.userChoice; } setVisible(false)}}>Install</button>
+      <button type="button" aria-label="Dismiss" onClick={()=>{ localStorage.setItem('installDismissedAt', Date.now().toString()); setVisible(false)}} className="opacity-70 hover:opacity-100">×</button>
     </div>
   )
 }
