@@ -101,3 +101,10 @@ export function decodePalette(value: unknown): DecodedSwatch[] {
   }
   return []
 }
+
+// Placeholder palette creation from interview answers.
+// In production this would call backend services to persist a palette
+// and return its identifier. For tests we simply return a mock id.
+export async function createPaletteFromInterview() {
+  return { id: 'mock' };
+}
