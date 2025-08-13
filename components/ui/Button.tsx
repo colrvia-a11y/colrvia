@@ -1,4 +1,5 @@
 "use client"
+/* eslint-disable react/button-has-type */
 import React from 'react'
 import { twMerge } from 'tailwind-merge'
 import { clsx } from 'clsx'
@@ -14,6 +15,6 @@ export default function Button({ className, variant='primary', as:Comp='button',
     ghost: 'text-foreground hover:bg-paper hover:text-foreground'
   } as const
   const styles = clsx(base, variants[variant], className)
-  if (Comp !== 'button') return <Comp href={href} type={type} className={twMerge(styles)} {...rest} />
-  return <button type={type ?? 'button'} className={twMerge(styles)} {...rest} />
+  if (Comp !== 'button') return <Comp href={href} className={twMerge(styles)} {...rest} />
+  return <button type={type ? type : 'button'} className={twMerge(styles)} {...rest} />
 }

@@ -3,43 +3,48 @@
 import { useRouter } from 'next/navigation'
 import { copyToClipboard } from '@/lib/client/download'
 import { useToast } from '@/components/ui/Toast'
+import { track } from '@/lib/analytics/client'
 
-export function ActionsBar({ jobId }: { jobId: string }) {
+export function ActionsBar({ storyId }: { storyId: string }) {
   const router = useRouter()
   const { show, ToastEl } = useToast()
 
   async function shareProject() {
-    const url = `${location.origin}/reveal/${jobId}`
+    const url = `${location.origin}/reveal/${storyId}`
     if (navigator.share) {
       try {
         await navigator.share({ title: 'My Colrvia designs', url })
+        track('reveal_action', { story_id: storyId, action: 'share' })
         return
       } catch {}
     }
     const ok = await copyToClipboard(url)
     show(ok ? 'Link copied!' : 'Couldn’t copy link')
+    track('reveal_action', { story_id: storyId, action: 'share' })
   }
 
   async function downloadAll() {
-    const res = await fetch(`/api/jobs/${jobId}/download-zip`)
+    const res = await fetch(`/api/stories/${storyId}/download-zip`)
     if (!res.ok) return show('Couldn’t prepare ZIP')
     const blob = await res.blob()
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `colrvia-${jobId}.zip`
+    a.download = `colrvia-${storyId}.zip`
     document.body.appendChild(a)
     a.click()
     a.remove()
     URL.revokeObjectURL(a.href)
     show('Downloading ZIP…')
+    track('reveal_action', { story_id: storyId, action: 'download_all' })
   }
 
   async function retryJob() {
-    const res = await fetch(`/api/jobs/${jobId}/retry`, { method: 'POST' })
+    const res = await fetch(`/api/stories/${storyId}/retry`, { method: 'POST' })
     const data = await res.json()
-    if (data?.jobId) {
+    if (data?.storyId) {
       show('Starting a new variation…')
-      router.push(`/reveal/${data.jobId}?optimistic=1`)
+      track('reveal_action', { story_id: storyId, action: 'retry' })
+      router.push(`/reveal/${data.storyId}?optimistic=1`)
     } else {
       show('Retry failed')
     }

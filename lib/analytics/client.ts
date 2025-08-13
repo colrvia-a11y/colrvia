@@ -1,7 +1,7 @@
 // lib/analytics/client.ts
 "use client"
 import type { PostHog } from "posthog-js"
-import type { AnalyticsEventName, AnalyticsEventPayload } from "./events"
+import type { AnalyticsEventName, AnalyticsEventPayload } from "./types"
 
 let ready = false
 let q: Array<[AnalyticsEventName, any]> = []

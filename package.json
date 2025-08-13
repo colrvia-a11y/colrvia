@@ -9,9 +9,12 @@
     "start": "next start",
     "dev:clean": "rm -rf .next && next dev --turbo",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test --reporter=list",
     "test:e2e:ui": "playwright test --ui",
+    "prepare": "husky install",
+    "precommit": "npm run lint && npm run typecheck",
     "smoke:generate": "node -e \"fetch('http://localhost:3000/api/stories',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({designer:'Marisol',vibe:'Cozy Neutral',brand:'SW',lighting:'mixed',hasWarmWood:true,photoUrl:null})}).then(r=>r.text()).then(console.log).catch(console.error)\"",
     "db:migrate:print": "echo 'Run SQL in Supabase → SQL Editor → paste → Run'",
     "smoke:insert": "tsx scripts/smoke-insert.ts",
@@ -52,6 +55,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.46.0",
+    "@axe-core/playwright": "^4.9.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
@@ -70,6 +74,7 @@
     "tailwindcss": "^4.1.11",
     "tsx": "^4.19.1",
     "typescript": "5.3.3",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "husky": "^9.0.0"
   }
 }

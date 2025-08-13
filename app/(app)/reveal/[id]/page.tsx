@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createBrowserClient } from "@supabase/ssr";
 import { Skeleton } from "@/components/Skeleton";
 import { ActionsBar } from "@/components/reveal/ActionsBar";
 import { ResultCard } from "@/components/reveal/ResultCard";
+import { createSupabaseBrowser } from "@/lib/supabase/browser";
+import { track } from "@/lib/analytics/client";
 
 type Story = {
   id: string;
@@ -13,10 +14,7 @@ type Story = {
 };
 
 export default function RevealPage({ params }: { params: { id: string } }) {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createSupabaseBrowser();
   const [story, setStory] = useState<Story | null>(null);
 
   // Initial fetch
@@ -47,6 +45,12 @@ export default function RevealPage({ params }: { params: { id: string } }) {
   const ready = story?.status === "ready";
   const failed = story?.status === "failed";
 
+  useEffect(() => {
+    if (story?.status === "ready") {
+      track("render_complete", { story_id: story.id });
+    }
+  }, [story?.status, story?.id]);
+
   return (
     <div className="mx-auto max-w-6xl px-4 md:px-6 py-6">
       {!ready && !failed && (
@@ -72,7 +76,7 @@ export default function RevealPage({ params }: { params: { id: string } }) {
       )}
       {ready && (
         <>
-          <ActionsBar jobId={story!.id} />
+          <ActionsBar storyId={story!.id} />
           <h1 className="text-xl font-semibold mb-3">Your designs</h1>
           <div className="grid md:grid-cols-2 gap-4">
             {story?.result?.images?.map((img, i) => (
