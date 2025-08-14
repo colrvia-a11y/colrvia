@@ -10,8 +10,10 @@ import { designPalette } from '@/lib/ai/orchestrator';
 import { mapV2ToLegacy } from '@/lib/ai/mapRoles';
 import type { DesignInput, Palette as V2Palette } from '@/lib/ai/schema';
 
-import { StoryBodySchema, type StoryBody } from "@/lib/validators"
-import type { StoriesPostRes } from "@/types/api"
+import { StoryBodySchema, type StoryBody } from "@/lib/validators";
+import type { StoriesPostRes } from "@/types/api";
+
+const L = (...args: any[]) => console.error('[stories]', ...args);
 
 export async function POST(req: Request) {
   // 1) Parse JSON safely
@@ -91,6 +93,16 @@ export async function POST(req: Request) {
       }
     }
     // 3) Persist the story to the database (guests included) and always return { id }
+    L('insert attempt', {
+      userId: user?.id ?? null,
+      brand,
+      prompt: body?.prompt ?? null,
+      vibe: body?.vibe ?? null,
+      hasPalette: Array.isArray(finalPalette),
+      paletteLen: Array.isArray(finalPalette) ? finalPalette.length : 0,
+      hasInputs: !!body?.inputs,
+      hasAnswers: !!body?.answers,
+    });
     const { data: created, error: insertErr } = await supabase
       .from("stories")
       .insert({
@@ -105,9 +117,17 @@ export async function POST(req: Request) {
       })
       .select("id")
       .single();
-
     if (insertErr || !created) {
-  return NextResponse.json<StoriesPostRes>({ error: "CREATE_FAILED" }, { status: 500 });
+      L('insert error', {
+        code: insertErr?.code,
+        message: insertErr?.message,
+        details: insertErr?.details,
+        hint: insertErr?.hint
+      });
+      return NextResponse.json(
+        { error: 'CREATE_FAILED', code: insertErr?.code, message: insertErr?.message, details: insertErr?.details, hint: insertErr?.hint },
+        { status: 500 },
+      );
     }
 
     // Return 201 (or 200 in test env) with the new story ID
