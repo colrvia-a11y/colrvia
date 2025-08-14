@@ -1,18 +1,24 @@
 export type Section = 'style' | 'room'
 
 export const QUESTION_SECTIONS: Record<string, Section> = {
-  style_primary: 'style',
-  mood_words: 'style',
-  dark_stance: 'style',
-  dark_locations: 'style',
   room_type: 'room',
+  mood_words: 'style',
+  style_primary: 'style',
   light_level: 'room',
   window_aspect: 'room',
-};
+  dark_stance: 'style',
+  dark_locations: 'style',
+  fixed_elements: 'room',
+  fixed_details: 'room',
+  anchors_keep: 'room',
+  flow_targets: 'room',
+  adjacent_primary_color: 'room',
+  theme: 'room',
+  constraints: 'room',
+  avoid_colors: 'room',
+  coordination_preference: 'room',
+}
 
-// Helper for ids not explicitly listed: modules like K*, B*, L*, N*, H*, O*, C* are all room
 export function getSection(id: string): Section {
-  return (
-    QUESTION_SECTIONS[id] || (/^[KBLNHOC]/.test(id) ? 'room' : 'style')
-  );
+  return QUESTION_SECTIONS[id] || 'room'
 }
