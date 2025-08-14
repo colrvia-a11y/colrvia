@@ -61,8 +61,9 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
 
   async function nextTurn(ack?: { id: string; value: string | string[] }) {
     setLoading(true);
+    const mergedAnswers = ack ? { ...answers, [ack.id]: ack.value } : answers;
     try {
-      const res: TurnResponse = await postTurn({ answers, ack, mode: 'next' });
+      const res: TurnResponse = await postTurn({ answers: mergedAnswers, ack, mode: 'next' });
       if (res.greeting) setGreeting(res.greeting);
       if (res.prompt) {
         setCurrent(res.prompt);
@@ -72,7 +73,11 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
       } else {
         setCurrent(null); // done!
       }
-      if (res.answers) setAnswers(res.answers);
+      if (res.answers) {
+        setAnswers(res.answers);
+      } else {
+        setAnswers(mergedAnswers);
+      }
       if (ack) setHistory((h) => [...h, ack]);
     } finally {
       setLoading(false);
