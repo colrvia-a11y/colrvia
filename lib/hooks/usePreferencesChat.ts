@@ -1,28 +1,31 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { type InterviewState, getCurrentNode, mapAnswersToStoryInput } from '@/lib/ai/onboardingGraph'
+import type { Answers } from '@/lib/intake/types'
+import type { QuestionId } from '@/lib/intake/questions'
 
 export interface UsePreferencesChat {
-  currentNode: ReturnType<typeof getCurrentNode> | null
-  utterance: string
+  currentQuestion: string
+  choices: string[] | null
   input: string
   setInput: (v: string) => void
   busy: boolean
   done: boolean
   statusText: string | null
   submit: (value?: string) => Promise<void>
+  storyId: string | null
 }
 
 export function usePreferencesChat(designerId: string): UsePreferencesChat {
-  const router = useRouter()
-  const [state, setState] = useState<InterviewState | null>(null)
-  const [utterance, setUtterance] = useState('')
+  const [answers, setAnswers] = useState<Answers>({})
+  const [currentId, setCurrentId] = useState<QuestionId | null>(null)
+  const [currentQuestion, setCurrentQuestion] = useState('')
+  const [choices, setChoices] = useState<string[] | null>(null)
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [statusText, setStatusText] = useState<string | null>(null)
+  const [storyId, setStoryId] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -31,12 +34,15 @@ export function usePreferencesChat(designerId: string): UsePreferencesChat {
         const r = await fetch('/api/ai/preferences', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ designerId, step: 'start' })
+          body: JSON.stringify({ answers: {}, designerId }),
         })
         const j = await r.json().catch(() => null)
         if (!active) return
-        setState(j?.state ?? null)
-        setUtterance(j?.utterance ?? '')
+        if (j?.turn) {
+          setCurrentId(j.turn.field_id)
+          setCurrentQuestion(j.turn.next_question)
+          setChoices(j.turn.choices || null)
+        }
       } catch {}
     })()
     return () => {
@@ -46,52 +52,43 @@ export function usePreferencesChat(designerId: string): UsePreferencesChat {
 
   async function submit(value?: string) {
     const v = (value ?? input).trim()
-    if (!v || busy || done || !state) return
+    if (!v || busy || done || !currentId) return
     setBusy(true)
+    const newAnswers = { ...answers, [currentId]: v }
     try {
       const r = await fetch('/api/ai/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ designerId, step: 'answer', content: v, state })
+        body: JSON.stringify({ answers: newAnswers, designerId, last_question: currentId, last_answer: v }),
       })
       const j = await r.json().catch(() => null)
-      setState(j?.state ?? null)
-      setUtterance(j?.utterance ?? '')
+      setAnswers(newAnswers)
       setInput('')
-      if (j?.state?.done) {
+      if (j?.turn) {
+        setCurrentId(j.turn.field_id)
+        setCurrentQuestion(j.turn.next_question)
+        setChoices(j.turn.choices || null)
+        setBusy(false)
+      } else {
         setDone(true)
         setStatusText('Great — generating your palette now…')
-        const storyInput = mapAnswersToStoryInput(j.state.answers)
-        let create: Response | null = null
         try {
-          create = await fetch('/api/stories', {
+          const create = await fetch('/api/stories', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ designerKey: designerId, ...storyInput, seed: `ai:${Date.now()}` })
+            body: JSON.stringify({ designerKey: designerId, ...newAnswers, seed: `chat:${Date.now()}` }),
           })
-        } catch {}
-        if (!create) {
+          const story = await create.json().catch(() => null)
+          if (create.ok && (story?.id || story?.story?.id)) {
+            const id = story.id || story.story.id
+            setStoryId(id)
+            setStatusText('Your palette is ready!')
+          } else {
+            setStatusText('Could not create story')
+          }
+        } catch {
           setStatusText('Something went wrong')
-          setBusy(false)
-          return
         }
-        if (create.status === 401) {
-          router.push('/sign-in')
-          return
-        }
-        if (!create.ok) {
-          setStatusText('Could not create story')
-          setBusy(false)
-          return
-        }
-        const story = await create.json().catch(() => null)
-        if (story?.id) {
-          router.push(`/reveal/${story.id}`)
-        } else {
-          setStatusText('Could not create story')
-          setBusy(false)
-        }
-      } else {
         setBusy(false)
       }
     } catch {
@@ -99,6 +96,6 @@ export function usePreferencesChat(designerId: string): UsePreferencesChat {
     }
   }
 
-  const currentNode = state ? getCurrentNode(state) : null
-  return { currentNode, utterance, input, setInput, busy, done, statusText, submit }
+  return { currentQuestion, choices, input, setInput, busy, done, statusText, submit, storyId }
 }
+
