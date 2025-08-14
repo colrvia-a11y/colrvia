@@ -348,7 +348,9 @@ Run Lighthouse in Chrome DevTools → check PWA + performance.
 
 ### AI configuration
 - `AI_ENABLE=true|false` — master switch for LLM calls (defaults to deterministic if false or key missing)
-- `AI_MODEL` — OpenAI model id (default `gpt-4o-mini`)
+- `OPENAI_MODEL` — model for palette/narrative generation (default `gpt-4o`)
+- `OPENAI_REALTIME_MODEL` — model for realtime intake and TTS (default `gpt-4o-mini` / `gpt-4o-mini-tts`)
+- `OPENAI_VISION_MODEL` — model for vision analysis (default `gpt-4o`)
 - `AI_MAX_OUTPUT_TOKENS` — cap response tokens (default 300)
 - `OPENAI_API_KEY` — required for any LLM usage (set in Vercel)
 - Status: visit `/api/ai/status` to verify `{ enabled, provider, model, hasKey }`

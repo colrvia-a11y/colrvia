@@ -4,6 +4,7 @@ import { designers } from "@/lib/ai/designers"
 import { startState, acceptAnswer, getCurrentNode, type InterviewState } from "@/lib/ai/onboardingGraph"
 import { buildStartUtterance, buildNextUtterance, ackFor, askFor } from "@/lib/ai/phrasing"
 import crypto from 'crypto'
+import { REALTIME_MODEL } from "@/lib/ai/config"
 
 const designerPrompts: Record<string,string> = {
   minimalist: 'You are a minimalist interior paint guide. Concise, calm, no fluff.',
@@ -64,7 +65,7 @@ async function phrase(systemPrompt: string, base: string, useLLM: boolean): Prom
     if(!OpenAI) throw new Error('NO_MOD')
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
     const resp = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: REALTIME_MODEL,
       temperature: 0.3,
       max_tokens: 80,
       messages: [

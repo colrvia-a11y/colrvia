@@ -1,5 +1,6 @@
 import SYSTEM_PROMPT from "@/lib/prompt/system";
 import { startState, acceptAnswer, getCurrentNode, type InterviewState } from "@/lib/ai/onboardingGraph";
+import { REALTIME_MODEL } from "@/lib/ai/config";
 
 export const runtime = 'nodejs'
 
@@ -8,7 +9,7 @@ export const runtime = 'nodejs'
  * Starts or continues a Realtime interview session.
  * Body:
  *  - step: 'start' | 'answer'
- *  - voice, model: optional Realtime model params
+ *  - voice: optional Realtime voice param
  *  - state, content: required for step='answer'
  */
 export async function POST(req: Request) {
@@ -19,12 +20,11 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json().catch(() => ({}))) as {
       voice?: string
-      model?: string
       step?: 'start' | 'answer'
       content?: string
       state?: InterviewState
     }
-    const { voice, model, step = 'start', content = '', state } = body
+    const { voice, step = 'start', content = '', state } = body
 
     if (step === 'answer' && state) {
       const nextState = acceptAnswer(state, content)
@@ -44,7 +44,6 @@ export async function POST(req: Request) {
     const initState = startState()
     const node = getCurrentNode(initState)
 
-    const rtModel = model || process.env.OPENAI_REALTIME_MODEL || 'gpt-4o-realtime-preview-2024-12-17'
     const rtVoice = voice || process.env.OPENAI_TTS_VOICE || 'alloy'
 
     const r = await fetch('https://api.openai.com/v1/realtime/sessions', {
@@ -54,7 +53,7 @@ export async function POST(req: Request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: rtModel,
+        model: REALTIME_MODEL,
         voice: rtVoice,
         instructions:
           SYSTEM_PROMPT +

@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { NextRequest } from "next/server";
+import { VISION_MODEL } from "@/lib/ai/config";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
     if (!apiKey) return new Response(JSON.stringify({ error: "missing OpenAI API key" }), { status: 500 });
     const client = new OpenAI({ apiKey });
     const res = await client.responses.create({
-      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      model: VISION_MODEL,
       input: [
         { role: "user", content: [
           { type: "input_text", text: "Report neutral observations useful for paint selection: undertones, relative contrast, and risks of color cast. Do NOT suggest specific paint colors." },

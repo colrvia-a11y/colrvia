@@ -1,4 +1,5 @@
 export const runtime = 'nodejs'
+import { REALTIME_MODEL } from '@/lib/ai/config'
 
 export async function POST(req: Request) {
   // Use the EPHEMERAL client secret from the browser, not the long-lived server key.
@@ -11,8 +12,7 @@ export async function POST(req: Request) {
   const sdp = await req.text().catch(() => '')
   if (!sdp) return new Response('Empty SDP', { status: 400 })
 
-  const model = process.env.OPENAI_REALTIME_MODEL || 'gpt-4o-realtime-preview-2024-12-17'
-  const url = `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}`
+  const url = `https://api.openai.com/v1/realtime?model=${encodeURIComponent(REALTIME_MODEL)}`
   try {
     const upstream = await fetch(url, {
       method: 'POST',

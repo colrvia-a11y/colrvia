@@ -1,4 +1,5 @@
 import { isVoiceEnabled } from '@/lib/flags'
+import { REALTIME_TTS_MODEL } from '@/lib/ai/config'
 
 let sessionId: string | null = null
 let audioCtx: AudioContext | null = null
@@ -27,7 +28,7 @@ export async function speak(text?: string, opts: { ssml?: string } = {}) {
         Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini-tts',
+        model: REALTIME_TTS_MODEL,
         input: opts.ssml ?? text,
         voice: process.env.NEXT_PUBLIC_TTS_VOICE || 'alloy',
         ...(sessionId ? { session_id: sessionId } : {}),
