@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient as createSupabaseBrowserClient } from '@supabase/supabase-js'
 import { postTurn } from '@/lib/realtalk/api'
 import type { Answers, PromptSpec, TurnResponse } from '@/lib/realtalk/types'
 import { useSpeech } from '@/hooks/useSpeech'
@@ -14,6 +15,10 @@ type Props = { initialAnswers?: Answers; autoStart?: boolean }
 
 export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart = true }: Props){
   const router = useRouter()
+  const supabase = createSupabaseBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  )
   const [answers, setAnswers] = useState<Answers>(initialAnswers)
   const [current, setCurrent] = useState<PromptSpec | null>(null)
   const [greeting, setGreeting] = useState<string | undefined>()
@@ -189,6 +194,12 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
               type="button"
               onClick={async () => {
                 setGenerating(true)
+                const { data: sessionRes } = await supabase.auth.getSession()
+                if (!sessionRes?.session) {
+                  setGenerating(false)
+                  router.push('/sign-in?next=/start/interview')
+                  return
+                }
                 // Persist latest answers for the API bridge to find if needed
                 try {
                   if (typeof window !== 'undefined') {
@@ -198,6 +209,11 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
                 // Prefer passing answers directly so we’re not relying on storage timing
                 setGenerationError(null)
                 const res = await createPaletteFromInterview(answers)
+                if ((res as any)?.error === 'AUTH_REQUIRED') {
+                  setGenerating(false)
+                  router.push('/sign-in?next=/start/interview')
+                  return
+                }
                 if (res?.id) {
                   // Navigate to reveal page with optimistic loading indicator
                   router.replace(`/reveal/${res.id}?optimistic=1`)
