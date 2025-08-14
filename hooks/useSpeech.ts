@@ -1,5 +1,23 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: Array<{
+    0: { transcript: string };
+    isFinal: boolean;
+  }>;
+}
+
+interface SpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
+}
+
 type UseSpeechOptions = {
   lang?: string;
   onFinal?: (text: string) => void;
