@@ -191,9 +191,9 @@ export default function VoiceInterview() {
               })
               const story = await storyRes.json().catch(() => null)
               const id = story?.id || story?.story?.id
-              router.replace(id ? `/start/processing?id=${id}` : '/start/processing')
+              router.replace(id ? `/reveal/${id}?optimistic=1` : '/start/interview')
             } catch {
-              router.replace('/start/processing')
+              router.replace('/start/interview')
             }
             return
           }
