@@ -24,6 +24,13 @@ export default function ProcessingPage() {
     }
   }, [storyId])
 
+  // Automatically redirect to the reveal page once a story has been created
+  useEffect(() => {
+    if (storyId) {
+      router.replace(`/reveal/${storyId}`)
+    }
+  }, [storyId, router])
+
   return (
     <div className="flex flex-col items-center gap-4 py-10">
       <p>{storyId ? moss.complete() : moss.working()}</p>
