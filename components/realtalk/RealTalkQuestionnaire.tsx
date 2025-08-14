@@ -188,7 +188,14 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
               type="button"
               onClick={async () => {
                 setGenerating(true)
-                const res = await createPaletteFromInterview()
+                // Persist latest answers for the API bridge to find if needed
+                try {
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('colrvia:interview', JSON.stringify({ answers }))
+                  }
+                } catch {}
+                // Prefer passing answers directly so we’re not relying on storage timing
+                const res = await createPaletteFromInterview(answers)
                 if (res?.id) router.replace(`/reveal/${res.id}`)
                 else router.replace('/start/processing')
               }}
