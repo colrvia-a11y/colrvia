@@ -5,7 +5,6 @@ import { buildQuestionQueue } from '@/lib/intake/engine'
 import type { Answers } from '@/lib/intake/types'
 import type { QuestionId } from '@/lib/intake/questions'
 import type { IntakeTurnT } from '@/lib/model-schema'
-import { ackFor } from '@/lib/ai/phrasing'
 import { nluParse } from '@/lib/intake/nlu'
 
 const GREETINGS: Record<string, string> = {
@@ -175,30 +174,33 @@ export async function POST(req: Request) {
   const queue = buildQuestionQueue(normalized)
   const nextId = queue[0]
 
-  if (!nextId) return NextResponse.json({ turn: null })
+  const answeredCount = Object.values(normalized).filter((v) => v !== undefined).length
+  const greeting = body.last_question ? undefined : GREETINGS[designerId] || GREETINGS.therapist
 
+  if (!nextId) {
+    return NextResponse.json({
+      prompt: null,
+      answers: normalized,
+      greeting,
+      progress: { asked: answeredCount, maxCap: 15 },
+    })
+  }
+
+  const base = PROMPTS[nextId]
   const info = promptFor(nextId, normalized)
-  let questionText = info.text
-  if (body.last_question && body.last_answer !== undefined) {
-    const ack = ackFor(body.last_question, body.last_answer, designerId)
-    questionText = `${ack} ${questionText}`
-  } else if (body.last_answer !== undefined) {
-    // If we have an answer but no matching question ID, fall back to a generic ack.
-    const ack = ackFor(body.last_question ?? '', body.last_answer, 'seed')
-    questionText = `${ack} ${questionText}`
-  } else if (!body.last_question) {
-    const greet = GREETINGS[designerId] || GREETINGS.therapist
-    questionText = `${greet} ${questionText}`
+  const prompt = {
+    id: nextId,
+    text: info.text,
+    input_type: base.input_type,
+    choices: base.choices?.map((c) => ({ id: c, label: c })),
+    validation: base.validation,
   }
 
-  const turn: IntakeTurnT = {
-    field_id: nextId,
-    next_question: questionText,
-    input_type: info.input_type,
-    choices: info.choices ?? null,
-    validation: info.validation || null,
-  }
-
-  return NextResponse.json({ turn })
+  return NextResponse.json({
+    prompt,
+    answers: normalized,
+    greeting,
+    progress: { asked: answeredCount, maxCap: 15 },
+  })
 }
 
