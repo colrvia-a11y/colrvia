@@ -1,9 +1,11 @@
 'use client'
 
 import React, { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { postTurn } from '@/lib/realtalk/api'
 import type { Answers, PromptSpec, TurnResponse } from '@/lib/realtalk/types'
 import { useSpeech } from '@/hooks/useSpeech'
+import { createPaletteFromInterview } from '@/lib/palette'
 import Stepper from './Stepper'
 import StickyActions from './StickyActions'
 import InlineHelp from './InlineHelp'
@@ -11,6 +13,7 @@ import InlineHelp from './InlineHelp'
 type Props = { initialAnswers?: Answers; autoStart?: boolean }
 
 export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart = true }: Props){
+  const router = useRouter()
   const [answers, setAnswers] = useState<Answers>(initialAnswers)
   const [current, setCurrent] = useState<PromptSpec | null>(null)
   const [greeting, setGreeting] = useState<string | undefined>()
@@ -22,6 +25,7 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
   const [chipFocus, setChipFocus] = useState(0)
   const [textValue, setTextValue] = useState('')
   const [textError, setTextError] = useState<string | null>(null)
+  const [generating, setGenerating] = useState(false)
 
   const { supported: speechOK, listening, interim, start, stop } = useSpeech({
     onFinal: (text) => {
@@ -180,7 +184,30 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
           <h2>All set 🎉</h2>
           <p>Thanks! We’ve gathered what we need. You can review or restart any time.</p>
           <div className="rt-actions">
-            <button type="button" onClick={() => { setAnswers({}); setHistory([]); setCurrent(null); setProgress(undefined); void nextTurn(); }}>Restart</button>
+            <button
+              type="button"
+              onClick={async () => {
+                setGenerating(true)
+                const res = await createPaletteFromInterview()
+                if (res?.id) router.replace(`/reveal/${res.id}`)
+                else router.replace('/start/processing')
+              }}
+              disabled={generating}
+            >
+              {generating ? 'Working…' : 'Create my color story'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAnswers({})
+                setHistory([])
+                setCurrent(null)
+                setProgress(undefined)
+                void nextTurn()
+              }}
+            >
+              Restart
+            </button>
           </div>
         </div>
       </div>
