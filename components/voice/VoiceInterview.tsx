@@ -24,6 +24,16 @@ export default function VoiceInterview() {
   const [status, setStatus] = useState<BootStatus>('booting')
   const bootTimerRef = useRef<number | null>(null)
 
+  // Choose a slightly longer fallback on mobile/slow networks so iOS has time to show the mic sheet
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : ''
+  const isMobile = /iphone|ipad|android/.test(ua)
+  const net = (navigator as any)?.connection?.effectiveType || ''
+  const slowNet = /2g|3g/.test(net)
+  const fallbackDelay = isMobile || slowNet ? 6000 : 3000
+  const showDiag =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('diag') === '1'
+
   function kickOffDeterministicFirstQuestion() {
     const first = "Let’s start with style. Which overall vibe do you love most?"
     setCurrentQuestion(first)
@@ -36,6 +46,7 @@ export default function VoiceInterview() {
     let cancelled = false
     async function start() {
       setStatus('booting')
+      // fallback to deterministic text if realtime is slow/dead
       bootTimerRef.current = window.setTimeout(() => {
         try {
           kickOffDeterministicFirstQuestion()
@@ -43,7 +54,7 @@ export default function VoiceInterview() {
         } catch {
           setStatus('error')
         }
-      }, 3000)
+      }, fallbackDelay)
 
       const tokenRes = await fetch('/api/realtime/session', { method: 'POST' })
       if (!tokenRes.ok) {
@@ -172,7 +183,7 @@ export default function VoiceInterview() {
         stream?.getTracks().forEach((t) => t.stop())
       } catch {}
     }
-  }, [router])
+  }, [])
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-6 p-4">
@@ -212,6 +223,11 @@ export default function VoiceInterview() {
       </main>
 
       <ChatCaptions text={captions} />
+      {showDiag && (
+        <div className="fixed bottom-2 left-2 text-[11px] px-2 py-1 rounded-md bg-black/80 text-white">
+          status: {status}
+        </div>
+      )}
     </div>
   )
 }
