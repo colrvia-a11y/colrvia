@@ -24,6 +24,16 @@ describe('buildQuestionQueue', () => {
     expect(q).toContain('anchors_keep')
     expect(q).toContain('coordination_preference')
   })
+
+  it('asks dark locations when stance not avoid', () => {
+    const q = buildQuestionQueue({ dark_stance: 'walls' })
+    expect(q).toContain('dark_locations')
+  })
+
+  it('skips dark locations when stance avoid', () => {
+    const q = buildQuestionQueue({ dark_stance: 'avoid' })
+    expect(q).not.toContain('dark_locations')
+  })
 })
 
 describe('capByPriority', () => {

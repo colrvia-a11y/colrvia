@@ -2,7 +2,7 @@ import React from 'react'
 import { describe, it, expect, vi } from 'vitest'
 // Ensure React is global for classic JSX
 ;(globalThis as any).React = React
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import VoiceInterview from '@/components/voice/VoiceInterview'
 
 const replace = vi.fn()
@@ -10,16 +10,40 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }))
 vi.mock('@/lib/analytics', () => ({ track: vi.fn() }))
 
 describe('VoiceInterview realtime', () => {
-  it('shows question from model', async () => {
+  it('asks follow-up based on previous answer', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ client_secret: { value: 'tok' } }) })
       .mockResolvedValueOnce({ ok: true, text: () => Promise.resolve('sdp-answer') })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            turn: {
+              field_id: 'dark_stance',
+              next_question: 'How do you feel about dark paint?',
+              input_type: 'text',
+            },
+          }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            turn: {
+              field_id: 'dark_locations',
+              next_question: 'Where would you use dark paint?',
+              input_type: 'text',
+            },
+          }),
+      })
     ;(globalThis as any).fetch = fetchMock
 
     ;(navigator as any).mediaDevices = {
       getUserMedia: vi.fn(() => Promise.resolve({ getTracks: () => [{ stop: vi.fn() }] })),
     }
+
+    ;(HTMLMediaElement.prototype as any).play = vi.fn(() => Promise.resolve())
 
     let dc: any
     const pc = {
@@ -49,17 +73,24 @@ describe('VoiceInterview realtime', () => {
 
     render(<VoiceInterview />)
 
+    fireEvent.click(screen.getByRole('button', { name: /enable voice/i }))
+
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
 
-    dc.onopen?.()
-    const delta = JSON.stringify({
-      field_id: 'style_primary',
-      next_question: 'How would you describe your style?',
-      input_type: 'text',
-    })
-    dc.onmessage?.({ data: JSON.stringify({ type: 'response.output_text.delta', delta }) })
-    dc.onmessage?.({ data: JSON.stringify({ type: 'response.completed' }) })
+    await waitFor(() => expect(pc.createDataChannel).toHaveBeenCalled())
 
-    await screen.findByText('How would you describe your style?')
+    dc.onopen?.()
+
+    await screen.findByText('How do you feel about dark paint?')
+
+    dc.onmessage?.({
+      data: JSON.stringify({ type: 'conversation.item.input_audio.transcription.delta', delta: 'Walls' }),
+    })
+    dc.onmessage?.({ data: JSON.stringify({ type: 'conversation.item.completed', item: { role: 'user' } }) })
+
+    await screen.findByText('Where would you use dark paint?')
+
+    const body = JSON.parse(fetchMock.mock.calls[3][1].body)
+    expect(body.answers.dark_stance).toBe('Walls')
   })
 })
