@@ -183,7 +183,8 @@ export async function POST(req: Request) {
     const ack = ackFor(body.last_question, body.last_answer, designerId)
     questionText = `${ack} ${questionText}`
   } else if (body.last_answer !== undefined) {
-    const ack = ackFor(body.last_question, body.last_answer, 'seed')
+    // If we have an answer but no matching question ID, fall back to a generic ack.
+    const ack = ackFor(body.last_question ?? '', body.last_answer, 'seed')
     questionText = `${ack} ${questionText}`
   } else if (!body.last_question) {
     const greet = GREETINGS[designerId] || GREETINGS.therapist
