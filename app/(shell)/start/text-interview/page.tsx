@@ -1,5 +1,3 @@
-"use client"
-
 import RealTalkQuestionnaire from '@/components/realtalk/RealTalkQuestionnaire'
 
 export const metadata = {
@@ -9,16 +7,8 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <main className="rt-container theme-moss">
+    <main className="grid items-start justify-center min-h-[calc(100dvh-16px)] p-[var(--space-10)] theme-moss">
       <RealTalkQuestionnaire autoStart />
-      <style jsx>{`
-        .rt-container {
-          display: grid;
-          place-items: start center;
-          min-height: calc(100dvh - 16px);
-          padding: var(--space-10);
-        }
-      `}</style>
     </main>
   )
 }
