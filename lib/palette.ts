@@ -102,16 +102,15 @@ export function decodePalette(value: unknown): DecodedSwatch[] {
   return []
 }
 
-// Create a palette (story) from previously saved interview answers.
-// Falls back to a mock id during tests so rendering the processing page
-// doesn't attempt a network request.
-export async function createPaletteFromInterview() {
+// Create a palette (story) from interview answers. Prefer explicit answers when provided.
+export async function createPaletteFromInterview(answersOverride?: any) {
   // Skip network work in tests
   if (process.env.NODE_ENV === 'test') return { id: 'mock' };
 
   try {
-    // Attempt to read persisted interview answers from storage
-    let answers: any = {};
+    // Prefer the explicitly passed answers; fall back to storage if needed.
+    let answers: any = answersOverride ?? {};
+    let stored: any = {};
     if (typeof window !== 'undefined') {
       try {
         const raw =
@@ -119,11 +118,14 @@ export async function createPaletteFromInterview() {
           localStorage.getItem('colrvia:interviewAnswers');
         if (raw) {
           const parsed = JSON.parse(raw);
-          answers = parsed?.answers ?? parsed;
+          stored = parsed?.answers ?? parsed ?? {};
         }
       } catch {
         /* ignore parse errors */
       }
+    }
+    if (!answers || (typeof answers === 'object' && Object.keys(answers).length === 0)) {
+      answers = stored;
     }
 
     const { mapAnswersToStoryInput } = await import('@/lib/ai/onboardingGraph');
@@ -137,12 +139,25 @@ export async function createPaletteFromInterview() {
       body: JSON.stringify({ ...payload, source: 'interview' })
     });
     const data = await resp.json().catch(() => null);
-    if (resp.ok) {
-      const id = data?.id ?? data?.story?.id;
+    if (resp.ok && data) {
+      // Be liberal in what we accept: { id }, { story: { id } }, { storyId }, etc.
+      const id =
+        data?.id ??
+        data?.story?.id ??
+        data?.storyId ??
+        data?.story?.storyId ??
+        null;
       if (id) return { id };
+    } else {
+      // Surface a breadcrumb in dev to help debugging while keeping UI calm
+      if (typeof window !== 'undefined') {
+        try { console.error('/api/stories failed', resp.status); } catch {}
+      }
     }
-  } catch {
-    /* swallow to allow graceful fallback */
+  } catch (err) {
+    if (typeof window !== 'undefined') {
+      try { console.error('createPaletteFromInterview error', err); } catch {}
+    }
   }
   return null;
 }
