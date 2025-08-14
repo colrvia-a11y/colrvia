@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { supabaseServer } from '@/lib/supabase/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { seedPaletteFor } from '@/lib/ai/palette';
 import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair';
 import { designPalette } from '@/lib/ai/orchestrator';
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   }
 
   // 3) Auth (optional): get user if present
-  const supabase = supabaseServer()
+  const supabase = createSupabaseServerClient()
   const {
     data: { user },
     error: userErr,
