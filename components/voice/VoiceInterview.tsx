@@ -13,6 +13,17 @@ import VoiceStatusBar from '@/components/voice/VoiceStatusBar'
 
 type BootStatus = 'booting' | 'ready' | 'error' | 'fallback'
 
+// System prompt ensures even smaller realtime models understand their role & flow
+const SYSTEM_PROMPT = [
+  'You are Moss, an AI color consultant conducting a short voice interview.',
+  'Your tone is calm, soothing, and warm.',
+  "Begin by greeting the user and introducing yourself as their Color Therapist.",
+  "Then ask the first question: 'Which space are we designing? (e.g. Living Room, Kitchen, Bedroom…)'",
+  "After each user answer, briefly acknowledge (e.g., 'Got it.' / 'Great.') and ask the next question.",
+  "Follow the app's questionnaire order and stop when all questions are answered.",
+  'Do not skip the greeting. Stay in character and guide the user through the interview.',
+].join(' ')
+
 export default function VoiceInterview() {
   const router = useRouter()
   const [currentQuestion, setCurrentQuestion] = useState('')
@@ -40,7 +51,9 @@ export default function VoiceInterview() {
     new URLSearchParams(window.location.search).get('diag') === '1'
 
   function kickOffDeterministicFirstQuestion() {
-    const first = "Let’s start with style. Which overall vibe do you love most?"
+    // Mirror the API's first turn which prepends the Moss greeting to the first question
+    const first =
+      "Hello! I’m Moss, your Color Therapist. Let’s get started. Which space are we designing? (e.g. Living Room, Kitchen, Bedroom…)"
     setCurrentQuestion(first)
   }
 
@@ -156,15 +169,20 @@ export default function VoiceInterview() {
             body: JSON.stringify(body),
           })
           const data = await res.json().catch(() => ({}))
-          if (!data?.turn) {
-            currentIdRef.current = null
-            setCurrentQuestion('')
-            dc?.send(
-              JSON.stringify({
-                type: 'response.create',
-                response: { modalities: ['audio', 'text'], instructions: '' },
-              }),
-            )
+            if (!data?.turn) {
+              currentIdRef.current = null
+              setCurrentQuestion('')
+              // End-of-interview: never send an empty instruction (some models emit stray adjectives).
+              dc?.send(
+                JSON.stringify({
+                  type: 'response.create',
+                  response: {
+                    modalities: ['audio', 'text'],
+                    instructions:
+                      "Thanks! I have what I need. I’m generating your palette now—this takes just a moment.",
+                  },
+                }),
+              )
             try {
               const storyRes = await fetch('/api/stories', {
                 method: 'POST',
@@ -222,9 +240,24 @@ export default function VoiceInterview() {
         }
       }
 
-      dc.onopen = () => {
-        askNext()
-      }
+        dc.onopen = () => {
+          // Prime the model with a clear role BEFORE the first spoken line.
+          try {
+            dc?.send(
+              JSON.stringify({
+                type: 'conversation.item.create',
+                item: {
+                  type: 'message',
+                  role: 'system',
+                  content: [{ type: 'input_text', text: SYSTEM_PROMPT }],
+                },
+              }),
+            )
+          } catch (e) {
+            console.warn('realtime: failed to send system prompt', e)
+          }
+          askNext()
+        }
 
       const offer = await pc.createOffer({ offerToReceiveAudio: true })
       await pc.setLocalDescription(offer)
