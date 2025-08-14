@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { postTurn } from '@/lib/realtalk/api';
 import type { Answers, PromptSpec, TurnResponse } from '@/lib/realtalk/types';
 import { useSpeech } from '@/hooks/useSpeech';
@@ -16,8 +16,12 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
   const [greeting, setGreeting] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
+  const [explainLoading, setExplainLoading] = useState(false);
   const [history, setHistory] = useState<{ id: string; value: string | string[] }[]>([]);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const chipRefs = useRef<HTMLButtonElement[]>([]);
+  const [chipFocus, setChipFocus] = useState(0);
+  const [textValue, setTextValue] = useState('');
 
   const { supported: speechOK, listening, interim, start, stop } = useSpeech({
     onFinal: (text) => {
@@ -38,6 +42,22 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
   useEffect(() => {
     if (autoStart) void nextTurn(); // first pull to get greeting + first prompt
   }, [autoStart]);
+
+  useEffect(() => {
+    setTextValue('');
+    setChipFocus(0);
+  }, [current?.id]);
+
+  useEffect(() => {
+    if (!current?.choices) return;
+    const multi = current.input_type === 'multiSelect';
+    const idx = current.choices.findIndex((c) =>
+      multi
+        ? Array.isArray(answers[current.id]) && (answers[current.id] as string[]).includes(c.id)
+        : answers[current.id] === c.id
+    );
+    setChipFocus(idx >= 0 ? idx : 0);
+  }, [current, answers]);
 
   async function nextTurn(ack?: { id: string; value: string | string[] }) {
     setLoading(true);
@@ -87,6 +107,7 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
     if (!v && current?.validation?.required) return;
     submitAnswer(v);
     if (inputRef.current) (inputRef.current as HTMLInputElement).value = '';
+    setTextValue('');
   }
 
   function toggleChip(choiceId: string) {
@@ -101,9 +122,43 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
     }
   }
 
+  function handleChipKey(
+    e: KeyboardEvent<HTMLButtonElement>,
+    idx: number,
+    choiceId: string
+  ) {
+    if (!current?.choices) return;
+    const total = current.choices.length;
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown': {
+        e.preventDefault();
+        const next = (idx + 1) % total;
+        chipRefs.current[next]?.focus();
+        setChipFocus(next);
+        break;
+      }
+      case 'ArrowLeft':
+      case 'ArrowUp': {
+        e.preventDefault();
+        const prev = (idx - 1 + total) % total;
+        chipRefs.current[prev]?.focus();
+        setChipFocus(prev);
+        break;
+      }
+      case 'Enter':
+      case ' ': {
+        e.preventDefault();
+        toggleChip(choiceId);
+        break;
+      }
+    }
+  }
+
   async function onExplain() {
     if (!current) return;
     setLoading(true);
+    setExplainLoading(true);
     try {
       const r = await fetch('/api/ai/explain', {
         method: 'POST',
@@ -113,6 +168,7 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
       const data = await r.json();
       setExplanation(data.explanation);
     } finally {
+      setExplainLoading(false);
       setLoading(false);
     }
   }
@@ -149,6 +205,12 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
 
   const isText = current.input_type === 'text';
   const isMulti = current.input_type === 'multiSelect';
+  const required = current.validation?.required;
+  const currentAnswer = answers[current.id];
+  const hasAnswer = Array.isArray(currentAnswer)
+    ? currentAnswer.length > 0
+    : Boolean(currentAnswer);
+  const continueDisabled = loading || (required && !hasAnswer && !textValue.trim());
 
   return (
     <div className="rt-shell">
@@ -156,24 +218,29 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
       <Progress label={progressLabel} />
       <div className="rt-card">
         <div className="rt-qhead">
-          <h2>{current.text}</h2>
+          <div aria-live="polite"><h2>{current.text}</h2></div>
           <div className="rt-qactions">
             <button type="button" className="rt-ghost" aria-label="Explain this question" onClick={onExplain}>Explain</button>
           </div>
         </div>
 
         {current.choices?.length ? (
-          <div className="rt-chips" role="group" aria-label="Suggested answers">
-            {current.choices.map((c) => {
+          <div className="rt-chips" role={isMulti ? 'group' : 'radiogroup'} aria-label="Suggested answers">
+            {current.choices.map((c, i) => {
               const active =
                 (isMulti && Array.isArray(answers[current.id]) && (answers[current.id] as string[]).includes(c.id)) ||
                 (!isMulti && answers[current.id] === c.id);
               return (
                 <button
+                  ref={(el) => (chipRefs.current[i] = el!)}
                   type="button"
                   key={c.id}
                   className={`rt-chip ${active ? 'is-active' : ''}`}
-                  onClick={() => toggleChip(c.id)}
+                  onClick={() => { setChipFocus(i); toggleChip(c.id); }}
+                  role={isMulti ? 'checkbox' : 'radio'}
+                  aria-checked={active}
+                  tabIndex={chipFocus === i ? 0 : -1}
+                  onKeyDown={(e) => handleChipKey(e, i, c.id)}
                 >
                   {c.label}
                 </button>
@@ -184,21 +251,32 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
 
         <div className="rt-free">
           {isText ? (
-            <input
-              ref={inputRef as any}
-              type="text"
-              placeholder="Type your answer…"
-              aria-label="Type your answer"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleTextSubmit((e.target as HTMLInputElement).value);
-              }}
-            />
+            <>
+              <input
+                ref={inputRef as any}
+                type="text"
+                placeholder="Type your answer…"
+                aria-label="Type your answer"
+                value={textValue}
+                onChange={(e) => setTextValue(e.target.value)}
+                title={current.id === 'mood_words' ? 'Max 3 words' : undefined}
+                aria-describedby={current.id === 'mood_words' ? 'mood-help' : undefined}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleTextSubmit((e.target as HTMLInputElement).value);
+                }}
+              />
+              {current.id === 'mood_words' && (
+                <small id="mood-help" className="rt-help">Max 3 words</small>
+              )}
+            </>
           ) : (
             <input
               ref={inputRef as any}
               type="text"
               placeholder="Prefer to type something else? (Press Enter to submit)"
               aria-label="Type your answer"
+              value={textValue}
+              onChange={(e) => setTextValue(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleTextSubmit((e.target as HTMLInputElement).value);
               }}
@@ -230,16 +308,16 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
               const v = (inputRef.current as HTMLInputElement | HTMLTextAreaElement)?.value ?? '';
               if (v.trim()) handleTextSubmit(v);
             }}
-            disabled={loading}
+            disabled={continueDisabled}
           >
             Continue
           </button>
         </div>
 
-        {explanation && (
-          <div className="rt-explain" role="region" aria-live="polite">
+        {(explanation || explainLoading) && (
+          <div className={`rt-explain ${explainLoading ? 'is-loading' : ''}`} role="region" aria-live="polite">
             <strong>Why we ask:</strong>
-            <p>{explanation}</p>
+            <p>{explainLoading ? 'Loading…' : explanation}</p>
           </div>
         )}
       </div>
@@ -285,6 +363,7 @@ function Style() {
       .rt-chip.is-active { border-color: #111; background: #111; color: #fff; }
       .rt-free { display: grid; gap: 8px; margin: 12px 0; }
       .rt-free input { width: 100%; font: inherit; padding: 12px 14px; border-radius: 12px; border: 1px solid #dedede; }
+      .rt-help { font-size: 0.8rem; opacity: 0.7; }
       .rt-voice { display:flex; align-items:center; gap: 8px; }
       .rt-mic { border: 1px solid #e2e2e2; border-radius: 10px; padding: 8px 12px; background: #fff; cursor: pointer; }
       .rt-mic.is-live { border-color: #ff7a59; box-shadow: 0 0 0 3px rgba(255,122,89,0.15); }
@@ -293,9 +372,19 @@ function Style() {
       .rt-primary { background: #111; color: #fff; border: none; padding: 10px 14px; border-radius: 10px; }
       .rt-secondary { background: #f5f5f5; border: none; padding: 10px 14px; border-radius: 10px; }
       .rt-explain { margin-top: 16px; padding: 12px; border-radius: 12px; background: #f9fafb; border: 1px dashed #e6e6e6; }
+      .rt-explain.is-loading p { position: relative; color: transparent; }
+      .rt-explain.is-loading p::before {
+        content: ''; position: absolute; inset: 0; border-radius: 4px;
+        background: linear-gradient(90deg,#eee,#ddd,#eee); background-size: 200% 100%;
+        animation: rt-shimmer 1.5s ease-in-out infinite;
+      }
       .rt-progress { display:flex; align-items:center; gap: 8px; margin: 12px 0; }
       .rt-bar { flex:1; height: 6px; background:#f1f1f4; border-radius: 999px; overflow:hidden; }
       .rt-fill { height: 100%; background: #111; }
+      @keyframes rt-shimmer {
+        from { background-position: 200% 0; }
+        to { background-position: -200% 0; }
+      }
     `}</style>
   );
 }
