@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { supabaseServer } from "@/lib/supabase/server";
 
 function idemKey(payload: unknown) {
   return crypto
@@ -11,7 +11,7 @@ function idemKey(payload: unknown) {
 }
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServer();
+  const supabase = supabaseServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();
