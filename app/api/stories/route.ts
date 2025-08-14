@@ -96,8 +96,6 @@ export async function POST(req: Request) {
     L('insert attempt', {
       userId: user?.id ?? null,
       brand,
-      prompt: (body as any)?.prompt ?? null,
-      vibe: (body as any)?.vibe ?? null,
       hasPalette: Array.isArray(finalPalette),
       paletteLen: Array.isArray(finalPalette) ? finalPalette.length : 0,
       hasInputs: !!(body as any)?.inputs,
@@ -107,13 +105,17 @@ export async function POST(req: Request) {
     const { data: created, error: insertErr } = await supabase
       .from("stories")
       .insert({
-        user_id: user?.id ?? null,            // allow null for guest users
-        brand,
-        prompt: body.prompt || null,
-        vibe: body.vibe || null,
-        palette: finalPalette,
-        source: body.source || "interview",
-        status: "ready",                      // initial status; RevealPoller can read this
+        user_id: user?.id ?? null,                 // guests are null (allowed by your DB)
+        brand,                                     // 'sherwin_williams'
+        inputs: (body as any)?.inputs ?? {
+          vibe: (body as any)?.vibe ?? null
+        },
+        palette: finalPalette,                     // the 5 swatches array
+        has_variants: false,                       // default for now
+        status: "ready",                           // so Reveal can read it
+        title: (body as any)?.vibe
+          ? `${(body as any).vibe} Palette`
+          : 'Your Color Story'
       })
       .select("id")
       .single();
