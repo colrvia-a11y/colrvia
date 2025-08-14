@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { isVoiceEnabled } from '@/lib/flags'
 
 export default function VoiceDebug() {
@@ -8,6 +8,10 @@ export default function VoiceDebug() {
   const [tokenOk, setTokenOk] = useState<null | string>(null)
   const [micOk, setMicOk] = useState<null | string>(null)
   const [secure, setSecure] = useState<boolean>(typeof window !== 'undefined' ? window.isSecureContext : false)
+  const [policyAllowsMic, setPolicyAllowsMic] = useState<null | boolean>(null)
+  const [policyHeader, setPolicyHeader] = useState<string | null>(null)
+  const [framed, setFramed] = useState<null | boolean>(null)
+  const [devices, setDevices] = useState<string>('(not checked yet)')
 
   const checkFlag = () => setFlag(isVoiceEnabled())
 
@@ -34,6 +38,31 @@ export default function VoiceDebug() {
     }
   }
 
+  useEffect(() => {
+    // Feature/Permissions Policy probe
+    try {
+      const fp: any = (document as any).featurePolicy || (document as any).permissionsPolicy
+      if (fp?.allowsFeature) setPolicyAllowsMic(!!fp.allowsFeature('microphone'))
+      else setPolicyAllowsMic(null)
+    } catch { setPolicyAllowsMic(null) }
+    // Are we inside an iframe?
+    try { setFramed(window.top !== window.self) } catch { setFramed(null) }
+    // List audio inputs (labels empty until permission is granted)
+    navigator.mediaDevices?.enumerateDevices?.().then(list => {
+      const summary =
+        list
+          .filter(d => d.kind === 'audioinput')
+          .map(d => d.label || '(mic)')
+          .join(', ') || '(no audioinput reported)'
+      setDevices(summary)
+    }).catch(() => setDevices('(error listing devices)'))
+    // Read the actual response header from an API route (same-origin)
+    fetch('/api/diag/headers').then(async r => {
+      setPolicyHeader(r.headers.get('permissions-policy'))
+    }).catch(() => setPolicyHeader(null))
+    setSecure(typeof window !== 'undefined' ? window.isSecureContext : false)
+  }, [])
+
   const setOverride = (v:'on'|'off'|'clear') => {
     try {
       if (v === 'clear') localStorage.removeItem('voice')
@@ -47,8 +76,12 @@ export default function VoiceDebug() {
       <h1 className="text-2xl font-semibold">Voice Debug</h1>
       <div className="text-sm">
         <div>Secure Context: <b>{secure ? '✅ yes (HTTPS)' : '❌ no (needs HTTPS)'}</b></div>
+        <div>Feature/Permissions-Policy allows microphone: <b>{policyAllowsMic === null ? 'unknown' : (policyAllowsMic ? '✅ yes' : '❌ no')}</b></div>
+        <div>Response header (Permissions-Policy): <code>{policyHeader ?? '(unknown)'}</code></div>
+        <div>In an iframe: <b>{framed === null ? 'unknown' : (framed ? '❌ yes (needs allow="microphone")' : '✅ no')}</b></div>
         <div className="break-all">User Agent: <code>{typeof navigator !== 'undefined' ? navigator.userAgent : ''}</code></div>
         <div>Location: <code>{typeof location !== 'undefined' ? location.href : ''}</code></div>
+        <div>Audio input devices: <code>{devices}</code></div>
       </div>
 
       <div className="space-x-2">
