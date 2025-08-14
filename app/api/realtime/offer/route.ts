@@ -7,19 +7,27 @@ export async function POST(req: Request) {
     console.error('[realtime][offer] missing client Authorization header')
     return new Response('Missing client Authorization', { status: 400 })
   }
+  // sanity-check format
+  if (!/^Bearer\s+[\w\-\._~+/]+=*$/i.test(clientAuth)) {
+    console.error('[realtime][offer] malformed Authorization header (expected "Bearer <token>")')
+    return new Response('Malformed Authorization header', { status: 400 })
+  }
 
   const sdp = await req.text().catch(() => '')
   if (!sdp) return new Response('Empty SDP', { status: 400 })
+  console.log('[realtime][offer] incoming SDP length=', sdp.length)
 
   const model = process.env.OPENAI_REALTIME_MODEL || 'gpt-4o-realtime-preview-2024-12-17'
-  const url = `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}`
+  // add voice in query too (belt & suspenders)
+  const url = `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}&voice=verse`
 
   try {
     const upstream = await fetch(url, {
       method: 'POST',
       headers: {
         'content-type': 'application/sdp',
-        authorization: clientAuth,           // Bearer <ephemeral token>
+        'accept': 'application/sdp',
+        authorization: clientAuth,            // Bearer <ephemeral>
         'OpenAI-Beta': 'realtime=v1',        // required
       },
       body: sdp,
@@ -27,10 +35,26 @@ export async function POST(req: Request) {
 
     const txt = await upstream.text()
     if (!upstream.ok) {
-      let message = txt
-      try { message = JSON.stringify(JSON.parse(txt), null, 2) } catch {}
-      console.error('[realtime][offer] upstream', upstream.status, (message || '').slice(0, 500))
-      return new Response(txt || 'Offer failed', { status: upstream.status })
+      // Try to parse upstream JSON; otherwise return raw text
+      let parsed: any = null
+      try { parsed = JSON.parse(txt) } catch {}
+      const brief = parsed ? JSON.stringify(parsed).slice(0,500) : (txt || '').slice(0,500)
+      console.error('[realtime][offer] upstream', upstream.status, brief)
+      // Enrich the response so the UI shows meaningful info
+      const details = {
+        status: upstream.status,
+        url,
+        headers: {
+          authorization: `Bearer ***${(clientAuth.split(' ')[1]||'').slice(-6)}`,
+          beta: 'realtime=v1'
+        },
+        sdpLen: sdp.length,
+        upstream: parsed || txt
+      }
+      return new Response(JSON.stringify({ error: details }), {
+        status: upstream.status,
+        headers: { 'content-type': 'application/json' }
+      })
     }
 
     return new Response(txt, { status: 200, headers: { 'content-type': 'application/sdp' } })

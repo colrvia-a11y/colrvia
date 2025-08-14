@@ -18,13 +18,8 @@ export async function POST() {
         authorization: `Bearer ${apiKey}`,
         'OpenAI-Beta': 'realtime=v1',
       },
-      body: JSON.stringify({
-        model,
-        // optional but recommended — choose a voice the model can speak with
-        voice: 'verse',
-        // you can include instructions/system here too, if desired
-        // instructions: 'You are the Colrvia intake assistant…'
-      }),
+      // include voice to ensure audio is produced
+      body: JSON.stringify({ model, voice: 'verse' })
     })
 
     const txt = await r.text()
@@ -39,6 +34,8 @@ export async function POST() {
       console.error('[realtime][session] no client_secret in upstream response')
       return new Response('Upstream response missing client_secret', { status: 502 })
     }
+    // lightweight log to verify token characteristics (masked)
+    console.log('[realtime][session] issued client_secret len=', String(clientSecret).length)
     return Response.json({ client_secret: { value: clientSecret } })
   } catch (e: any) {
     console.error('[realtime][session] error', e?.message || e)

@@ -196,7 +196,7 @@ export default function VoiceInterview() {
         )
       }
 
-      const offer = await pc.createOffer()
+      const offer = await pc.createOffer({ offerToReceiveAudio: true })
       await pc.setLocalDescription(offer)
       const res = await fetch('/api/realtime/offer', {
         method: 'POST',

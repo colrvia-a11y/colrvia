@@ -91,7 +91,7 @@ export default function VoiceMic({ onActiveChange, greet }: Props) {
         }
       };
 
-      const offer = await pc.createOffer();
+      const offer = await pc.createOffer({ offerToReceiveAudio: true });
       await pc.setLocalDescription(offer);
 
       // Wait for ICE to gather
