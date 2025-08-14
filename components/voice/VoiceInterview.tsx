@@ -200,7 +200,10 @@ export default function VoiceInterview() {
       await pc.setLocalDescription(offer)
       const res = await fetch('/api/realtime/offer', {
         method: 'POST',
-        headers: { 'content-type': 'application/sdp', authorization: `Bearer ${clientSecret}` },
+        headers: {
+          'content-type': 'application/sdp',
+          authorization: `Bearer ${clientSecret}`, // ephemeral token from /api/realtime/session
+        },
         body: offer.sdp || '',
       })
       if (!res.ok) {

@@ -1,79 +1,48 @@
-import SYSTEM_PROMPT from "@/lib/prompt/system";
-import { startState, acceptAnswer, getCurrentNode, type InterviewState } from "@/lib/ai/onboardingGraph";
-import { REALTIME_MODEL } from "@/lib/ai/config";
-
 export const runtime = 'nodejs'
 
-/**
- * POST /api/realtime/session
- * Starts or continues a Realtime interview session.
- * Body:
- *  - step: 'start' | 'answer'
- *  - voice: optional Realtime voice param
- *  - state, content: required for step='answer'
- */
-export async function POST(req: Request) {
+export async function POST() {
   const apiKey = process.env.OPENAI_API_KEY
+  const model = process.env.OPENAI_REALTIME_MODEL || 'gpt-4o-realtime-preview-2024-12-17'
   if (!apiKey) {
+    console.error('[realtime][session] missing OPENAI_API_KEY')
     return new Response('OPENAI_API_KEY missing', { status: 500 })
   }
+
   try {
-    const body = (await req.json().catch(() => ({}))) as {
-      voice?: string
-      step?: 'start' | 'answer'
-      content?: string
-      state?: InterviewState
-    }
-    const { voice, step = 'start', content = '', state } = body
-
-    if (step === 'answer' && state) {
-      const nextState = acceptAnswer(state, content)
-      if (nextState.done) {
-        return new Response(JSON.stringify({ state: nextState, done: true }), {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        })
-      }
-      const node = getCurrentNode(nextState)
-      return new Response(JSON.stringify({ state: nextState, question: node.prompt }), {
-        headers: { 'Content-Type': 'application/json' },
-        status: 200,
-      })
-    }
-
-    const initState = startState()
-    const node = getCurrentNode(initState)
-
-    const rtVoice = voice || process.env.OPENAI_TTS_VOICE || 'alloy'
-
+    // Create an EPHEMERAL client secret for WebRTC:
+    // POST https://api.openai.com/v1/realtime/sessions
     const r = await fetch('https://api.openai.com/v1/realtime/sessions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+        'content-type': 'application/json',
+        authorization: `Bearer ${apiKey}`,
+        'OpenAI-Beta': 'realtime=v1',
       },
       body: JSON.stringify({
-        model: REALTIME_MODEL,
-        voice: rtVoice,
-        instructions:
-          SYSTEM_PROMPT +
-          "\n\nKeep replies warm, brief, and natural. Ask the user: " +
-          node.prompt,
+        model,
+        // optional but recommended — choose a voice the model can speak with
+        voice: 'verse',
+        // you can include instructions/system here too, if desired
+        // instructions: 'You are the Colrvia intake assistant…'
       }),
     })
 
+    const txt = await r.text()
     if (!r.ok) {
-      const text = await r.text()
-      return new Response(text || 'Failed to create realtime session', { status: r.status })
+      console.error('[realtime][session] upstream', r.status, txt.slice(0, 300))
+      return new Response(txt || 'Session init failed', { status: r.status })
     }
 
-    const data = await r.json().catch(() => ({}))
-    return new Response(JSON.stringify({ ...data, state: initState, question: node.prompt }), {
-      headers: { 'Content-Type': 'application/json' },
-      status: 200,
-    })
-  } catch (err: any) {
-    console.error('/api/realtime/session error', err)
-    return new Response(err?.message ?? 'Unknown error', { status: 500 })
+    const json = JSON.parse(txt)
+    const clientSecret = json?.client_secret?.value
+    if (!clientSecret) {
+      console.error('[realtime][session] no client_secret in upstream response')
+      return new Response('Upstream response missing client_secret', { status: 502 })
+    }
+    return Response.json({ client_secret: { value: clientSecret } })
+  } catch (e: any) {
+    console.error('[realtime][session] error', e?.message || e)
+    return new Response('Session init error', { status: 502 })
   }
 }
+
