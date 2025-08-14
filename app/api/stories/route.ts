@@ -96,12 +96,13 @@ export async function POST(req: Request) {
     L('insert attempt', {
       userId: user?.id ?? null,
       brand,
-      prompt: body?.prompt ?? null,
-      vibe: body?.vibe ?? null,
+      prompt: (body as any)?.prompt ?? null,
+      vibe: (body as any)?.vibe ?? null,
       hasPalette: Array.isArray(finalPalette),
       paletteLen: Array.isArray(finalPalette) ? finalPalette.length : 0,
-      hasInputs: !!body?.inputs,
-      hasAnswers: !!body?.answers,
+      hasInputs: !!(body as any)?.inputs,
+      hasAnswers: !!(body as any)?.answers,
+      bodyKeys: Object.keys((body as any) ?? {})
     });
     const { data: created, error: insertErr } = await supabase
       .from("stories")
