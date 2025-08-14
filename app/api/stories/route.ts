@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { supabaseServer } from '@/lib/supabase/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { seedPaletteFor } from '@/lib/ai/palette';
 import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair';
 import { designPalette } from '@/lib/ai/orchestrator';
@@ -33,12 +33,19 @@ export async function POST(req: Request) {
   return NextResponse.json<StoriesPostRes>({ error: "INVALID_INPUT", issues }, { status: 422 })
   }
 
-  // 3) Auth (optional): get user if present
-  const supabase = supabaseServer()
+  // 3) Auth: require sign-in
+  const supabase = createSupabaseServerClient()
   const {
     data: { user },
     error: userErr,
   } = await supabase.auth.getUser()
+
+  if (!user || userErr) {
+    return NextResponse.json<StoriesPostRes>(
+      { error: 'AUTH_REQUIRED' },
+      { status: 401 },
+    )
+  }
 
   // 4) Build or repair palette using existing flow; guard to avoid 500s on downstream throws
   try {
@@ -92,9 +99,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "PALETTE_INVALID" }, { status: 422 })
       }
     }
-    // 3) Persist the story to the database (guests included) and always return { id }
+    // 3) Persist the story to the database and always return { id }
     L('insert attempt', {
-      userId: user?.id ?? null,
+      userId: user.id,
       brand,
       hasPalette: Array.isArray(finalPalette),
       paletteLen: Array.isArray(finalPalette) ? finalPalette.length : 0,
@@ -103,21 +110,21 @@ export async function POST(req: Request) {
       bodyKeys: Object.keys((body as any) ?? {})
     });
     const { data: created, error: insertErr } = await supabase
-      .from("stories")
+      .from('stories')
       .insert({
-        user_id: user?.id ?? null,                 // guests are null (allowed by your DB)
-        brand,                                     // 'sherwin_williams'
+        user_id: user.id,
+        brand,
         inputs: (body as any)?.inputs ?? {
-          vibe: (body as any)?.vibe ?? null
+          vibe: (body as any)?.vibe ?? null,
         },
-        palette: finalPalette,                     // the 5 swatches array
-        has_variants: false,                       // default for now
-        status: "ready",                           // so Reveal can read it
+        palette: finalPalette,
+        has_variants: false,
+        status: 'ready',
         title: (body as any)?.vibe
           ? `${(body as any).vibe} Palette`
-          : 'Your Color Story'
+          : 'Your Color Story',
       })
-      .select("id")
+      .select('id')
       .single();
     if (insertErr || !created) {
       L('insert error', {
@@ -132,8 +139,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Return 201 (or 200 in test env) with the new story ID
-  return NextResponse.json<StoriesPostRes>({ id: created.id }, { status: testEnv ? 200 : 201 });
+    // Return 201 with the new story ID
+    return NextResponse.json<StoriesPostRes>({ id: created.id }, { status: 201 });
   } catch (err) {
     // Convert unexpected errors to a typed 422 rather than a 500 for user-caused input paths
   return NextResponse.json<StoriesPostRes>({ error: "UNPROCESSABLE" }, { status: 422 });
