@@ -1,11 +1,15 @@
 import SYSTEM_PROMPT from "@/lib/prompt/system";
+import { startState, acceptAnswer, getCurrentNode, type InterviewState } from "@/lib/ai/onboardingGraph";
 
 export const runtime = 'nodejs'
 
 /**
  * POST /api/realtime/session
- * Creates a short-lived Realtime session token for the client to start a WebRTC call.
- * Body (optional): { voice?: string, model?: string }
+ * Starts or continues a Realtime interview session.
+ * Body:
+ *  - step: 'start' | 'answer'
+ *  - voice, model: optional Realtime model params
+ *  - state, content: required for step='answer'
  */
 export async function POST(req: Request) {
   const apiKey = process.env.OPENAI_API_KEY
@@ -13,10 +17,32 @@ export async function POST(req: Request) {
     return new Response('OPENAI_API_KEY missing', { status: 500 })
   }
   try {
-    const { voice, model } = (await req.json().catch(() => ({}))) as {
+    const body = (await req.json().catch(() => ({}))) as {
       voice?: string
       model?: string
+      step?: 'start' | 'answer'
+      content?: string
+      state?: InterviewState
     }
+    const { voice, model, step = 'start', content = '', state } = body
+
+    if (step === 'answer' && state) {
+      const nextState = acceptAnswer(state, content)
+      if (nextState.done) {
+        return new Response(JSON.stringify({ state: nextState, done: true }), {
+          headers: { 'Content-Type': 'application/json' },
+          status: 200,
+        })
+      }
+      const node = getCurrentNode(nextState)
+      return new Response(JSON.stringify({ state: nextState, question: node.prompt }), {
+        headers: { 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    }
+
+    const initState = startState()
+    const node = getCurrentNode(initState)
 
     const rtModel = model || process.env.OPENAI_REALTIME_MODEL || 'gpt-4o-realtime-preview-2024-12-17'
     const rtVoice = voice || process.env.OPENAI_TTS_VOICE || 'alloy'
@@ -30,7 +56,10 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model: rtModel,
         voice: rtVoice,
-        instructions: SYSTEM_PROMPT + "\n\nKeep replies warm, brief, and natural.",
+        instructions:
+          SYSTEM_PROMPT +
+          "\n\nKeep replies warm, brief, and natural. Ask the user: " +
+          node.prompt,
       }),
     })
 
@@ -40,8 +69,7 @@ export async function POST(req: Request) {
     }
 
     const data = await r.json().catch(() => ({}))
-    // Make sure to return: { client_secret: { value: token } }
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify({ ...data, state: initState, question: node.prompt }), {
       headers: { 'Content-Type': 'application/json' },
       status: 200,
     })
