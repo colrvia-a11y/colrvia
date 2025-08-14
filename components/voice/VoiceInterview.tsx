@@ -23,6 +23,8 @@ export default function VoiceInterview() {
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const [status, setStatus] = useState<BootStatus>('booting')
   const bootTimerRef = useRef<number | null>(null)
+  const [armed, setArmed] = useState(false) // user tapped Enable Voice
+  const [micError, setMicError] = useState<string | null>(null)
 
   // Choose a slightly longer fallback on mobile/slow networks so iOS has time to show the mic sheet
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : ''
@@ -40,6 +42,7 @@ export default function VoiceInterview() {
   }
 
   useEffect(() => {
+    if (!armed) return
     let pc: RTCPeerConnection | null = null
     let dc: RTCDataChannel | null = null
     let stream: MediaStream | null = null
@@ -73,10 +76,32 @@ export default function VoiceInterview() {
         return
       }
 
+      // 2) mic (with preflight + better error)
       try {
+        // Preflight if supported
+        const canCheck =
+          typeof navigator !== 'undefined' && (navigator as any).permissions?.query
+        if (canCheck) {
+          try {
+            const p = await (navigator as any).permissions.query({
+              name: 'microphone' as any,
+            })
+            if (p.state === 'denied') {
+              setMicError('Microphone is blocked for this site. Tap Fix Microphone for steps.')
+              setStatus('fallback')
+              return
+            }
+          } catch {}
+        }
         stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      } catch (e) {
+        setMicError(null)
+      } catch (e: any) {
         console.error('mic', e)
+        setMicError(
+          e?.name === 'NotAllowedError'
+            ? 'Microphone permission was denied. Please allow access and try again.'
+            : 'Microphone error. Please check permissions.',
+        )
         setStatus('fallback')
         return
       }
@@ -183,7 +208,7 @@ export default function VoiceInterview() {
         stream?.getTracks().forEach((t) => t.stop())
       } catch {}
     }
-  }, [])
+  }, [armed])
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-6 p-4">
@@ -217,6 +242,41 @@ export default function VoiceInterview() {
       {status === 'booting' && <p className="text-xs text-muted-foreground">Starting voice…</p>}
       {status === 'fallback' && <p className="text-xs">Voice is warming up — using text prompts for now.</p>}
       {status === 'error' && <p className="text-xs text-red-600">Couldn’t start voice. You can still tap to answer.</p>}
+
+      {!armed && (
+        <button
+          type="button"
+          className="mt-2 px-4 py-2 rounded-2xl bg-black text-white"
+          onClick={() => setArmed(true)}
+        >
+          Enable Voice (Mic)
+        </button>
+      )}
+      {micError && (
+        <div className="mt-2 text-xs rounded-xl border p-2">
+          {micError}{' '}
+          <details className="mt-1">
+            <summary className="cursor-pointer">Fix Microphone (iOS & Android)</summary>
+            <div className="mt-1 space-y-1">
+              <div>iOS Safari: aA → Website Settings → Microphone → Allow, then reload.</div>
+              <div>iOS Settings: Privacy & Security → Microphone → enable for Safari/Chrome.</div>
+              <div>Chrome: lock icon → Site settings → Microphone → Allow, then reload.</div>
+            </div>
+          </details>
+          <div className="mt-2">
+            <button
+              type="button"
+              className="px-3 py-1 rounded border"
+              onClick={() => {
+                setArmed(false)
+                setTimeout(() => setArmed(true), 0)
+              }}
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      )}
 
       <main className="flex flex-col items-center gap-4">
         <p className="mt-2 text-center text-base">{currentQuestion}</p>
