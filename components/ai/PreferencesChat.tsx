@@ -1,9 +1,10 @@
 "use client"
 import * as React from 'react'
+import Link from 'next/link'
 import { usePreferencesChat } from '@/lib/hooks/usePreferencesChat'
 
 export default function PreferencesChat({ designerId }: { designerId: string }) {
-  const { currentNode, utterance, input, setInput, busy, done, statusText, submit } =
+  const { currentQuestion, choices, input, setInput, busy, done, statusText, submit, storyId } =
     usePreferencesChat(designerId)
 
   return (
@@ -13,16 +14,16 @@ export default function PreferencesChat({ designerId }: { designerId: string }) 
       className="rounded-2xl border border-white/15 bg-white/5 p-4 text-white/95"
     >
       <div className="min-h-[120px]">
-        {utterance ? (
-          <p className="text-base md:text-lg">{utterance}</p>
+        {currentQuestion ? (
+          <p className="text-base md:text-lg">{currentQuestion}</p>
         ) : (
           <p className="opacity-80">Preparing questions…</p>
         )}
         {statusText && <p className="mt-2 text-sm opacity-80">{statusText}</p>}
       </div>
-      {Array.isArray(currentNode?.options) && currentNode.options.length > 0 && !done && (
+      {Array.isArray(choices) && choices.length > 0 && !done && (
         <div className="mt-3 flex flex-wrap gap-2">
-          {currentNode.options.map((o: string) => (
+          {choices.map((o: string) => (
             <button
               type="button"
               key={o}
@@ -55,6 +56,16 @@ export default function PreferencesChat({ designerId }: { designerId: string }) 
           >
             Send
           </button>
+        </div>
+      )}
+      {done && storyId && (
+        <div className="mt-4">
+          <Link
+            href={`/reveal/${storyId}`}
+            className="rounded-xl bg-white/20 px-4 py-2 text-sm hover:bg-white/25"
+          >
+            Reveal My Palette
+          </Link>
         </div>
       )}
     </div>

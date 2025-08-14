@@ -141,12 +141,19 @@ export default function VoiceInterview() {
 
       dc = pc.createDataChannel('oai-events')
 
-      const askNext = async () => {
+      const designerId = 'therapist'
+
+      const askNext = async (last?: { id: string; answer: string }) => {
         try {
+          const body: any = { answers: answersRef.current, designerId }
+          if (last) {
+            body.last_question = last.id
+            body.last_answer = last.answer
+          }
           const res = await fetch('/api/ai/preferences', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ answers: answersRef.current }),
+            body: JSON.stringify(body),
           })
           const data = await res.json().catch(() => ({}))
           if (!data?.turn) {
@@ -158,6 +165,18 @@ export default function VoiceInterview() {
                 response: { modalities: ['audio', 'text'], instructions: '' },
               }),
             )
+            try {
+              const storyRes = await fetch('/api/stories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ designerKey: designerId, ...answersRef.current, seed: `voice:${Date.now()}` }),
+              })
+              const story = await storyRes.json().catch(() => null)
+              const id = story?.id || story?.story?.id
+              router.replace(id ? `/start/processing?id=${id}` : '/start/processing')
+            } catch {
+              router.replace('/start/processing')
+            }
             return
           }
           const turn = IntakeTurnZ.parse(data.turn)
@@ -198,9 +217,7 @@ export default function VoiceInterview() {
             }
             const pr = QUESTION_PRIORITY[currentIdRef.current as QuestionId] || 'P4'
             track?.('answer_saved', { id: currentIdRef.current, priority: pr })
-            askNext()
-          } else if (msg.item?.role === 'assistant' && currentQuestion === '') {
-            router.replace('/start/processing')
+            askNext({ id: currentIdRef.current, answer: t })
           }
         }
       }

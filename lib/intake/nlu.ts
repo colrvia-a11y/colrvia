@@ -59,6 +59,19 @@ const LOCATION_SYNONYMS: Record<string, string[]> = {
   island: ['island'],
 };
 
+const ROOM_SYNONYMS: Record<string, string[]> = {
+  kitchen: ['kitchen'],
+  bathroom: ['bathroom', 'bath', 'powder'],
+  living_room: ['living', 'living room', 'family room'],
+  bedroom_adult: ['bedroom', 'primary bedroom', 'master'],
+  bedroom_kid: ["kid's room", 'kids room', 'child room', 'teen room'],
+  nursery: ['nursery'],
+  dining: ['dining', 'dining room'],
+  home_office: ['home office', 'office', 'study'],
+  open_concept: ['open concept', 'open', 'great room'],
+  hallway_entry: ['hallway', 'entry', 'foyer'],
+};
+
 export function nluParse(id: string, transcript: string): any {
   const text = transcript.trim().toLowerCase();
 
@@ -98,6 +111,9 @@ export function nluParse(id: string, transcript: string): any {
         west: ['west', 'west-facing', 'west facing'],
       };
       return mapFromSynonyms(MAP, text) || 'unknown';
+    }
+    case 'room_type': {
+      return mapFromSynonyms(ROOM_SYNONYMS, text) || text.replace(/\s+/g, '_');
     }
     default:
       return text;

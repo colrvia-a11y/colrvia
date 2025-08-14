@@ -65,6 +65,15 @@ export function ackFor(prevKey: string, userText: string, rngSeed: string) {
       const m = userText.toLowerCase().startsWith('sher')? 'Sherwin-Williams':'Behr'
       return pick(rng,[`${m}—solid choice.`,`${m} works great.`])
     }
+    case 'room_type': {
+      const clean = userText.trim()
+      const joins = [
+        `Great, a ${clean}—got it.`,
+        `${clean}? Love it.`,
+        `${clean}—sounds good.`,
+      ]
+      return pick(rng, joins)
+    }
     case 'avoid': return pick(rng,["Noted—avoiding it.","Got it—steering clear."])
     case 'fixed': return pick(rng,["Will match those.","Finishes noted."])
     case 'trim': return pick(rng,["Trim noted.","We’ll match trim."])
