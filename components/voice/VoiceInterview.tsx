@@ -20,7 +20,6 @@ export default function VoiceInterview() {
   const [captions, setCaptions] = useState('')
   const answersRef = useRef<Answers>({})
   const currentIdRef = useRef<string | null>(null)
-  const modelTextRef = useRef<string>('')
   const userTextRef = useRef('')
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -142,6 +141,42 @@ export default function VoiceInterview() {
 
       dc = pc.createDataChannel('oai-events')
 
+      const askNext = async () => {
+        try {
+          const res = await fetch('/api/ai/preferences', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ answers: answersRef.current }),
+          })
+          const data = await res.json().catch(() => ({}))
+          if (!data?.turn) {
+            currentIdRef.current = null
+            setCurrentQuestion('')
+            dc?.send(
+              JSON.stringify({
+                type: 'response.create',
+                response: { modalities: ['audio', 'text'], instructions: '' },
+              }),
+            )
+            return
+          }
+          const turn = IntakeTurnZ.parse(data.turn)
+          currentIdRef.current = turn.field_id
+          setCurrentQuestion(turn.next_question)
+          setActiveSection(getSection(turn.field_id))
+          const pr = QUESTION_PRIORITY[turn.field_id as QuestionId] || 'P4'
+          track?.('question_shown', { id: turn.field_id, priority: pr })
+          dc?.send(
+            JSON.stringify({
+              type: 'response.create',
+              response: { modalities: ['audio', 'text'], instructions: turn.next_question },
+            }),
+          )
+        } catch (err) {
+          console.error('ask', err)
+        }
+      }
+
       dc.onmessage = (e) => {
         let msg: any
         try {
@@ -149,25 +184,7 @@ export default function VoiceInterview() {
         } catch {
           return
         }
-        if (msg.type === 'response.output_text.delta') {
-          modelTextRef.current += msg.delta ?? ''
-        } else if (msg.type === 'response.completed' || msg.type === 'response.output_text.done') {
-          const raw = modelTextRef.current.trim()
-          modelTextRef.current = ''
-          if (!raw) return
-          try {
-            const turn = IntakeTurnZ.parse(JSON.parse(raw))
-            currentIdRef.current = turn.field_id
-            setCurrentQuestion(turn.next_question)
-            setActiveSection(getSection(turn.field_id))
-            const pr = QUESTION_PRIORITY[turn.field_id as QuestionId] || 'P4'
-            track?.('question_shown', { id: turn.field_id, priority: pr })
-          } catch (err) {
-            console.error('parse', err)
-            setStatus('error')
-            setStatusReason('model JSON parse error')
-          }
-        } else if (msg.type === 'conversation.item.input_audio.transcription.delta') {
+        if (msg.type === 'conversation.item.input_audio.transcription.delta') {
           userTextRef.current += msg.delta
           setCaptions((c) => c + msg.delta)
         } else if (msg.type === 'conversation.item.completed') {
@@ -181,6 +198,7 @@ export default function VoiceInterview() {
             }
             const pr = QUESTION_PRIORITY[currentIdRef.current as QuestionId] || 'P4'
             track?.('answer_saved', { id: currentIdRef.current, priority: pr })
+            askNext()
           } else if (msg.item?.role === 'assistant' && currentQuestion === '') {
             router.replace('/start/processing')
           }
@@ -188,15 +206,7 @@ export default function VoiceInterview() {
       }
 
       dc.onopen = () => {
-        dc!.send(
-          JSON.stringify({
-            type: 'response.create',
-            response: {
-              modalities: ['audio', 'text'],
-              instructions: 'BEGIN',
-            },
-          }),
-        )
+        askNext()
       }
 
       const offer = await pc.createOffer({ offerToReceiveAudio: true })
