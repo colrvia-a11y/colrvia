@@ -158,24 +158,36 @@ export async function POST(req: Request) {
   const designerId = body.designerId || 'therapist'
   const answers: Answers = body.answers || {}
 
-  if (body.last_question && body.last_answer !== undefined) {
-    answers[body.last_question] = nluParse(body.last_question, body.last_answer)
+  // NEW: normalize ALL provided answers so conditional logic sees canonical values.
+  // Voice mode sends free-form text; we need to map it to enums/arrays consistently.
+  const normalized: Answers = {} as any
+  for (const key of Object.keys(answers) as QuestionId[]) {
+    const raw: any = (answers as any)[key]
+    // Only re-parse strings; arrays/objects already in canonical shape can pass through.
+    normalized[key] = typeof raw === 'string' ? (nluParse as any)(key, raw) : raw
   }
 
-  const queue = buildQuestionQueue(answers)
+  // Also re-apply the latest answer explicitly (this ensures it wins over any stale client value).
+  if (body.last_question && body.last_answer !== undefined) {
+    normalized[body.last_question] = nluParse(body.last_question, body.last_answer)
+  }
+
+  const queue = buildQuestionQueue(normalized)
   const nextId = queue[0]
 
   if (!nextId) return NextResponse.json({ turn: null })
 
-  const info = promptFor(nextId, answers)
+  const info = promptFor(nextId, normalized)
   let questionText = info.text
-
-  if (!body.last_question) {
-    const greet = GREETINGS[designerId] || GREETINGS.therapist
-    questionText = `${greet} ${questionText}`
+  if (body.last_question && body.last_answer !== undefined) {
+    const ack = ackFor(body.last_question, body.last_answer, designerId)
+    questionText = `${ack} ${questionText}`
   } else if (body.last_answer !== undefined) {
     const ack = ackFor(body.last_question, body.last_answer, 'seed')
     questionText = `${ack} ${questionText}`
+  } else if (!body.last_question) {
+    const greet = GREETINGS[designerId] || GREETINGS.therapist
+    questionText = `${greet} ${questionText}`
   }
 
   const turn: IntakeTurnT = {
