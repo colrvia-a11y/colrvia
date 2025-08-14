@@ -113,7 +113,6 @@ export async function POST(req: Request) {
         vibe: body.vibe || null,
         palette: finalPalette,
         source: body.source || "interview",
-        notes: body.notes || null,
         status: "ready",                      // initial status; RevealPoller can read this
       })
       .select("id")
