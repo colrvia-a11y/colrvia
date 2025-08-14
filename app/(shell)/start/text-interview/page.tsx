@@ -1,3 +1,5 @@
+"use client"
+
 import RealTalkQuestionnaire from '@/components/realtalk/RealTalkQuestionnaire'
 
 export const metadata = {
