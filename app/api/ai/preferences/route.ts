@@ -5,7 +5,6 @@ import { buildQuestionQueue } from '@/lib/intake/engine'
 import type { Answers } from '@/lib/intake/types'
 import type { QuestionId } from '@/lib/intake/questions'
 import type { IntakeTurnT } from '@/lib/model-schema'
-import { ackFor } from '@/lib/ai/phrasing'
 import { nluParse } from '@/lib/intake/nlu'
 
 const GREETINGS: Record<string, string> = {
@@ -139,15 +138,6 @@ const PROMPTS: Record<QuestionId, Prompt> = {
   },
 }
 
-function promptFor(id: QuestionId, answers: Answers): Prompt {
-  const base = PROMPTS[id]
-  if (id === 'fixed_elements') {
-    const room = (answers.room_type || 'room').replace(/_/g, ' ')
-    return { ...base, text: `Which ${room} elements need to coordinate with paint?` }
-  }
-  return base
-}
-
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as {
     answers?: Answers
@@ -175,30 +165,28 @@ export async function POST(req: Request) {
   const queue = buildQuestionQueue(normalized)
   const nextId = queue[0]
 
-  if (!nextId) return NextResponse.json({ turn: null })
+  const greeting = body.last_question
+    ? null
+    : GREETINGS[designerId] || GREETINGS.therapist
+  const progress = { asked: Object.keys(normalized).length, maxCap: 15 }
 
-  const info = promptFor(nextId, normalized)
-  let questionText = info.text
-  if (body.last_question && body.last_answer !== undefined) {
-    const ack = ackFor(body.last_question, body.last_answer, designerId)
-    questionText = `${ack} ${questionText}`
-  } else if (body.last_answer !== undefined) {
-    // If we have an answer but no matching question ID, fall back to a generic ack.
-    const ack = ackFor(body.last_question ?? '', body.last_answer, 'seed')
-    questionText = `${ack} ${questionText}`
-  } else if (!body.last_question) {
-    const greet = GREETINGS[designerId] || GREETINGS.therapist
-    questionText = `${greet} ${questionText}`
-  }
+  if (!nextId)
+    return NextResponse.json({
+      prompt: null,
+      answers: normalized,
+      greeting,
+      progress,
+    })
 
-  const turn: IntakeTurnT = {
-    field_id: nextId,
-    next_question: questionText,
+  const info = PROMPTS[nextId]
+  const prompt = {
+    id: nextId,
+    text: info.text,
     input_type: info.input_type,
-    choices: info.choices ?? null,
-    validation: info.validation || null,
+    choices: info.choices?.map((c) => ({ id: c, label: c })),
+    validation: info.validation,
   }
 
-  return NextResponse.json({ turn })
+  return NextResponse.json({ prompt, answers: normalized, greeting, progress })
 }
 
