@@ -7,6 +7,7 @@ import { IntakeTurnZ } from '@/lib/model-schema'
 import type { Answers } from '@/lib/intake/types'
 import { track } from '@/lib/analytics'
 import { getSection } from '@/lib/intake/sections'
+import { QUESTION_PRIORITY, QuestionId } from '@/lib/intake/questions'
 import { isVoiceEnabled } from '@/lib/flags'
 import VoiceStatusBar from '@/components/voice/VoiceStatusBar'
 
@@ -159,7 +160,8 @@ export default function VoiceInterview() {
             currentIdRef.current = turn.field_id
             setCurrentQuestion(turn.next_question)
             setActiveSection(getSection(turn.field_id))
-            track?.('question_shown', { id: turn.field_id, priority: 'P1' })
+            const pr = QUESTION_PRIORITY[turn.field_id as QuestionId] || 'P4'
+            track?.('question_shown', { id: turn.field_id, priority: pr })
           } catch (err) {
             console.error('parse', err)
             setStatus('error')
@@ -177,7 +179,8 @@ export default function VoiceInterview() {
               ...answersRef.current,
               [currentIdRef.current]: t,
             }
-            track?.('answer_saved', { id: currentIdRef.current, priority: 'P1' })
+            const pr = QUESTION_PRIORITY[currentIdRef.current as QuestionId] || 'P4'
+            track?.('answer_saved', { id: currentIdRef.current, priority: pr })
           } else if (msg.item?.role === 'assistant' && currentQuestion === '') {
             router.replace('/start/processing')
           }
