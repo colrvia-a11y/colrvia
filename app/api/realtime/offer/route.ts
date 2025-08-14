@@ -7,12 +7,13 @@ export async function POST(req: Request) {
   }
   const sdp = await req.text().catch(() => '')
   if (!sdp) return new Response('Empty SDP', { status: 400 })
-  const r = await fetch('https://api.openai.com/v1/realtime/offer', {
+  // forward to provider; bubble up provider error text
+  const upstream = await fetch('https://api.openai.com/v1/realtime/offer', {
     method: 'POST',
     headers: { 'content-type': 'application/sdp', authorization: `Bearer ${apiKey}` },
     body: sdp,
   })
-  const txt = await r.text()
-  if (!r.ok) return new Response(txt || 'Offer failed', { status: r.status })
+  const txt = await upstream.text()
+  if (!upstream.ok) return new Response(txt || 'Offer failed', { status: upstream.status })
   return new Response(txt, { status: 200, headers: { 'content-type': 'application/sdp' } })
 }

@@ -10,7 +10,7 @@ export const runtime = 'nodejs'
 export async function POST(req: Request) {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'OPENAI_API_KEY missing' }), { status: 500 })
+    return new Response('OPENAI_API_KEY missing', { status: 500 })
   }
   try {
     const { voice, model } = (await req.json().catch(() => ({}))) as {
@@ -36,19 +36,17 @@ export async function POST(req: Request) {
 
     if (!r.ok) {
       const text = await r.text()
-      return new Response(
-        JSON.stringify({ error: 'Failed to create realtime session', details: text }),
-        { status: r.status },
-      )
+      return new Response(text || 'Failed to create realtime session', { status: r.status })
     }
 
     const data = await r.json().catch(() => ({}))
+    // Make sure to return: { client_secret: { value: token } }
     return new Response(JSON.stringify(data), {
       headers: { 'Content-Type': 'application/json' },
       status: 200,
     })
   } catch (err: any) {
     console.error('/api/realtime/session error', err)
-    return new Response(JSON.stringify({ error: err?.message ?? 'Unknown error' }), { status: 500 })
+    return new Response(err?.message ?? 'Unknown error', { status: 500 })
   }
 }

@@ -8,6 +8,7 @@ import type { Answers } from '@/lib/intake/types'
 import { track } from '@/lib/analytics'
 import { getSection } from '@/lib/intake/sections'
 import { isVoiceEnabled } from '@/lib/flags'
+import VoiceStatusBar from '@/components/voice/VoiceStatusBar'
 
 type BootStatus = 'booting' | 'ready' | 'error' | 'fallback'
 
@@ -23,6 +24,7 @@ export default function VoiceInterview() {
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [status, setStatus] = useState<BootStatus>('booting')
+  const [statusReason, setStatusReason] = useState<string | null>(null)
   const bootTimerRef = useRef<number | null>(null)
   const [armed, setArmed] = useState(false) // user tapped Enable Voice
   const [micError, setMicError] = useState<string | null>(null)
@@ -55,15 +57,19 @@ export default function VoiceInterview() {
         try {
           kickOffDeterministicFirstQuestion()
           setStatus('fallback')
+          if (!statusReason) setStatusReason('timeout waiting for realtime')
         } catch {
           setStatus('error')
+          setStatusReason('fallback init failed')
         }
       }, fallbackDelay)
 
       const tokenRes = await fetch('/api/realtime/session', { method: 'POST' })
       if (!tokenRes.ok) {
-        console.error('session init failed', await tokenRes.text().catch(() => ''))
+        const errText = await tokenRes.text().catch(() => '')
+        console.error('session init failed', errText)
         setStatus('fallback')
+        setStatusReason(`session ${tokenRes.status} ${errText.slice(0,80)}`)
         return
       }
       const tokenData = await tokenRes.json().catch(() => ({} as any))
@@ -74,6 +80,7 @@ export default function VoiceInterview() {
           bootTimerRef.current = null
         }
         setStatus('fallback')
+        setStatusReason(!isVoiceEnabled() ? 'voice disabled by flag' : 'missing client_secret')
         return
       }
 
@@ -98,12 +105,14 @@ export default function VoiceInterview() {
         setMicError(null)
       } catch (e: any) {
         console.error('mic', e)
+        const name = e?.name || ''
         setMicError(
-          e?.name === 'NotAllowedError'
-            ? 'Microphone permission was denied. Please allow access and try again.'
-            : 'Microphone error. Please check permissions.',
+          name === 'NotAllowedError'
+            ? 'Microphone permission was denied. Please allow access in site settings, then try again.'
+            : 'Microphone error. Please check permissions and try again.',
         )
         setStatus('fallback')
+        setStatusReason(name || 'mic error')
         return
       }
       if (cancelled) return
@@ -154,6 +163,7 @@ export default function VoiceInterview() {
           } catch (err) {
             console.error('parse', err)
             setStatus('error')
+            setStatusReason('model JSON parse error')
           }
         } else if (msg.type === 'conversation.item.input_audio.transcription.delta') {
           userTextRef.current += msg.delta
@@ -197,6 +207,7 @@ export default function VoiceInterview() {
         const errText = await res.text().catch(() => '')
         console.error('offer failed', errText)
         setStatus('fallback')
+        setStatusReason(`offer ${res.status} ${errText.slice(0,80)}`)
         return
       }
       const answer = { type: 'answer', sdp: await res.text() }
@@ -251,9 +262,7 @@ export default function VoiceInterview() {
         </div>
       </header>
 
-      {status === 'booting' && <p className="text-xs text-muted-foreground">Starting voice…</p>}
-      {status === 'fallback' && <p className="text-xs">Voice is warming up — using text prompts for now.</p>}
-      {status === 'error' && <p className="text-xs text-red-600">Couldn’t start voice. You can still tap to answer.</p>}
+      <VoiceStatusBar status={status} reason={statusReason} showLink />
 
       {!armed && (
         <button
