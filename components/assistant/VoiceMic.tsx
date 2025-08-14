@@ -18,6 +18,7 @@ export default function VoiceMic({ onActiveChange, greet }: Props) {
   const [error, setError] = React.useState<string | null>(null);
   const pcRef = React.useRef<RTCPeerConnection | null>(null);
   const dcRef = React.useRef<RTCDataChannel | null>(null);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   function exposeBus() {
     window.colrviaVoice = {
@@ -64,14 +65,21 @@ export default function VoiceMic({ onActiveChange, greet }: Props) {
       });
       pcRef.current = pc;
 
-      // Remote audio
-      const audioEl = new Audio();
-      audioEl.autoplay = true;
-      pc.ontrack = (e) => { audioEl.srcObject = e.streams[0]; };
+      // Receive remote audio and play it
+      try {
+        pc.addTransceiver("audio", { direction: "recvonly" });
+      } catch {}
+      pc.ontrack = (e) => {
+        const remote = e.streams?.[0];
+        if (audioRef.current && remote) {
+          audioRef.current.srcObject = remote;
+          audioRef.current.play().catch(() => {});
+        }
+      };
 
-      // Send mic / receive back audio
-      pc.addTransceiver("audio", { direction: "sendrecv" });
-      pc.addTrack(stream.getTracks()[0], stream);
+      // Send mic upstream
+      const micTrack = stream.getTracks()[0];
+      if (micTrack) pc.addTrack(micTrack, stream);
 
       // Data channel for Realtime events
       const dc = pc.createDataChannel("oai-events");
@@ -112,6 +120,7 @@ export default function VoiceMic({ onActiveChange, greet }: Props) {
       setActive(true);
       onActiveChange?.(true);
       exposeBus();
+      setTimeout(() => audioRef.current?.play().catch(() => {}), 0);
     } catch (e: any) {
       setError(e?.message || "Mic error");
       setActive(false);
@@ -136,6 +145,8 @@ export default function VoiceMic({ onActiveChange, greet }: Props) {
       </button>
       {error && <span className="text-xs text-red-500">{error}</span>}
       <span className="text-xs text-neutral-500">{active ? "Listening…" : "Tap to speak"}</span>
+      {/* Hidden audio element for remote voice */}
+      <audio ref={audioRef} autoPlay playsInline className="hidden" />
     </div>
   );
 }

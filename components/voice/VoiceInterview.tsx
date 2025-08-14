@@ -21,6 +21,7 @@ export default function VoiceInterview() {
   const modelTextRef = useRef<string>('')
   const userTextRef = useRef('')
   const pcRef = useRef<RTCPeerConnection | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [status, setStatus] = useState<BootStatus>('booting')
   const bootTimerRef = useRef<number | null>(null)
   const [armed, setArmed] = useState(false) // user tapped Enable Voice
@@ -112,13 +113,24 @@ export default function VoiceInterview() {
         iceTransportPolicy: 'all',
       })
       pcRef.current = pc
-      stream.getTracks().forEach((track) => pc!.addTrack(track, stream!))
-      dc = pc.createDataChannel('oai-events')
-      const audioEl = new Audio()
-      audioEl.autoplay = true
+
+      // Receive remote audio (voice from the model) and play it
+      try {
+        pc.addTransceiver('audio', { direction: 'recvonly' })
+      } catch {}
       pc.ontrack = (e) => {
-        audioEl.srcObject = e.streams[0]
+        const remote = e.streams?.[0]
+        if (audioRef.current && remote) {
+          audioRef.current.srcObject = remote
+          audioRef.current.play().catch(() => {})
+        }
       }
+
+      // Send mic upstream
+      const micTrack = stream.getTracks()[0]
+      if (micTrack) pc.addTrack(micTrack, stream)
+
+      dc = pc.createDataChannel('oai-events')
 
       dc.onmessage = (e) => {
         let msg: any
@@ -247,7 +259,10 @@ export default function VoiceInterview() {
         <button
           type="button"
           className="mt-2 px-4 py-2 rounded-2xl bg-black text-white"
-          onClick={() => setArmed(true)}
+          onClick={() => {
+            setArmed(true)
+            setTimeout(() => audioRef.current?.play().catch(() => {}), 0)
+          }}
         >
           Enable Voice (Mic)
         </button>
@@ -269,7 +284,10 @@ export default function VoiceInterview() {
               className="px-3 py-1 rounded border"
               onClick={() => {
                 setArmed(false)
-                setTimeout(() => setArmed(true), 0)
+                setTimeout(() => {
+                  setArmed(true)
+                  setTimeout(() => audioRef.current?.play().catch(() => {}), 0)
+                }, 0)
               }}
             >
               Try Again
@@ -283,6 +301,8 @@ export default function VoiceInterview() {
       </main>
 
       <ChatCaptions text={captions} />
+      {/* Hidden audio element that actually plays the model's voice */}
+      <audio ref={audioRef} autoPlay playsInline className="hidden" />
       {showDiag && (
         <div className="fixed bottom-2 left-2 text-[11px] px-2 py-1 rounded-md bg-black/80 text-white">
           status: {status}
