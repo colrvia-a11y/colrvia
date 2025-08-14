@@ -2,7 +2,6 @@ import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import InterviewIntro from "@/app/(shell)/start/interview-intro/page";
-import ProcessingPage from "@/app/(shell)/start/processing/page";
 import InterviewPage from "@/app/(shell)/start/interview/page";
 import { moss } from "@/lib/ai/phrasing";
 
@@ -26,10 +25,6 @@ describe("onboarding flow pages", () => {
     expect(screen.getByText(/Designer interview/i)).toBeTruthy();
   });
 
-  it("shows processing message", () => {
-    render(<ProcessingPage />);
-    expect(screen.getByText(moss.working())).toBeTruthy();
-  });
 
   it("shows moss greeting and progress label", () => {
     render(<InterviewPage />);

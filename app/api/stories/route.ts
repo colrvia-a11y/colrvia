@@ -9,7 +9,6 @@ import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair';
 import { designPalette } from '@/lib/ai/orchestrator';
 import { mapV2ToLegacy } from '@/lib/ai/mapRoles';
 import type { DesignInput, Palette as V2Palette } from '@/lib/ai/schema';
-import { buildDeterministicNarrative } from '@/lib/ai/narrative';
 
 import { StoryBodySchema, type StoryBody } from "@/lib/validators"
 import type { StoriesPostRes } from "@/types/api"
@@ -91,41 +90,30 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "PALETTE_INVALID" }, { status: 422 })
       }
     }
-    // 3. Persist only if user is present; otherwise return story directly
-    if (!user || userErr) {
-      const narrative = buildDeterministicNarrative({ input: { vibe: body.vibe || vibe, brand }, palette: finalPalette })
-      const story = {
-        id: null,
-        title: body.vibe ? `${body.vibe} Palette` : 'Your Color Story',
-        palette: finalPalette.map((s: any) => ({ hex: s.hex, name: s.name, brand: s.brand, placement: s.role })),
-        narrative,
-        createdAt: new Date().toISOString(),
-      }
-      return NextResponse.json<StoriesPostRes>({ story }, { status: 200 })
-    }
-
+    // 3) Persist the story to the database (guests included) and always return { id }
     const { data: created, error: insertErr } = await supabase
       .from("stories")
       .insert({
-        user_id: user.id,
+        user_id: user?.id ?? null,            // allow null for guest users
         brand,
         prompt: body.prompt || null,
         vibe: body.vibe || null,
         palette: finalPalette,
-        source: body.source || "user",
+        source: body.source || "interview",
         notes: body.notes || null,
+        status: "ready",                      // initial status; RevealPoller can read this
       })
       .select("id")
-      .single()
+      .single();
 
     if (insertErr || !created) {
-  return NextResponse.json<StoriesPostRes>({ error: "CREATE_FAILED" }, { status: 500 })
+  return NextResponse.json<StoriesPostRes>({ error: "CREATE_FAILED" }, { status: 500 });
     }
 
-    // Return 200 for test/dev/Vitest, 201 for prod
-  return NextResponse.json<StoriesPostRes>({ id: created.id }, { status: testEnv ? 200 : 201 })
+    // Return 201 (or 200 in test env) with the new story ID
+  return NextResponse.json<StoriesPostRes>({ id: created.id }, { status: testEnv ? 200 : 201 });
   } catch (err) {
     // Convert unexpected errors to a typed 422 rather than a 500 for user-caused input paths
-  return NextResponse.json<StoriesPostRes>({ error: "UNPROCESSABLE" }, { status: 422 })
+  return NextResponse.json<StoriesPostRes>({ error: "UNPROCESSABLE" }, { status: 422 });
   }
 }

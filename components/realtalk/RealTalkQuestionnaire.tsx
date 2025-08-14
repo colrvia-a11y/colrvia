@@ -26,6 +26,7 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
   const [textValue, setTextValue] = useState('')
   const [textError, setTextError] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
+  const [generationError, setGenerationError] = useState<string | null>(null)
 
   const { supported: speechOK, listening, interim, start, stop } = useSpeech({
     onFinal: (text) => {
@@ -195,9 +196,17 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
                   }
                 } catch {}
                 // Prefer passing answers directly so we’re not relying on storage timing
+                setGenerationError(null)
                 const res = await createPaletteFromInterview(answers)
-                if (res?.id) router.replace(`/reveal/${res.id}`)
-                else router.replace('/start/processing')
+                if (res?.id) {
+                  // Navigate to reveal page with optimistic loading indicator
+                  router.replace(`/reveal/${res.id}?optimistic=1`)
+                } else {
+                  // Generation failed – stop spinner and show error message
+                  setGenerating(false)
+                  setGenerationError("Sorry — we couldn’t finish your Color Story. Please try again.")
+                  return
+                }
               }}
               disabled={generating}
             >
@@ -216,6 +225,11 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
               Restart
             </button>
           </div>
+          {generationError && (
+            <p className="mt-2 text-sm text-red-600" role="alert">
+              {generationError}
+            </p>
+          )}
         </div>
       </div>
     )

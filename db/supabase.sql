@@ -3,7 +3,7 @@ create extension if not exists "uuid-ossp";
 create extension if not exists "pgcrypto";
 create table if not exists public.stories (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete cascade,
   title text not null,
   designer text not null,
   vibe text not null,
@@ -15,6 +15,7 @@ create table if not exists public.stories (
   palette jsonb not null,
   placements jsonb not null,
   narrative text not null,
+  status text default 'pending',
   preview_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
