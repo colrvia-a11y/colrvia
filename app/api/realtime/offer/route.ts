@@ -1,19 +1,39 @@
 export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) {
-    return new Response('OPENAI_API_KEY missing', { status: 500 })
+  // Use the EPHEMERAL client secret from the browser, not the long-lived server key.
+  const clientAuth = req.headers.get('authorization') || ''
+  if (!clientAuth) {
+    console.error('[realtime][offer] missing client Authorization header')
+    return new Response('Missing client Authorization', { status: 400 })
   }
+
   const sdp = await req.text().catch(() => '')
   if (!sdp) return new Response('Empty SDP', { status: 400 })
-  // forward to provider; bubble up provider error text
-  const upstream = await fetch('https://api.openai.com/v1/realtime/offer', {
-    method: 'POST',
-    headers: { 'content-type': 'application/sdp', authorization: `Bearer ${apiKey}` },
-    body: sdp,
-  })
-  const txt = await upstream.text()
-  if (!upstream.ok) return new Response(txt || 'Offer failed', { status: upstream.status })
-  return new Response(txt, { status: 200, headers: { 'content-type': 'application/sdp' } })
+
+  const model = process.env.OPENAI_REALTIME_MODEL || 'gpt-4o-realtime-preview-2024-12-17'
+  const url = `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}`
+  try {
+    const upstream = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/sdp',
+        // Forward the ephemeral client_secret from /api/realtime/session:
+        authorization: clientAuth,
+        // Required by the Realtime API:
+        'OpenAI-Beta': 'realtime=v1',
+      },
+      body: sdp,
+    })
+    const txt = await upstream.text()
+    if (!upstream.ok) {
+      console.error('[realtime][offer] upstream', upstream.status, txt.slice(0, 200))
+      return new Response(txt || 'Offer failed', { status: upstream.status })
+    }
+    // Return the answer SDP back to the browser
+    return new Response(txt, { status: 200, headers: { 'content-type': 'application/sdp' } })
+  } catch (e: any) {
+    console.error('[realtime][offer] network error', e?.message || e)
+    return new Response('Upstream network error', { status: 502 })
+  }
 }
