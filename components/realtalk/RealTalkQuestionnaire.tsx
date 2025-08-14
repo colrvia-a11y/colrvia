@@ -1,396 +1,274 @@
-'use client';
+'use client'
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { postTurn } from '@/lib/realtalk/api';
-import type { Answers, PromptSpec, TurnResponse } from '@/lib/realtalk/types';
-import { useSpeech } from '@/hooks/useSpeech';
+import React, { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { postTurn } from '@/lib/realtalk/api'
+import type { Answers, PromptSpec, TurnResponse } from '@/lib/realtalk/types'
+import { useSpeech } from '@/hooks/useSpeech'
+import Stepper from './Stepper'
+import StickyActions from './StickyActions'
+import InlineHelp from './InlineHelp'
 
-type Props = {
-  initialAnswers?: Answers;
-  autoStart?: boolean;
-};
+type Props = { initialAnswers?: Answers; autoStart?: boolean }
 
-export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart = true }: Props) {
-  const [answers, setAnswers] = useState<Answers>(initialAnswers);
-  const [current, setCurrent] = useState<PromptSpec | null>(null);
-  const [greeting, setGreeting] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
-  const [explanation, setExplanation] = useState<string | null>(null);
-  const [explainLoading, setExplainLoading] = useState(false);
-  const [history, setHistory] = useState<{ id: string; value: string | string[] }[]>([]);
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
-  const chipRefs = useRef<HTMLButtonElement[]>([]);
-  const [chipFocus, setChipFocus] = useState(0);
-  const [textValue, setTextValue] = useState('');
+export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart = true }: Props){
+  const [answers, setAnswers] = useState<Answers>(initialAnswers)
+  const [current, setCurrent] = useState<PromptSpec | null>(null)
+  const [greeting, setGreeting] = useState<string | undefined>()
+  const [loading, setLoading] = useState(false)
+  const [history, setHistory] = useState<{id:string; value:string|string[]}[]>([])
+  const [progress, setProgress] = useState<{asked:number; maxCap?:number} | undefined>(undefined)
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
+  const chipRefs = useRef<HTMLButtonElement[]>([])
+  const [chipFocus, setChipFocus] = useState(0)
+  const [textValue, setTextValue] = useState('')
+  const [textError, setTextError] = useState<string | null>(null)
 
   const { supported: speechOK, listening, interim, start, stop } = useSpeech({
     onFinal: (text) => {
-      // If user says "explain", route to explainer; else treat as answer.
-      const normalized = text.trim().toLowerCase();
+      const normalized = text.trim().toLowerCase()
       if (normalized.startsWith('explain')) {
-        onExplain();
-      } else {
-        if (current?.input_type === 'text') handleTextSubmit(text);
-        else {
-          // Try to smart-match against choices (nluParse on server will also normalize)
-          submitAnswer(text);
-        }
+        return // inline help handled separately
       }
+      if (current?.input_type === 'text') handleTextSubmit(text)
+      else submitAnswer(text)
     }
-  });
+  })
 
   useEffect(() => {
-    if (autoStart) void nextTurn(); // first pull to get greeting + first prompt
-  }, [autoStart]);
+    if (autoStart) void nextTurn()
+  }, [autoStart])
 
   useEffect(() => {
-    setTextValue('');
-    setChipFocus(0);
-  }, [current?.id]);
+    setTextValue('')
+    setChipFocus(0)
+    setTextError(null)
+  }, [current?.id])
 
   useEffect(() => {
-    if (!current?.choices) return;
-    const multi = current.input_type === 'multiSelect';
+    if (!current?.choices) return
+    const multi = current.input_type === 'multiSelect'
     const idx = current.choices.findIndex((c) =>
-      multi
-        ? Array.isArray(answers[current.id]) && (answers[current.id] as string[]).includes(c.id)
-        : answers[current.id] === c.id
-    );
-    setChipFocus(idx >= 0 ? idx : 0);
-  }, [current, answers]);
+      multi ? Array.isArray(answers[current.id]) && (answers[current.id] as string[]).includes(c.id)
+            : answers[current.id] === c.id
+    )
+    setChipFocus(idx >= 0 ? idx : 0)
+  }, [current, answers])
 
-  async function nextTurn(ack?: { id: string; value: string | string[] }) {
-    setLoading(true);
-    const mergedAnswers = ack ? { ...answers, [ack.id]: ack.value } : answers;
+  async function nextTurn(ack?: {id:string; value:string|string[]}){
+    setLoading(true)
+    const merged = ack ? { ...answers, [ack.id]: ack.value } : answers
     try {
-      const res: TurnResponse = await postTurn({ answers: mergedAnswers, ack, mode: 'next' });
-      if (res.greeting) setGreeting(res.greeting);
+      const res: TurnResponse = await postTurn({ answers: merged, ack, mode:'next' })
+      if (res.greeting) setGreeting(res.greeting)
       if (res.prompt) {
-        setCurrent(res.prompt);
-        setExplanation(null);
-        // focus input for text questions
-        setTimeout(() => inputRef.current?.focus(), 0);
+        setCurrent(res.prompt)
+        setTimeout(() => inputRef.current?.focus(), 0)
       } else {
-        setCurrent(null); // done!
+        setCurrent(null)
       }
-      if (res.answers) {
-        setAnswers(res.answers);
-      } else {
-        setAnswers(mergedAnswers);
-      }
-      if (ack) setHistory((h) => [...h, ack]);
+      if (res.answers) setAnswers(res.answers); else setAnswers(merged)
+      if (ack) setHistory(h => [...h, ack])
+      if (res.progress) setProgress(res.progress)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
-  const progressLabel = useMemo(() => {
-    // If backend provides, use it; else approximate from history length.
-    return `Step ${history.length + (current ? 1 : 0)} of ${Math.max(history.length + 1, 10)}`;
-  }, [history.length, current]);
-
-  function updateAnswers(id: string, value: string | string[]) {
-    setAnswers((a) => ({ ...a, [id]: value }));
+  function updateAnswers(id:string, value:string|string[]){
+    setAnswers(a => ({...a, [id]: value}))
   }
 
-  function submitAnswer(value: string | string[]) {
-    if (!current) return;
-    // Client-side validation where easy (e.g., mood_words max 3 words)
-    if (current.id === 'mood_words' && typeof value === 'string') {
-      const words = value.trim().split(/\s+/).filter(Boolean);
-      if (words.length > (current.validation?.max ?? 3)) {
-        alert(`Please keep this to ${current.validation?.max ?? 3} words.`);
-        return;
+  function submitAnswer(value:string|string[]){
+    if (!current) return
+    if (current.id === 'mood_words' && typeof value === 'string'){
+      const words = value.trim().split(/\s+/).filter(Boolean)
+      if (words.length > (current.validation?.max ?? 3)){
+        setTextError(`Please keep this to ${current.validation?.max ?? 3} words.`)
+        return
       }
     }
-    updateAnswers(current.id, value);
-    void nextTurn({ id: current.id, value });
+    updateAnswers(current.id, value)
+    void nextTurn({ id: current.id, value })
   }
 
-  function handleTextSubmit(text: string) {
-    const v = text.trim();
-    if (!v && current?.validation?.required) return;
-    submitAnswer(v);
-    if (inputRef.current) (inputRef.current as HTMLInputElement).value = '';
-    setTextValue('');
+  function handleTextSubmit(text:string){
+    const v = text.trim()
+    if (!v && current?.validation?.required) return
+    submitAnswer(v)
+    setTextValue('')
+    setTextError(null)
+    if (inputRef.current) (inputRef.current as HTMLInputElement).value = ''
   }
 
-  function toggleChip(choiceId: string) {
-    if (!current) return;
-    if (current.input_type === 'singleSelect') {
-      submitAnswer(choiceId);
-    } else if (current.input_type === 'multiSelect') {
-      const prev = (answers[current.id] as string[] | undefined) ?? [];
-      const exists = prev.includes(choiceId);
-      const next = exists ? prev.filter((x) => x !== choiceId) : [...prev, choiceId];
-      updateAnswers(current.id, next);
+  function toggleChip(choiceId:string){
+    if (!current) return
+    if (current.input_type === 'singleSelect'){
+      submitAnswer(choiceId)
+    } else {
+      const prev = (answers[current.id] as string[] | undefined) ?? []
+      const exists = prev.includes(choiceId)
+      const next = exists ? prev.filter(x => x!==choiceId) : [...prev, choiceId]
+      updateAnswers(current.id, next)
     }
   }
 
-  function handleChipKey(
-    e: KeyboardEvent<HTMLButtonElement>,
-    idx: number,
-    choiceId: string
-  ) {
-    if (!current?.choices) return;
-    const total = current.choices.length;
-    switch (e.key) {
+  function handleChipKey(e:KeyboardEvent<HTMLButtonElement>, idx:number, choiceId:string){
+    if (!current?.choices) return
+    const total = current.choices.length
+    switch(e.key){
       case 'ArrowRight':
-      case 'ArrowDown': {
+      case 'ArrowDown':
         e.preventDefault();
-        const next = (idx + 1) % total;
-        chipRefs.current[next]?.focus();
-        setChipFocus(next);
-        break;
-      }
+        {const next=(idx+1)%total; chipRefs.current[next]?.focus(); setChipFocus(next);}
+        break
       case 'ArrowLeft':
-      case 'ArrowUp': {
+      case 'ArrowUp':
         e.preventDefault();
-        const prev = (idx - 1 + total) % total;
-        chipRefs.current[prev]?.focus();
-        setChipFocus(prev);
-        break;
-      }
+        {const prev=(idx-1+total)%total; chipRefs.current[prev]?.focus(); setChipFocus(prev);}
+        break
       case 'Enter':
-      case ' ': {
+      case ' ':
         e.preventDefault();
-        toggleChip(choiceId);
-        break;
-      }
+        toggleChip(choiceId)
+        break
     }
   }
 
-  async function onExplain() {
-    if (!current) return;
-    setLoading(true);
-    setExplainLoading(true);
-    try {
-      const r = await fetch('/api/ai/explain', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ questionText: current.text, answers })
-      });
-      const data = await r.json();
-      setExplanation(data.explanation);
-    } finally {
-      setExplainLoading(false);
-      setLoading(false);
+  function onBack(){
+    const prev=[...history]; prev.pop();
+    const newAnswers:{[k:string]:any}={...answers};
+    if (current?.id && newAnswers[current.id]) delete newAnswers[current.id]
+    setHistory(prev); setAnswers(newAnswers); void nextTurn()
+  }
+
+  const total = progress?.maxCap ?? 10
+  const asked = progress?.asked ?? (history.length + (current ? 1 : 0))
+  const percent = Math.min(100, Math.round((asked / total) * 100))
+
+  const isText = current?.input_type === 'text'
+  const isMulti = current?.input_type === 'multiSelect'
+  const required = current?.validation?.required
+  const currentAnswer = current ? answers[current.id] : undefined
+  const hasAnswer = Array.isArray(currentAnswer) ? currentAnswer.length>0 : Boolean(currentAnswer)
+  const continueDisabled = loading || (isText && (required && !textValue.trim())) || (isMulti && required && !hasAnswer) || Boolean(textError)
+  const canSkip = !required
+
+  function handleContinue(){
+    if (isText){
+      handleTextSubmit(textValue)
+    } else if (isMulti){
+      if (Array.isArray(currentAnswer)) submitAnswer(currentAnswer)
     }
   }
 
-  function onBack() {
-    // Pop last ack and ask server to recompute (authoritative)
-    const prev = [...history];
-    prev.pop();
-    const newAnswers: Answers = { ...answers };
-    // Remove last id from local answers (server remains source of truth)
-    if (current?.id && newAnswers[current.id]) delete newAnswers[current.id];
-    setHistory(prev);
-    setAnswers(newAnswers);
-    void nextTurn(); // rely on server to send previous question
+  function onSkip(){ if (current) submitAnswer('') }
+
+  // text counting helper
+  function onTextChange(v:string){
+    setTextValue(v)
+    if (current?.id === 'mood_words'){
+      const words = v.trim().split(/\s+/).filter(Boolean)
+      setTextError(words.length > (current.validation?.max ?? 3) ? `Please keep this to ${current.validation?.max ?? 3} words.` : null)
+    }
   }
 
-  if (!current) {
+  if (!current){
     return (
       <div className="rt-shell">
         <Header greeting={greeting} />
-        <div className="rt-card">
+        <div className="rt-card" aria-live="polite">
           <h2>All set 🎉</h2>
           <p>Thanks! We’ve gathered what we need. You can review or restart any time.</p>
           <div className="rt-actions">
-            <button type="button" onClick={() => { setAnswers({}); setHistory([]); setCurrent(null); void nextTurn(); }}>
-              Restart
-            </button>
+            <button type="button" onClick={() => { setAnswers({}); setHistory([]); setCurrent(null); setProgress(undefined); void nextTurn(); }}>Restart</button>
           </div>
         </div>
-        <Style />
       </div>
-    );
+    )
   }
-
-  const isText = current.input_type === 'text';
-  const isMulti = current.input_type === 'multiSelect';
-  const required = current.validation?.required;
-  const currentAnswer = answers[current.id];
-  const hasAnswer = Array.isArray(currentAnswer)
-    ? currentAnswer.length > 0
-    : Boolean(currentAnswer);
-  const continueDisabled = loading || (required && !hasAnswer && !textValue.trim());
 
   return (
     <div className="rt-shell">
       <Header greeting={greeting} />
-      <Progress label={progressLabel} />
-      <div className="rt-card">
-        <div className="rt-qhead">
-          <div aria-live="polite"><h2>{current.text}</h2></div>
-          <div className="rt-qactions">
-            <button type="button" className="rt-ghost" aria-label="Explain this question" onClick={onExplain}>Explain</button>
-          </div>
-        </div>
-
+      <Stepper step={asked} total={total} percent={percent} />
+      <div className="rt-card" aria-live="polite">
+        <h2>{current.text}</h2>
+        <InlineHelp questionText={current.text} answers={answers} />
         {current.choices?.length ? (
-          <div className="rt-chips" role={isMulti ? 'group' : 'radiogroup'} aria-label="Suggested answers">
-            {current.choices.map((c, i) => {
-              const active =
-                (isMulti && Array.isArray(answers[current.id]) && (answers[current.id] as string[]).includes(c.id)) ||
-                (!isMulti && answers[current.id] === c.id);
+          <div className="rt-chips" role={isMulti ? 'group':'radiogroup'} aria-label="Suggested answers">
+            {current.choices.map((c,i)=>{
+              const active = isMulti ? Array.isArray(currentAnswer) && (currentAnswer as string[]).includes(c.id) : currentAnswer === c.id
               return (
                 <button
-                  ref={(el) => (chipRefs.current[i] = el!)}
-                  type="button"
+                  ref={el => (chipRefs.current[i]=el!)}
                   key={c.id}
-                  className={`rt-chip ${active ? 'is-active' : ''}`}
-                  onClick={() => { setChipFocus(i); toggleChip(c.id); }}
-                  role={isMulti ? 'checkbox' : 'radio'}
+                  type="button"
+                  className={`rt-chip ${active?'is-active':''}`}
+                  onClick={()=>{ setChipFocus(i); toggleChip(c.id) }}
+                  role={isMulti ? 'checkbox':'radio'}
                   aria-checked={active}
-                  tabIndex={chipFocus === i ? 0 : -1}
-                  onKeyDown={(e) => handleChipKey(e, i, c.id)}
-                >
-                  {c.label}
-                </button>
-              );
+                  tabIndex={chipFocus===i?0:-1}
+                  onKeyDown={(e)=>handleChipKey(e,i,c.id)}
+                >{c.label}</button>
+              )
             })}
           </div>
-        ) : null}
+        ):null}
 
         <div className="rt-free">
-          {isText ? (
-            <>
-              <input
-                ref={inputRef as any}
-                type="text"
-                placeholder="Type your answer…"
-                aria-label="Type your answer"
-                value={textValue}
-                onChange={(e) => setTextValue(e.target.value)}
-                title={current.id === 'mood_words' ? 'Max 3 words' : undefined}
-                aria-describedby={current.id === 'mood_words' ? 'mood-help' : undefined}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleTextSubmit((e.target as HTMLInputElement).value);
-                }}
-              />
-              {current.id === 'mood_words' && (
-                <small id="mood-help" className="rt-help">Max 3 words</small>
-              )}
-            </>
-          ) : (
+          <div className="rt-input-row">
             <input
               ref={inputRef as any}
               type="text"
-              placeholder="Prefer to type something else? (Press Enter to submit)"
+              placeholder="Type your answer…"
               aria-label="Type your answer"
               value={textValue}
-              onChange={(e) => setTextValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleTextSubmit((e.target as HTMLInputElement).value);
-              }}
+              onChange={(e)=>onTextChange(e.target.value)}
+              onKeyDown={(e)=> e.key==='Enter' && handleTextSubmit(textValue)}
             />
-          )}
-
-          <div className="rt-voice">
-            <button
-              type="button"
-              className={`rt-mic ${listening ? 'is-live' : ''}`}
-              onClick={() => (listening ? stop() : start())}
-              disabled={!speechOK}
-              aria-pressed={listening}
-              aria-label={listening ? 'Stop voice input' : 'Start voice input'}
-              title={speechOK ? 'Answer by voice' : 'Voice not supported on this browser'}
-            >
-              {listening ? 'Listening…' : '🎙️ Voice'}
-            </button>
-            {interim && <span className="rt-interim" aria-live="polite">{interim}</span>}
+            <button type="button" className={`rt-mic ${listening?'is-live':''}`} aria-pressed={listening} onClick={()=>listening?stop():start()} disabled={!speechOK}>{listening?'Stop':'🎙️'}</button>
           </div>
+          {current.id==='mood_words' && <small className="rt-help">Max 3 words ({textValue.trim()?textValue.trim().split(/\s+/).filter(Boolean).length:0}/3)</small>}
+          {interim && <span className="rt-interim" aria-live="polite">{interim}</span>}
+          {textError && <div className="rt-error" aria-live="assertive">{textError}</div>}
         </div>
 
-        <div className="rt-actions">
-          <button type="button" className="rt-secondary" onClick={onBack} disabled={!history.length}>Back</button>
-          <button
-            type="button"
-            className="rt-primary"
-            onClick={() => {
-              const v = (inputRef.current as HTMLInputElement | HTMLTextAreaElement)?.value ?? '';
-              if (v.trim()) handleTextSubmit(v);
-            }}
-            disabled={continueDisabled}
-          >
-            Continue
-          </button>
-        </div>
-
-        {(explanation || explainLoading) && (
-          <div className={`rt-explain ${explainLoading ? 'is-loading' : ''}`} role="region" aria-live="polite">
-            <strong>Why we ask:</strong>
-            <p>{explainLoading ? 'Loading…' : explanation}</p>
-          </div>
-        )}
+        <StickyActions onBack={onBack} onSkip={onSkip} onContinue={handleContinue} disableContinue={continueDisabled} canSkip={canSkip} />
       </div>
-      <Style />
+      <style jsx>{`
+        .rt-shell { max-width:720px; margin:0 auto; }
+        .rt-card { background: var(--color-bg-alt); border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-8); box-shadow: var(--shadow-lg); }
+        .rt-chips { display:flex; flex-wrap:wrap; gap: var(--space-3); margin: var(--space-4) 0; }
+        .rt-chip { border:1px solid var(--color-border); background: var(--color-bg-alt); padding:10px 14px; border-radius: var(--radius-pill); }
+        .rt-chip.is-active { background: var(--color-accent); color: var(--color-accent-fg); border-color: transparent; }
+        .rt-chip:focus-visible { outline:none; box-shadow: var(--focus-ring); }
+        .rt-free { margin-top: var(--space-4); display:flex; flex-direction:column; gap: var(--space-3); }
+        .rt-input-row { display:flex; gap: var(--space-3); align-items:center; }
+        .rt-input-row input { flex:1; padding: var(--space-3) var(--space-4); border:1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg); }
+        .rt-mic { padding: var(--space-3) var(--space-4); border:1px solid var(--color-border); border-radius: var(--radius-pill); background: var(--color-bg); }
+        .rt-mic.is-live { box-shadow:0 0 0 3px color-mix(in oklab,var(--brand) 40%, transparent); }
+        .rt-help { font-size: var(--text-sm); color: var(--color-fg-muted); }
+        .rt-interim { font-size: var(--text-sm); color: var(--color-fg-muted); }
+        .rt-error { color: var(--color-danger); font-size: var(--text-sm); }
+      `}</style>
     </div>
-  );
+  )
 }
 
-function Header({ greeting }: { greeting?: string }) {
+function Header({ greeting }: { greeting?: string }){
   return (
     <header className="rt-header">
       <div className="rt-avatar" aria-hidden>🧑‍🎨</div>
       <div className="rt-headcopy">
         <h1>RealTalk Interview</h1>
-        <p>{greeting ?? 'Let’s make your space sing.'}</p>
+        <p>{greeting ?? 'Let\u2019s make this room feel right.'}</p>
       </div>
+      <style jsx>{`
+        .rt-header { display:flex; gap: var(--space-3); align-items:center; margin-bottom: var(--space-4); }
+        .rt-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; background: var(--color-bg-inset); }
+        .rt-headcopy h1 { font-size: var(--text-xl); margin:0; }
+        .rt-headcopy p { font-size: var(--text-sm); color: var(--color-fg-muted); margin:0; }
+      `}</style>
     </header>
-  );
+  )
 }
-
-function Progress({ label }: { label: string }) {
-  return (
-    <div className="rt-progress" aria-label="Interview progress">
-      <div className="rt-bar"><div className="rt-fill" style={{ width: '40%' }} /></div>
-      <span>{label}</span>
-    </div>
-  );
-}
-
-/** Scoped CSS for quick drop-in (feel free to migrate to your design system) */
-function Style() {
-  return (
-    <style jsx>{`
-      .rt-shell { max-width: 720px; margin: 0 auto; padding: 24px; }
-      .rt-header { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
-      .rt-avatar { width: 40px; height: 40px; border-radius: 50%; display:flex; align-items:center; justify-content:center; background: #f2f2f7; }
-      .rt-card { background: #fff; border: 1px solid #eee; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-      .rt-qhead { display:flex; align-items:start; justify-content:space-between; gap: 12px; }
-      .rt-qactions { display:flex; gap:8px; }
-      .rt-ghost { background: transparent; border: none; padding: 6px 8px; cursor: pointer; opacity: 0.8; }
-      .rt-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
-      .rt-chip { border: 1px solid #e2e2e2; background: #fafafa; padding: 8px 12px; border-radius: 999px; cursor: pointer; }
-      .rt-chip.is-active { border-color: #111; background: #111; color: #fff; }
-      .rt-free { display: grid; gap: 8px; margin: 12px 0; }
-      .rt-free input { width: 100%; font: inherit; padding: 12px 14px; border-radius: 12px; border: 1px solid #dedede; }
-      .rt-help { font-size: 0.8rem; opacity: 0.7; }
-      .rt-voice { display:flex; align-items:center; gap: 8px; }
-      .rt-mic { border: 1px solid #e2e2e2; border-radius: 10px; padding: 8px 12px; background: #fff; cursor: pointer; }
-      .rt-mic.is-live { border-color: #ff7a59; box-shadow: 0 0 0 3px rgba(255,122,89,0.15); }
-      .rt-interim { font-size: 0.9rem; opacity: 0.8; }
-      .rt-actions { display:flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
-      .rt-primary { background: #111; color: #fff; border: none; padding: 10px 14px; border-radius: 10px; }
-      .rt-secondary { background: #f5f5f5; border: none; padding: 10px 14px; border-radius: 10px; }
-      .rt-explain { margin-top: 16px; padding: 12px; border-radius: 12px; background: #f9fafb; border: 1px dashed #e6e6e6; }
-      .rt-explain.is-loading p { position: relative; color: transparent; }
-      .rt-explain.is-loading p::before {
-        content: ''; position: absolute; inset: 0; border-radius: 4px;
-        background: linear-gradient(90deg,#eee,#ddd,#eee); background-size: 200% 100%;
-        animation: rt-shimmer 1.5s ease-in-out infinite;
-      }
-      .rt-progress { display:flex; align-items:center; gap: 8px; margin: 12px 0; }
-      .rt-bar { flex:1; height: 6px; background:#f1f1f4; border-radius: 999px; overflow:hidden; }
-      .rt-fill { height: 100%; background: #111; }
-      @keyframes rt-shimmer {
-        from { background-position: 200% 0; }
-        to { background-position: -200% 0; }
-      }
-    `}</style>
-  );
-}
-
