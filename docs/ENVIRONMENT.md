@@ -35,3 +35,22 @@ Optional:
 Envs needed for paint facts:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
+
+# AI / Via Chat Environment
+
+Set these in **Vercel → Project → Settings → Environment Variables** (and `.env.local` for dev):
+
+- `OPENAI_API_KEY` – required for AI.
+- `AI_ENABLE=true` – enables real model calls (omit or set false in CI/local to use safe stub).
+- `VIA_CHAT_MODEL` – e.g., `gpt-5` (default).
+- `VIA_CHAT_FAST_MODEL` – e.g., `gpt-5-mini` (default).
+- `AI_MAX_OUTPUT_TOKENS` – optional, default 300.
+
+Endpoints:
+- `POST /api/via/chat` – Via Q&A chat (fast path supported by `{ fast: true }` body). Returns `{ reply, model }`.  (Ref: Via Chat cheatsheet)  
+
+Wire navigation & links:
+
+(Optional) Add a link to /via/chat in your site nav if you have one; otherwise you can open the page directly.
+
+Update README (optional): Add a bullet “Via Chat: /via/chat”.
