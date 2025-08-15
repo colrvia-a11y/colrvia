@@ -8,6 +8,7 @@ import { seedPaletteFor } from '@/lib/ai/palette';
 import { normalizePaletteOrRepair } from '@/lib/palette/normalize-repair';
 import { designPalette } from '@/lib/ai/orchestrator';
 import { mapV2ToLegacy } from '@/lib/ai/mapRoles';
+import { CatalogEmptyError, ConfigError, NormalizeError } from '@/lib/errors';
 import type { DesignInput, Palette as V2Palette } from '@/lib/ai/schema';
 
 import { StoryBodySchema, type StoryBody } from "@/lib/validators";
@@ -87,11 +88,17 @@ export async function POST(req: Request) {
       paletteToNormalize = seedPaletteFor({ brand: brandSafe, vibe: vibeSafe })
     }
 
-    let basePalette = await normalizePaletteOrRepair(paletteToNormalize, vibeSafe)
-    if (!basePalette) {
+    let basePalette: any
+    try {
+      basePalette = await normalizePaletteOrRepair(paletteToNormalize, vibeSafe)
+    } catch (err) {
       // fallback for test/dev: map the palette to NormalizedSwatch[] if normalization fails
-      if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || process.env.VITEST) {
-        basePalette = (paletteToNormalize as any[]).map(s => ({
+      if (
+        process.env.NODE_ENV === 'test' ||
+        process.env.NODE_ENV === 'development' ||
+        process.env.VITEST
+      ) {
+        basePalette = (paletteToNormalize as any[]).map((s) => ({
           ...s,
           brand: 'sherwin_williams',
           code: s.code || '',
@@ -100,21 +107,26 @@ export async function POST(req: Request) {
           role: s.role || 'walls',
         }))
       } else {
-        return NextResponse.json({ error: "PALETTE_INVALID" }, { status: 422 })
+        throw err
       }
     }
 
     // 2. Build a new palette with the AI orchestrator, then normalize/repair
     const generated = await designPalette({ brand: brandSafe, vibe: vibeSafe } as DesignInput)
     const legacy = mapV2ToLegacy(generated as V2Palette)
-    let finalPalette = await normalizePaletteOrRepair(legacy.swatches, vibeSafe)
-    const testEnv = process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || process.env.VITEST
-    if (!finalPalette) {
+    let finalPalette: any
+    const testEnv =
+      process.env.NODE_ENV === 'test' ||
+      process.env.NODE_ENV === 'development' ||
+      process.env.VITEST
+    try {
+      finalPalette = await normalizePaletteOrRepair(legacy.swatches, vibeSafe)
+    } catch (err) {
       if (testEnv) {
         // Use the fallback palette (basePalette) for DB insert
         finalPalette = basePalette
       } else {
-        return NextResponse.json({ error: "PALETTE_INVALID" }, { status: 422 })
+        throw err
       }
     }
     // 3) Persist the story to the database and always return { id }
@@ -155,8 +167,18 @@ export async function POST(req: Request) {
 
     // Return 201 with the new story ID
     return NextResponse.json<StoriesPostRes>({ id: created.id }, { status: 201 });
-  } catch (err) {
-    // Convert unexpected errors to a typed 422 rather than a 500 for user-caused input paths
-  return NextResponse.json<StoriesPostRes>({ error: "UNPROCESSABLE" }, { status: 422 });
+  } catch (err: any) {
+    // Distinguish between config, catalog, and normalization failures
+    if (err?.name === 'ConfigError') {
+      const missing = err?.missing ?? []
+      return NextResponse.json({ error: 'ENV_MISSING', missing }, { status: 500 })
+    }
+    if (err?.name === 'CatalogEmptyError') {
+      return NextResponse.json({ error: 'CATALOG_EMPTY' }, { status: 503 })
+    }
+    if (err?.name === 'NormalizeError') {
+      return NextResponse.json({ error: 'PALETTE_INVALID' }, { status: 422 })
+    }
+    return NextResponse.json<StoriesPostRes>({ error: 'UNPROCESSABLE' }, { status: 422 })
   }
 }
