@@ -68,3 +68,4 @@ function useSpeech(opts?: Options): SpeechState {
 
 export default useSpeech;
 export { useSpeech };
+
