@@ -20,6 +20,7 @@ import { getLocale, getMessages } from '@/lib/i18n'
 import { Inter, Fraunces } from 'next/font/google'
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
 const fraunces = Fraunces({ subsets: ['latin'], display: 'swap', variable: '--font-fraunces' })
+import BottomNav from '@/components/nav/BottomNav'
 
 initSentry()
 
@@ -113,6 +114,9 @@ export default async function RootLayout({
                   <main id="main" className="min-h-dvh">
                     <AppShell><RouteTransition>{children}</RouteTransition></AppShell>
                   </main>
+                  {/* Spacer so content isn't obscured by the nav on mobile */}
+                  <div className="h-24 md:hidden" aria-hidden="true" />
+                  <BottomNav />
                 </AnalyticsProvider>
               </StartStoryPortalProvider>
               <SupabaseListener />
