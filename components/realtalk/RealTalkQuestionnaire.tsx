@@ -201,9 +201,13 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
                 // Prefer passing answers directly so we’re not relying on storage timing
                 setGenerationError(null)
                 const res = await createPaletteFromInterview(answers)
-                if ((res as any)?.error === 'AUTH_REQUIRED') {
+                if (res && 'error' in res) {
                   setGenerating(false)
-                  router.push('/sign-in?next=/start/interview')
+                  if (res.error === 'AUTH_REQUIRED') {
+                    router.push('/sign-in?next=/start/interview')
+                  } else {
+                    setGenerationError("Sorry — we couldn’t finish your Color Story. Please try again.")
+                  }
                   return
                 }
                 if (res?.id) {
