@@ -1,17 +1,11 @@
 # Environment Variables
 
-Set these in **Vercel → Project → Settings → Environment Variables** (Production, Preview, and Development as needed):
+Set these in **Vercel → Project → Settings → Environment Variables** (and your local `.env.local` if developing):
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `OPENAI_API_KEY`: required for any OpenAI calls.
+- `AI_ENABLE`: set to `true` to allow server to call OpenAI.
+- `VIA_PALETTE_MODEL`: **`gpt-5`**  ← palette generation model used by the orchestrator.
+- (optional) `OPENAI_MODEL`: default chat/narrative model (fallback for non-palette places).
+- (optional) `OPENAI_VISION_MODEL`, `OPENAI_REALTIME_MODEL`, etc., if you use vision/realtime.
 
-> Never paste secrets into chat or client code. The service role key must only be used on the server (API routes, server utilities).
-
-## Domains
-- Production domain: https://colrvia.com (canonical)
-- www.colrvia.com → redirects to apex (via Vercel Domain setting or middleware)
-- Preview builds can use *.vercel.app without redirects
-
-### Sanity check
-After setting the envs and redeploying, POST `/api/stories` should **not** return `{"error":"ENV_MISSING"}`.
-If you still see `{"error":"CATALOG_EMPTY"}`, seed at least five valid rows in `catalog_sw`.
+> Safety: never paste secrets in chat; keep them in Vercel envs.

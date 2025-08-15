@@ -4,7 +4,7 @@ import { PALETTE_GUIDELINES } from './guidelines'
 import { byBrand, isNearWhite, isNeutral, contrastScore, excludeByAvoid } from './catalog'
 import { makeRNG, pick } from '@/lib/utils/seededRandom'
 import { capture, enabled as analyticsEnabled } from '@/lib/analytics/server'
-import { AI_ENABLE, AI_MODEL, AI_MAX_OUTPUT_TOKENS, HAS_OPENAI_KEY } from '@/lib/ai/config'
+import { AI_ENABLE, PALETTE_MODEL, AI_MAX_OUTPUT_TOKENS, HAS_OPENAI_KEY } from '@/lib/ai/config'
 import { getOpenAI } from '@/lib/openai'
 
 type Candidates = { neutrals: Color[]; whites: Color[]; accents: Color[] }
@@ -144,14 +144,14 @@ async function tryLlmPick(input: DesignInput, candidates: Candidates, fallback: 
     const messages: any[] = [{ role: 'system', content: sys }, user]
     if (fixNote) messages.push({ role: 'system', content: `Fix the prior output: ${fixNote}` })
     const resp = await client.chat.completions.create({
-      model: AI_MODEL,
+      model: PALETTE_MODEL,
       temperature: 0.2,
       response_format: { type: 'json_object' },
       max_tokens: AI_MAX_OUTPUT_TOKENS,
       messages
     })
     if (analyticsEnabled() && (resp as any)?.usage) {
-      await capture('ai_usage', { model: AI_MODEL, ...(resp as any).usage })
+      await capture('ai_usage', { model: PALETTE_MODEL, ...(resp as any).usage })
     }
     const parsed = JSON.parse(resp.choices[0]?.message?.content || '{}')
     return sanitizeLlmPalette(parsed, candidates, fallback)

@@ -7,6 +7,11 @@ export const REALTIME_TTS_MODEL =
 export const AI_MODEL =
   process.env.OPENAI_MODEL || 'gpt-4o'
 
+// Palette generation model for LLM-assisted picks.
+// Prefer VIA_PALETTE_MODEL; fallback to OPENAI_MODEL; default to gpt-5.
+export const PALETTE_MODEL =
+  process.env.VIA_PALETTE_MODEL || process.env.OPENAI_MODEL || 'gpt-5'
+
 export const VISION_MODEL =
   process.env.OPENAI_VISION_MODEL || 'gpt-4o'
 
