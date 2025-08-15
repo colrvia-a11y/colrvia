@@ -204,7 +204,12 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
                 if ('error' in res) {
                   setGenerating(false)
                   if (res.error === 'AUTH_REQUIRED') {
-                    router.push('/sign-in?next=/start/interview')
+                    try {
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem('colrvia:interview', JSON.stringify({ answers }))
+                      }
+                    } catch {}
+                    router.push('/sign-in?next=/auth/resume')
                   } else {
                     setGenerationError("Sorry — we couldn’t finish your Color Story. Please try again.")
                   }
