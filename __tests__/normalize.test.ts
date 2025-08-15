@@ -16,7 +16,7 @@ const fakeSupabase = (rows: any[]) => ({
 describe('normalizePaletteOrRepair', () => {
   it('throws CatalogEmptyError if fewer than five swatches are available', async () => {
     await expect(
-      normalizePaletteOrRepair(undefined, undefined, {
+      normalizePaletteOrRepair(undefined, undefined, undefined, {
         supabase: fakeSupabase([{}, {}, {}]) as any,
       }),
     ).rejects.toThrow(CatalogEmptyError)

@@ -96,7 +96,7 @@ export async function POST(req: Request) {
 
     let basePalette: any
     try {
-      basePalette = await normalizePaletteOrRepair(paletteToNormalize, vibeSafe)
+      basePalette = await normalizePaletteOrRepair(paletteToNormalize, vibeSafe, brandCanonical)
     } catch (err) {
       // fallback for test/dev: map the palette to NormalizedSwatch[] if normalization fails
       if (
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
       ) {
         basePalette = (paletteToNormalize as any[]).map((s) => ({
           ...s,
-          brand: 'sherwin_williams',
+          brand: brandCanonical,
           code: s.code || '',
           name: s.name || '',
           hex: s.hex || '#FFFFFF',
@@ -126,7 +126,7 @@ export async function POST(req: Request) {
       process.env.NODE_ENV === 'development' ||
       process.env.VITEST
     try {
-      finalPalette = await normalizePaletteOrRepair(legacy.swatches, vibeSafe)
+      finalPalette = await normalizePaletteOrRepair(legacy.swatches, vibeSafe, brandCanonical)
     } catch (err) {
       if (testEnv) {
         // Use the fallback palette (basePalette) for DB insert

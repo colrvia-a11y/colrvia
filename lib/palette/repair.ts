@@ -14,10 +14,10 @@ export async function repairStoryPalette({ id }:{ id: string }): Promise<{ ok:tr
   if(error || !data) return { ok:false, reason:'not_found' }
   let repaired
   try {
-    repaired = await normalizePaletteOrRepair(data.palette as any, (data as any).vibe)
+    repaired = await normalizePaletteOrRepair(data.palette as any, (data as any).vibe, (data as any).brand)
   } catch {
     try {
-      repaired = await normalizePaletteOrRepair([], (data as any).vibe)
+      repaired = await normalizePaletteOrRepair([], (data as any).vibe, (data as any).brand)
     } catch {
       return { ok:false, reason:'unrepairable' }
     }

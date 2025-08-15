@@ -9,7 +9,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-40 bg-[var(--color-bg)]">
         <div className="max-w-content container flex items-center justify-between py-3">
           <Link href="/" className="font-display text-2xl">Colrvia</Link>
-          <nav aria-label="Utility" className="flex gap-3">
+          <nav aria-label="Utility" className="flex items-center gap-3">
+            <Link
+              href="/via"
+              className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-sm hover:bg-white/10 transition-colors"
+              aria-label="Via Chat"
+            >
+              Via
+            </Link>
             <Link
               href="/account"
               aria-label="Account"

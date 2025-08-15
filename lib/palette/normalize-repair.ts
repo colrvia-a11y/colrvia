@@ -9,7 +9,7 @@ import { normalizePaintName, extractSwCode } from './normalize-utils'
 
 export type RawSwatch = { brand?: string; code?: string; name?: string; hex?: string } | string
 export type NormalizedSwatch = {
-  brand: 'sherwin_williams'
+  brand: 'sherwin_williams' | 'behr'
   code: string
   name: string
   hex: `#${string}`
@@ -64,21 +64,25 @@ async function resolveSwatchWithCatalog(
 export async function normalizePaletteOrRepair(
   raw: RawSwatch[] | undefined | null,
   vibe: string | undefined,
+  brand?: string,
   deps?: { supabase?: SupabaseLite },
 ): Promise<NormalizedSwatch[]> {
   try {
     const arr = Array.isArray(raw) ? raw : []
+    const brandNorm = /behr/i.test(String(brand)) ? 'Behr' : 'Sherwin-Williams'
+    const table = brandNorm === 'Behr' ? 'catalog_behr' : 'catalog_sw'
+    const brandKey = brandNorm === 'Behr' ? 'behr' : 'sherwin_williams'
     const complete = arr.filter(
       (x: any) =>
         x &&
-        /^sherwin_williams$/i.test(x.brand) &&
+        /^(sherwin_williams|behr)$/i.test(x.brand) &&
         x.code &&
         x.name &&
         /^#/i.test(x.hex),
     )
     if (complete.length === 5) {
       return complete.map((x: any, i: number) => ({
-        brand: 'sherwin_williams',
+        brand: /behr/i.test(x.brand) ? 'behr' : 'sherwin_williams',
         code: coerceSWCode(x.code),
         name: x.name,
         hex: x.hex.toUpperCase() as `#${string}`,
@@ -102,7 +106,7 @@ export async function normalizePaletteOrRepair(
       FALLBACK.default
     const sb = deps?.supabase ?? getSupabaseAdminClient()
     const { data, error } = await sb
-      .from('catalog_sw')
+      .from(table)
       .select('code,name,hex')
       .in('code', wantedCodes)
     if (error) {
@@ -118,7 +122,7 @@ export async function normalizePaletteOrRepair(
       .filter((s: any) => s && (!s.code || !foundCodes.has(coerceSWCode(s.code))))
 
     for (const m of missing) {
-      const hit = await resolveSwatchWithCatalog(sb, 'Sherwin-Williams', m as any)
+      const hit = await resolveSwatchWithCatalog(sb, brandNorm, m as any)
       if (hit && !foundCodes.has(hit.code)) {
         rows.push(hit)
         foundCodes.add(hit.code)
@@ -129,7 +133,7 @@ export async function normalizePaletteOrRepair(
       const need = seed.filter((c) => !foundCodes.has(c)).slice(0, 5 - rows.length)
       if (need.length) {
         const { data: fb, error: fbErr } = await sb
-          .from('catalog_sw')
+          .from(table)
           .select('code,name,hex')
           .in('code', need)
         if (fbErr) {
@@ -149,16 +153,17 @@ export async function normalizePaletteOrRepair(
 
     if (rows.length < 5) {
       const { data: topup, error: topErr } = await sb
-        .from('catalog_sw')
+        .from(table)
         .select('code,name,hex')
         .order('name', { ascending: true })
-        .limit(15)
+        .limit(50)
       if (topErr) {
         throw new NormalizeError(
           `Supabase query failed: ${topErr.message ?? topErr}`,
         )
       }
-      for (const r of topup || []) {
+      const shuffled = (topup || []).slice().sort(() => Math.random() - 0.5)
+      for (const r of shuffled) {
         if (rows.length >= 5) break
         if (!foundCodes.has(r.code)) {
           rows.push(r)
@@ -180,7 +185,7 @@ export async function normalizePaletteOrRepair(
       }
     }
     return rows.slice(0, 5).map((d, i) => ({
-      brand: 'sherwin_williams',
+      brand: brandKey,
       code: coerceSWCode(d.code),
       name: d.name,
       hex: d.hex.toUpperCase() as `#${string}`,
