@@ -134,7 +134,13 @@ export default function ViaPage() {
             onChange={setPendingInput}
             onSubmit={sendMessage}
             onAttach={(fileList) => addFiles(fileList)}
-            attachments={files}
+            attachments={files.map(f => ({
+              id: f.id,
+              name: f.file.name,
+              url: f.preview,
+              type: f.file.type,
+              size: f.file.size,
+            }))}
             onRemoveAttachment={(id) => removeFile(id)}
             micAvailable={speechSupported}
             isRecording={isRecording}
