@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { VIA_INTERVIEW_MODEL, AI_MAX_OUTPUT_TOKENS } from '@/lib/ai/config'
+import { getOpenAI } from '@/lib/openai'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -6,33 +8,27 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: Request) {
   const { questionText, answers } = await req.json()
 
-  // Try OpenAI if KEY exists, else fall back to a rule-based explainer.
-  const key = process.env.OPENAI_API_KEY
   const prompt = `Explain this interview question to a homeowner in 2-4 friendly sentences.
 Question: "${questionText}"
 Context (prior answers): ${JSON.stringify(answers ?? {}, null, 0)}
 Keep it non-technical and give a quick example if helpful.`
-
-  if (key) {
-    const r = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: 'You are a friendly interior design assistant.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.3
-      })
+  try {
+    const client = getOpenAI()
+    const r = await client.chat.completions.create({
+      model: VIA_INTERVIEW_MODEL,
+      messages: [
+        { role: 'system', content: 'You are a friendly interior design assistant.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: AI_MAX_OUTPUT_TOKENS
     })
-    if (!r.ok) return NextResponse.json({ explanation: defaultExplain(questionText) })
-    const data = await r.json()
-    const explanation = data?.choices?.[0]?.message?.content?.trim() || defaultExplain(questionText)
+    const explanation = r?.choices?.[0]?.message?.content?.trim() || defaultExplain(questionText)
     return NextResponse.json({ explanation })
+  } catch {
+    // Missing key or API error → fallback
+    return NextResponse.json({ explanation: defaultExplain(questionText) })
   }
-
-  return NextResponse.json({ explanation: defaultExplain(questionText) })
 }
 
 function defaultExplain(questionText: string) {
