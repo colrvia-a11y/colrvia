@@ -2,15 +2,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import MessageBubble, { Attachment } from './MessageBubble';
-
-export type ChatMessage = {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  attachments?: Attachment[];
-  thinking?: boolean;
-};
+import MessageBubble from './MessageBubble';
+import type { ChatMessage } from './types';
 
 export default function ChatContainer({
   messages,
@@ -27,20 +20,19 @@ export default function ChatContainer({
 
   return (
     <section
-      className={cn(
-        'relative',
-        'min-h-[30dvh] max-h-[58dvh] md:max-h-[62dvh]',
-        'px-1 md:px-2',
-        'overflow-y-auto',
-        className
-      )}
+      className={cn('relative min-h-[30dvh] max-h-[58dvh] md:max-h-[62dvh] px-1 md:px-2 overflow-y-auto', className)}
       aria-live="polite"
       aria-label="Conversation"
       role="log"
     >
       <div className="space-y-3 pb-4">
         {messages.map(m => (
-          <MessageBubble key={m.id} role={m.role} attachments={m.attachments}>
+          <MessageBubble
+            key={m.id}
+            role={m.role}
+            attachments={m.attachments}
+            callouts={m.kind === 'callouts' ? m.callouts : undefined}
+          >
             {m.thinking ? 'Via is thinking…' : m.content}
           </MessageBubble>
         ))}
@@ -49,4 +41,3 @@ export default function ChatContainer({
     </section>
   );
 }
-
