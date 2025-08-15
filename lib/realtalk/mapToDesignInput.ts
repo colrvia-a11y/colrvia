@@ -1,7 +1,7 @@
 import type { Answers } from '@/lib/intake/types'
-import type { DesignInput } from '@/lib/ai/schema'
+import type { DesignInput, Brand } from '@/lib/ai/schema'
 
-function brandFrom(a?: string): DesignInput['brand'] {
+function brandFrom(a?: string): Brand {
   if (!a) return 'Sherwin-Williams'
   return /behr/i.test(a) ? 'Behr' : 'Sherwin-Williams'
 }
@@ -35,12 +35,15 @@ function fixedFrom(a: Answers): string | undefined {
 export function mapRealTalkToDesignInput(a: Answers): DesignInput {
   const brand = brandFrom(a.brand as any)
   const vibe = vibeFrom(a.style_primary as any, a.mood_words as any)
-  const seed = [
-    a.room_type || '',
-    a.style_primary || '',
-    Array.isArray(a.mood_words) ? a.mood_words.join('-') : a.mood_words || '',
-    brand,
-  ].join('|')
+  const seedParts = Object.entries(a)
+    .sort(([k1], [k2]) => k1.localeCompare(k2))
+    .map(([, v]) => {
+      if (Array.isArray(v)) return v.join('-')
+      if (v && typeof v === 'object') return JSON.stringify(v)
+      return String(v ?? '')
+    })
+  seedParts.push(brand)
+  const seed = seedParts.join('|')
 
   return {
     space: (a.room_type || '').toString(),

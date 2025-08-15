@@ -14,8 +14,7 @@ describe('normalizeBrand', () => {
   })
   it('defaults to sherwin_williams when missing/unrecognized', () => {
     expect(normalizeBrand('')).toBe('sherwin_williams')
-    // @ts-expect-error – testing null/undefined tolerance
-    expect(normalizeBrand(undefined)).toBe('sherwin_williams')
+    expect(normalizeBrand(undefined as any)).toBe('sherwin_williams')
   })
 })
 
