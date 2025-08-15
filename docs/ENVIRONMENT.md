@@ -26,3 +26,12 @@ Optional:
 ### Envs
 - `OPENAI_REALTIME_MODEL` (default: `gpt-4o-mini`) – used for live talk.
 - `VIA_INTERVIEW_MODEL` (default: `gpt-5-mini`) – used for text form explains.
+
+## Via Tools
+
+- `analyzeImageForUndertones(url)` uses **sharp** to downsample and infer undertones.
+- `getPaintFacts(query)` reads from Supabase `paint_colors` (name, brand, code, hex, undertone, notes).
+
+Envs needed for paint facts:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
