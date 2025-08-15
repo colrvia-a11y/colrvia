@@ -13,7 +13,7 @@ describe('CTA enablement', () => {
   it('enables continue for text when filled', async () => {
     ;(postTurn as any).mockResolvedValueOnce({
       prompt:{ id:'t1', text:'Say', input_type:'text', validation:{required:true}},
-      answers:{}
+      answers:{},
     })
     const { getByRole } = render(<RealTalkQuestionnaire autoStart />)
     const btn = await waitFor(() => getByRole('button', { name:'Continue →' }))
@@ -23,22 +23,22 @@ describe('CTA enablement', () => {
     expect(btn).not.toBeDisabled()
   })
 
-  it('continue stays disabled for single select', async () => {
+  it('continue is enabled for single select', async () => {
     ;(postTurn as any).mockReset()
     ;(postTurn as any).mockResolvedValueOnce({
       prompt:{ id:'s1', text:'Pick', input_type:'singleSelect', choices:[{id:'a',label:'A'}] },
-      answers:{}
+      answers:{},
     })
     const { getByRole } = render(<RealTalkQuestionnaire autoStart />)
     const btn = await waitFor(() => getByRole('button', { name:'Continue →' }))
-    expect(btn).toBeDisabled()
+    expect(btn).not.toBeDisabled()
   })
 
   it('enables continue for multi select after choice', async () => {
     ;(postTurn as any).mockReset()
     ;(postTurn as any).mockResolvedValueOnce({
       prompt:{ id:'m1', text:'Pick many', input_type:'multiSelect', choices:[{id:'a',label:'A'}], validation:{required:true} },
-      answers:{}
+      answers:{},
     })
     const { getByRole, getByText } = render(<RealTalkQuestionnaire autoStart />)
     const btn = await waitFor(() => getByRole('button', { name:'Continue →' }))
