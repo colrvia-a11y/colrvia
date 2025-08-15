@@ -10,6 +10,7 @@ import { designPalette } from '@/lib/ai/orchestrator';
 import { mapV2ToLegacy } from '@/lib/ai/mapRoles';
 import { CatalogEmptyError, ConfigError, NormalizeError } from '@/lib/errors';
 import type { DesignInput, Palette as V2Palette } from '@/lib/ai/schema';
+import { normalizeBrand } from '@/lib/brand'
 
 import { StoryBodySchema, type StoryBody } from "@/lib/validators";
 import type { StoriesPostRes } from "@/types/api";
@@ -64,8 +65,8 @@ export async function POST(req: Request) {
     }
   } catch { /* non-fatal; schema already guards */ }
 
-  // Now use these for generation
-  const brandSafe = (brand || 'Sherwin-Williams') as any
+  // Canonicalize brand and prepare vibe for downstream functions
+  const brandCanonical = normalizeBrand(brand)
   const vibeSafe = (vibe || 'Custom') as any
 
   // 4) Build or repair palette using existing flow; guard to avoid 500s on downstream throws
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
     } else if (body.palette && Array.isArray(body.palette) && body.palette.length > 0) {
       paletteToNormalize = body.palette as any[]
     } else {
-      paletteToNormalize = seedPaletteFor({ brand: brandSafe, vibe: vibeSafe })
+      paletteToNormalize = seedPaletteFor({ brand: brandCanonical, vibe: vibeSafe })
     }
 
     let basePalette: any
@@ -112,7 +113,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Build a new palette with the AI orchestrator, then normalize/repair
-    const generated = await designPalette({ brand: brandSafe, vibe: vibeSafe } as DesignInput)
+    const generated = await designPalette({ brand: brandCanonical, vibe: vibeSafe } as DesignInput)
     const legacy = mapV2ToLegacy(generated as V2Palette)
     let finalPalette: any
     const testEnv =
@@ -132,7 +133,7 @@ export async function POST(req: Request) {
     // 3) Persist the story to the database and always return { id }
     L('insert attempt', {
       userId: user.id,
-      brand: brandSafe,
+      brand: brandCanonical,
       hasPalette: Array.isArray(finalPalette),
       paletteLen: Array.isArray(finalPalette) ? finalPalette.length : 0,
       hasInputs: !!inputs,
@@ -143,7 +144,7 @@ export async function POST(req: Request) {
       .from('stories')
       .insert({
         user_id: user.id,
-        brand: brandSafe,
+        brand: brandCanonical,
         inputs: inputs ?? { vibe: vibeSafe },
         palette: finalPalette,
         has_variants: false,
