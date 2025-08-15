@@ -70,6 +70,11 @@ export async function POST(req: Request) {
   const vibeSafe = (vibe || 'Custom') as any
 
   // 4) Build or repair palette using existing flow; guard to avoid 500s on downstream throws
+  // NEW: in production, if OPENAI_API_KEY is missing, throw a 500 to surface misconfig instead of silently falling back
+  if (process.env.NODE_ENV === 'production' && !process.env.OPENAI_API_KEY) {
+    console.error('Missing OPENAI_API_KEY in production. Refusing to silently fall back.');
+    return new Response(JSON.stringify({ error: 'Server misconfigured' }), { status: 500 });
+  }
   try {
 
     // 1. If palette_v2 is present and allowed, use it (map to legacy)

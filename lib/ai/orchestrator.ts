@@ -181,6 +181,12 @@ async function tryLlmPick(input: DesignInput, candidates: Candidates, fallback: 
 }
 
 export async function designPalette(input: DesignInput): Promise<Palette> {
+  if (!process.env.OPENAI_API_KEY) {
+    const msg = 'OPENAI_API_KEY not set; using fallback palette'
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(msg)
+    }
+  }
   const candidates = getCandidates(input)
   const fallback = assignRolesDeterministic(input, candidates)
   const t0 = Date.now()

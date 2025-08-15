@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { mapV2ToLegacy } from '@/lib/ai/mapRoles'
 
 function mockOpenAIReturning(json: any) {
   vi.doMock('openai', () => {
@@ -65,5 +66,18 @@ describe('orchestrator LLM assist', () => {
     const mod: any = await import('@/lib/ai/orchestrator')
     const p = await mod.designPalette({ brand:'Sherwin-Williams', seed:'llm-bad' } as any)
     expect(p.swatches.length).toBeGreaterThanOrEqual(5)
+  })
+
+  it('maps v2 roles to legacy including ceiling', () => {
+    const v2 = [
+      { role: 'primary', brand: 'b', code: '1', name: 'n1', hex: '#111111' },
+      { role: 'secondary', brand: 'b', code: '2', name: 'n2', hex: '#222222' },
+      { role: 'accent', brand: 'b', code: '3', name: 'n3', hex: '#333333' },
+      { role: 'trim', brand: 'b', code: '4', name: 'n4', hex: '#444444' },
+      { role: 'ceiling', brand: 'b', code: '5', name: 'n5', hex: '#555555' },
+    ]
+    const legacy = mapV2ToLegacy({ swatches: v2 } as any)
+    expect(legacy.swatches).toHaveLength(5)
+    expect(legacy.swatches.find(r => r.role === 'extra')).toBeTruthy()
   })
 })
