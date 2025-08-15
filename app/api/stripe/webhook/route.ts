@@ -1,6 +1,6 @@
 // app/api/stripe/webhook/route.ts
 import { NextResponse } from "next/server"
-import { supabaseAdmin } from "@/lib/supabase/admin"
+import { getSupabaseAdminClient, type SupabaseAdminClient } from "@/lib/supabase/admin"
 import { getStripe } from "@/lib/stripe"
 
 export const runtime = "nodejs"
@@ -13,15 +13,13 @@ type StripeEvent = {
   created: number
 }
 
-async function alreadyProcessed(id: string) {
-  const admin = supabaseAdmin()
-  const { data } = await admin.from("stripe_events").select("id").eq("id", id).single()
+async function alreadyProcessed(supabase: SupabaseAdminClient, id: string) {
+  const { data } = await supabase.from("stripe_events").select("id").eq("id", id).single()
   return !!data
 }
 
-async function recordProcessed(evt: StripeEvent) {
-  const admin = supabaseAdmin()
-  await admin.from("stripe_events").insert({
+async function recordProcessed(supabase: SupabaseAdminClient, evt: StripeEvent) {
+  await supabase.from("stripe_events").insert({
     id: evt.id,
     type: evt.type,
     created_at: new Date(evt.created * 1000).toISOString(),
@@ -44,6 +42,7 @@ async function handleEvent(evt: StripeEvent) {
 }
 
 export async function POST(req: Request) {
+  const supabase = getSupabaseAdminClient()
   const stripe = getStripe()
   const secret = process.env.STRIPE_WEBHOOK_SECRET
   if (!secret) {
@@ -60,7 +59,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: `Invalid signature: ${err?.message || "unknown"}` }, { status: 400 })
   }
 
-  if (await alreadyProcessed(evt.id)) {
+  if (await alreadyProcessed(supabase, evt.id)) {
     return NextResponse.json({ ok: true, idempotent: true })
   }
 
@@ -71,7 +70,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    await recordProcessed(evt)
+    await recordProcessed(supabase, evt)
   } catch {
     return NextResponse.json({ ok: true, recorded: false }, { status: 202 })
   }
