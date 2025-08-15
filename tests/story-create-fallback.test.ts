@@ -6,8 +6,8 @@ import * as orchestrator from '@/lib/ai/orchestrator'
 import { POST } from '@/app/api/stories/route'
 
 // Mock supabase server client used in route
-vi.mock('@/lib/supabase/server', () => ({
-  supabaseServer: () => {
+vi.mock('@/lib/supabase/server', () => {
+  const client = () => {
     const swatches = [
       { brand:'sherwin_williams', code:'SW 7008', name:'Alabaster', hex:'#FFFFFF' },
       { brand:'sherwin_williams', code:'SW 7036', name:'Accessible Beige', hex:'#E5D8C8' },
@@ -23,7 +23,8 @@ vi.mock('@/lib/supabase/server', () => ({
       })
     }
   }
-}))
+  return { supabaseServer: client, createSupabaseServerClient: client }
+})
 
 // Mock palette builder to return empty swatches triggering fallback
 vi.spyOn(orchestrator, 'designPalette').mockResolvedValue({

@@ -2,8 +2,8 @@
 import { describe, it, expect, vi } from "vitest"
 import * as storiesRoute from "@/app/api/stories/route"
 
-vi.mock("@/lib/supabase/server", () => ({
-  supabaseServer: () => ({
+vi.mock("@/lib/supabase/server", () => {
+  const client = () => ({
     auth: { getUser: async () => ({ data: { user: { id: "u1" } }, error: null }) },
     from: () => ({
       insert: (_: any) => ({
@@ -12,8 +12,9 @@ vi.mock("@/lib/supabase/server", () => ({
         }),
       }),
     }),
-  }),
-}))
+  })
+  return { supabaseServer: client, createSupabaseServerClient: client }
+})
 
 vi.mock("@/lib/palette/normalize-repair", () => ({
   normalizePaletteOrRepair: async (p: any) => p,

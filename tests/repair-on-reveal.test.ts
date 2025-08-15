@@ -16,8 +16,8 @@ vi.mock('@/app/reveal/[id]/variant-tabs', () => ({ default: ()=> null }))
 vi.mock('@/app/reveal/[id]/reveal-client', () => ({ default: ()=> null }))
 vi.mock('@/lib/palette', () => ({ normalizePalette: () => { throw new Error('invalid') } }))
 
-vi.mock('@/lib/supabase/server', () => ({
-  supabaseServer: () => {
+vi.mock('@/lib/supabase/server', () => {
+  const client = () => {
     let first = true
     const repaired = [
       { brand:'sherwin_williams', code:'SW 7008', name:'Alabaster', hex:'#FFFFFF' },
@@ -36,7 +36,8 @@ vi.mock('@/lib/supabase/server', () => ({
       })
     }
   }
-}))
+  return { supabaseServer: client, createSupabaseServerClient: client }
+})
 
 vi.mock('@/lib/palette/normalize-repair', () => ({ normalizePaletteOrRepair: async () => [
   { brand:'sherwin_williams', code:'SW 7008', name:'Alabaster', hex:'#FFFFFF' },
