@@ -10,6 +10,7 @@ import useSpeech from '@/hooks/useSpeech';
 import useFileUpload from '@/hooks/useFileUpload';
 import useVoiceOut from '@/hooks/useVoiceOut';
 import { cn } from '@/lib/utils';
+import { shouldShowGreeting } from './greeting';
 
 export default function ViaPage() {
   // Conversation
@@ -180,19 +181,33 @@ export default function ViaPage() {
           aria-label="Via chat panel"
         >
           {/* Header */}
-          <header className="p-6 md:p-8 flex items-start justify-between gap-4">
+          <header
+            className={cn(
+              shouldShowGreeting(messages.length) ? 'p-6 md:p-8' : 'p-2 md:p-4',
+              'flex items-start justify-between gap-4'
+            )}
+          >
             <div>
-              <h1 className="font-display text-4xl md:text-5xl leading-tight text-[--via-ink] via-type-in" aria-live="polite">
-                {bootTyped || '‎'}
-              </h1>
-              <p className="mt-3 text-[15px] md:text-base text-[--via-ink-subtle]">how can i help?</p>
-              {showSuggestions && (
-                <div className="mt-5">
-                  <PrefilledButtons
-                    items={['design a palette', 'talk about paint', 'something else']}
-                    onPick={(s) => { setPendingInput(s); sendMessage(s); }}
-                  />
-                </div>
+              {shouldShowGreeting(messages.length) && (
+                <>
+                  <h1
+                    className="font-display text-4xl md:text-5xl leading-tight text-[--via-olive] via-type-in"
+                    aria-live="polite"
+                  >
+                    {bootTyped || '‎'}
+                  </h1>
+                  <p className="mt-3 text-[15px] md:text-base text-[--via-olive]">
+                    how can i help?
+                  </p>
+                  {showSuggestions && (
+                    <div className="mt-5">
+                      <PrefilledButtons
+                        items={['design a palette', 'talk about paint', 'something else']}
+                        onPick={(s) => { setPendingInput(s); sendMessage(s); }}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
