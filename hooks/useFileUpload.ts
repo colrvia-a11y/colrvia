@@ -2,10 +2,11 @@
 
 import { useCallback, useState } from 'react';
 
-type Upload = {
+export type Upload = {
   id: string;
   file: File;
   preview: string;
+  dataUrl?: string;
 };
 
 export default function useFileUpload(opts?: {
@@ -43,4 +44,3 @@ export default function useFileUpload(opts?: {
 
   return { files, addFiles, removeFile, clear };
 }
-

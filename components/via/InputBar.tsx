@@ -2,7 +2,7 @@
 
 import React, { FormEvent, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { MicIcon, MicOffIcon, PaperclipIcon, SendIcon } from './icons';
+import type { Attachment } from './types';
 
 export default function InputBar({
   className,
@@ -21,7 +21,7 @@ export default function InputBar({
   onChange: (v: string) => void;
   onSubmit: (v: string) => void;
   onAttach: (files: FileList) => void;
-  attachments: { id: string; name: string; url: string; type?: string; size?: number }[];
+  attachments: Attachment[];
   onRemoveAttachment: (id: string) => void;
   micAvailable: boolean;
   isRecording: boolean;
@@ -35,11 +35,10 @@ export default function InputBar({
     onSubmit(value);
   };
 
-  // textarea autoresize
+  // autoresize
   const taRef = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
-    const el = taRef.current;
-    if (!el) return;
+    const el = taRef.current; if (!el) return;
     el.style.height = '0px';
     el.style.height = el.scrollHeight + 'px';
   }, [value]);
@@ -52,12 +51,10 @@ export default function InputBar({
             {attachments.map((a) => (
               <figure key={a.id}>
                 {a.type?.startsWith('image/') ? (
-                  /* eslint-disable @next/next/no-img-element */
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={a.url} alt={a.name} className="block w-full h-20 object-cover" />
                 ) : (
-                  <div className="h-20 grid place-items-center text-sm text-[--via-ink-subtle]">
-                    {a.name}
-                  </div>
+                  <div className="h-20 grid place-items-center text-sm text-[--via-ink-subtle]">{a.name}</div>
                 )}
                 <button
                   type="button"
@@ -73,18 +70,10 @@ export default function InputBar({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="via-input grid grid-cols-[auto,1fr,auto,auto] gap-2 items-end p-2">
+      <form onSubmit={handleSubmit} className="via-input grid grid-cols-[auto,1fr,auto] gap-2 items-end p-2">
         {/* Attach */}
         <div className="pl-2 flex items-center">
-          <button
-            type="button"
-            className="p-2 rounded-md hover:bg-white/70"
-            onClick={onPick}
-            aria-label="Attach files"
-            title="Attach files"
-          >
-            <PaperclipIcon />
-          </button>
+          <button type="button" className="p-2 rounded-md hover:bg-white/70" onClick={onPick} aria-label="Attach files" title="Attach files">📎</button>
           <input
             ref={fileInput}
             type="file"
@@ -114,37 +103,29 @@ export default function InputBar({
           />
         </div>
 
-        {/* Mic */}
-        <div className="flex items-center">
+        {/* Mic + Send */}
+        <div className="pr-1 flex items-center gap-1">
           <button
             type="button"
             disabled={!micAvailable}
             onClick={onToggleMic}
-            className={cn(
-              'p-2 rounded-md',
-              micAvailable ? 'hover:bg-white/70' : 'opacity-50 cursor-not-allowed'
-            )}
+            className={cn('p-2 rounded-md', micAvailable ? 'hover:bg-white/70' : 'opacity-50 cursor-not-allowed')}
             aria-pressed={isRecording}
             aria-label={isRecording ? 'Stop recording' : 'Start recording'}
             title={micAvailable ? (isRecording ? 'Stop recording' : 'Start recording') : 'Microphone not available'}
           >
-            {isRecording ? <MicOffIcon /> : <MicIcon />}
+            {isRecording ? '🛑🎙️' : '🎙️'}
           </button>
-        </div>
 
-        {/* Send */}
-        <div className="pr-1 flex items-center">
           <button
             type="submit"
             className="inline-flex items-center gap-1 px-3 py-2 rounded-md bg-[--via-olive] text-[--via-olive-ink] font-semibold hover:brightness-105 active:brightness-95"
             aria-label="Send"
           >
-            <SendIcon />
-            <span className="hidden sm:inline">Send</span>
+            ➤ <span className="hidden sm:inline">Send</span>
           </button>
         </div>
       </form>
     </footer>
   );
 }
-

@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import './via.css';
 import AmbientEdge from '@/components/ui/ambient-edge';
 import PrefilledButtons from '@/components/via/PrefilledButtons';
-import ChatContainer, { ChatMessage } from '@/components/via/ChatContainer';
+import ChatContainer from '@/components/via/ChatContainer';
+import type { ChatMessage, Attachment } from '@/components/via/types';
 import InputBar from '@/components/via/InputBar';
 import useSpeech from '@/hooks/useSpeech';
 import useFileUpload from '@/hooks/useFileUpload';
@@ -49,7 +50,7 @@ export default function ViaPage() {
       id: crypto.randomUUID(),
       role: 'user',
       content: text.trim(),
-      attachments: files.map(f => ({ id: f.id, name: f.file.name, url: f.preview, type: f.file.type, size: f.file.size }))
+      attachments: files.map<Attachment>(f => ({ id: f.id, name: f.file.name, url: f.preview, type: f.file.type, size: f.file.size }))
     };
 
     setMessages(prev => [...prev, userMsg]);
@@ -134,7 +135,7 @@ export default function ViaPage() {
             onChange={setPendingInput}
             onSubmit={sendMessage}
             onAttach={(fileList) => addFiles(fileList)}
-            attachments={files.map(f => ({
+            attachments={files.map<Attachment>(f => ({
               id: f.id,
               name: f.file.name,
               url: f.preview,
