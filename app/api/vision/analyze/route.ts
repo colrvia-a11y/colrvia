@@ -1,16 +1,16 @@
-import OpenAI from "openai";
 import { NextRequest } from "next/server";
 import { VISION_MODEL } from "@/lib/ai/config";
+import { getOpenAI } from "@/lib/openai";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const { imageUrl } = await req.json();
     if (!imageUrl) return new Response(JSON.stringify({ error: "imageUrl required" }), { status: 400 });
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return new Response(JSON.stringify({ error: "missing OpenAI API key" }), { status: 500 });
-    const client = new OpenAI({ apiKey });
-    const res = await client.responses.create({
+    const openai = getOpenAI();
+    const res = await openai.responses.create({
       model: VISION_MODEL,
       input: [
         { role: "user", content: [

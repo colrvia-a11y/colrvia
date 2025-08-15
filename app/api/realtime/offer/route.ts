@@ -1,4 +1,5 @@
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
   // IMPORTANT: Use the EPHEMERAL client secret from the browser, not the server key.

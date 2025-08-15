@@ -1,6 +1,7 @@
 import { getDesigner } from '@/lib/ai/designers'
 import { AI_ENABLE, AI_MODEL, AI_MAX_OUTPUT_TOKENS, HAS_OPENAI_KEY } from '@/lib/ai/config'
 import { capture, enabled as analyticsEnabled } from '@/lib/analytics/server'
+import { getOpenAI } from '@/lib/openai'
 
 type LegacySwatch = { role: string; brand: string; code: string; name: string; hex: string }
 
@@ -45,9 +46,8 @@ export async function polishWithLLM(text: string, designerId?: string) {
   const d = getDesigner(designerId || '')
   const system = `${d?.style || ''}\nConstraints: 2–3 short sentences, warm and specific. Keep facts.`
   try {
-    const { OpenAI } = await import('openai')
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-    const resp = await client.chat.completions.create({
+    const openai = getOpenAI()
+    const resp = await openai.chat.completions.create({
       model: AI_MODEL,
       temperature: 0.3,
       max_tokens: Math.min(120, AI_MAX_OUTPUT_TOKENS),
