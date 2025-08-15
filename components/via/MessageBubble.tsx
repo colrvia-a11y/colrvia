@@ -2,7 +2,14 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import type { Attachment, Callout } from './types';
+
+export type Attachment = {
+  id: string;
+  name: string;
+  url: string;
+  type?: string;
+  size?: number;
+};
 
 export default function MessageBubble({
   role,
@@ -13,10 +20,9 @@ export default function MessageBubble({
   role: 'user' | 'assistant';
   children: React.ReactNode;
   attachments?: Attachment[];
-  callouts?: Callout[];
+  callouts?: { label: string; tone?: 'neutral' | 'warn' | 'info' }[];
 }) {
   const isUser = role === 'user';
-
   return (
     <div className={cn('via-bubble', isUser ? 'via-bubble--user ml-auto' : 'via-bubble--assistant mr-auto')}>
       <div className="whitespace-pre-wrap text-[0.97rem]">{children}</div>
@@ -49,3 +55,4 @@ export default function MessageBubble({
     </div>
   );
 }
+

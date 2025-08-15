@@ -2,8 +2,17 @@
 
 import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import MessageBubble from './MessageBubble';
-import type { ChatMessage } from './types';
+import MessageBubble, { Attachment } from './MessageBubble';
+
+export type ChatMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  attachments?: Attachment[];
+  thinking?: boolean;
+  kind?: 'text' | 'callouts';
+  callouts?: { label: string; tone?: 'neutral' | 'warn' | 'info' }[];
+};
 
 export default function ChatContainer({
   messages,
@@ -13,25 +22,20 @@ export default function ChatContainer({
   className?: string;
 }) {
   const endRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages.length]);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [messages.length]);
 
   return (
     <section
       className={cn('relative min-h-[30dvh] max-h-[58dvh] md:max-h-[62dvh] px-1 md:px-2 overflow-y-auto', className)}
-      aria-live="polite"
-      aria-label="Conversation"
-      role="log"
+      aria-live="polite" aria-label="Conversation" role="log"
     >
       <div className="space-y-3 pb-4">
         {messages.map(m => (
           <MessageBubble
             key={m.id}
             role={m.role}
-            attachments={m.attachments}
             callouts={m.kind === 'callouts' ? m.callouts : undefined}
+            attachments={m.attachments}
           >
             {m.thinking ? 'Via is thinking…' : m.content}
           </MessageBubble>
@@ -41,3 +45,4 @@ export default function ChatContainer({
     </section>
   );
 }
+

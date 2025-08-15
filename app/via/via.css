@@ -1,60 +1,66 @@
-/* Page-level tokens for Via. Keeps within existing token system but scoped here. */
-:root {
-  --via-peach: oklch(0.91 0.04 45);      /* pastel peach */
-  --via-peach-2: oklch(0.985 0.01 95);   /* warm white top */
-  --via-peach-bg: linear-gradient(180deg, var(--via-peach) 0%, var(--via-peach-2) 48%);
-  --via-panel: oklch(0.985 0.005 95);    /* card surface */
-  --via-ink: oklch(0.2 0.01 270);        /* deep neutral for text */
-  --via-ink-subtle: oklch(0.42 0.02 270);
-  --via-olive: oklch(0.39 0.06 140);     /* brand olive (buttons) */
-  --via-olive-ink: oklch(0.96 0.01 110); /* text on olive */
-  --via-radius-xl: 28px;
+/* ---------- Brand-scoped tokens for /via ---------- */
+.theme-via {
+  /* Background: pastel peach → warm white */
+  --via-peach: oklch(0.92 0.05 45);
+  --via-peach-2: oklch(0.99 0.01 95);
+  --via-bg: linear-gradient(180deg, var(--via-peach) 0%, var(--via-peach-2) 52%);
+  background: var(--via-bg);
+  /* Card surface + text */
+  --via-panel: oklch(0.985 0.005 95);
+  --via-ink: oklch(0.20 0.01 272);
+  --via-ink-subtle: oklch(0.42 0.02 272);
+  /* Action (olive) */
+  --via-olive: oklch(0.39 0.06 140);
+  --via-olive-ink: oklch(0.98 0.01 110);
+
+  /* Also map to global tokens so components stay consistent */
+  --brand: var(--via-olive);
+  --color-bg: var(--via-peach-2);
+  --color-surface: var(--via-panel);
+  --color-fg: var(--via-ink);
+  --color-fg-muted: var(--via-ink-subtle);
+  --color-border: color-mix(in oklab, var(--via-olive) 16%, white);
 }
 
-/* Paint-chip silhouette: rounded left edge */
+/* Paint-chip silhouette + enter animation */
 .via-card {
-  border-radius: var(--via-radius-xl);
+  border-radius: 28px;
   border-top-left-radius: 52px;
   border-bottom-left-radius: 52px;
   overflow: clip;
-  animation: via-enter 420ms var(--ease, cubic-bezier(.2,.8,.2,1)) both;
+  animation: via-enter 420ms cubic-bezier(.2,.8,.2,1) both;
 }
-
 @keyframes via-enter {
   from { opacity: 0; transform: translateY(8px) scale(.995); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Type-in header effect */
+/* Type-in effect for "hi, i’m Via," */
 .via-type-in { white-space: pre; }
 .via-type-in::after {
   content: ' ';
   display: inline-block;
-  width: .55ch;
-  height: 1.1em;
-  vertical-align: -0.1em;
+  width: .55ch; height: 1.1em; vertical-align: -0.1em;
   background: color-mix(in oklab, var(--via-ink) 35%, transparent);
-  margin-left: 2px;
-  border-radius: 2px;
+  margin-left: 2px; border-radius: 2px;
   animation: caret 900ms steps(1) infinite;
 }
 @keyframes caret { 50% { opacity: 0; } }
 
-/* Suggestion chips */
-.via-suggestion {
-  --bg: var(--via-olive);
-  --fg: var(--via-olive-ink);
-  background: var(--bg);
-  color: var(--fg);
-  border-radius: 9999px;
-  padding: 10px 16px;
+/* Chips */
+.via-chip {
+  background: color-mix(in oklab, var(--via-olive) 90%, white);
+  color: var(--via-olive-ink);
+  border-radius: 999px;
   font-weight: 600;
   letter-spacing: .2px;
-  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
   box-shadow: 0 2px 0 color-mix(in oklab, black 8%, transparent);
+  transition: transform .12s ease, filter .12s ease;
 }
-.via-suggestion:hover { transform: translateY(-1px); }
-.via-suggestion:active { transform: translateY(0); }
+.via-chip:hover { transform: translateY(-1px); }
+
+/* Suggestion buttons use .via-chip via component */
+.via-suggestion { composes: via-chip; padding: 10px 16px; }
 
 /* Message bubbles */
 .via-bubble {
@@ -73,38 +79,39 @@
   color: var(--via-olive-ink);
 }
 
-/* Attachments */
+/* Callouts (image insights) */
+.via-callouts {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+}
+.via-callouts .pill {
+  padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  border: 1px solid color-mix(in oklab, var(--via-olive) 22%, white);
+  background: oklch(.995 .002 95);
+}
+.via-callouts .pill.warn { background: #fff6ed; border-color: #fed7aa; }
+.via-callouts .pill.info { background: #eef2ff; border-color: #c7d2fe; }
+
+/* Attachments grid */
 .via-attachments {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-  gap: 8px;
-  margin-top: 8px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px; margin-top: 8px;
 }
 .via-attachments figure {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
+  position: relative; border-radius: 12px; overflow: hidden;
   border: 1px solid color-mix(in oklab, var(--via-olive) 25%, white);
   background: white;
 }
 .via-attachments button.remove {
-  position: absolute;
-  top: 4px;
-  right: 4px;
+  position: absolute; top: 4px; right: 4px;
   background: color-mix(in oklab, black 8%, white);
-  border-radius: 8px;
-  padding: 2px 6px;
+  border-radius: 8px; padding: 2px 6px;
 }
 
-/* Input bar */
+/* Input */
 .via-input {
   background: oklch(.99 .004 95);
   border-radius: 16px;
   border: 1px solid color-mix(in oklab, var(--via-olive) 18%, white);
 }
-.via-input textarea {
-  resize: none;
-  min-height: 48px;
-  max-height: 168px;
-}
+.via-input textarea { resize: none; min-height: 48px; max-height: 168px; }
 
