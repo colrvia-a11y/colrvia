@@ -5,6 +5,7 @@ import { byBrand, isNearWhite, isNeutral, contrastScore, excludeByAvoid } from '
 import { makeRNG, pick } from '@/lib/utils/seededRandom'
 import { capture, enabled as analyticsEnabled } from '@/lib/analytics/server'
 import { AI_ENABLE, AI_MODEL, AI_MAX_OUTPUT_TOKENS, HAS_OPENAI_KEY } from '@/lib/ai/config'
+import { getOpenAI } from '@/lib/openai'
 
 type Candidates = { neutrals: Color[]; whites: Color[]; accents: Color[] }
 
@@ -83,14 +84,12 @@ function sanitizeLlmPalette(parsed: Palette | null, candidates: Candidates, fall
 
 async function tryLlmPick(input: DesignInput, candidates: Candidates, fallback: Palette): Promise<Palette | null> {
   if (!AI_ENABLE || !HAS_OPENAI_KEY) return null
-  let OpenAIImpl: any
+  let client: ReturnType<typeof getOpenAI>
   try {
-    const mod = await import('openai')
-    OpenAIImpl = (mod as any).OpenAI
+    client = getOpenAI()
   } catch {
     return null
   }
-  const client = new OpenAIImpl({ apiKey: process.env.OPENAI_API_KEY })
   const payload = {
     input,
     candidates: {
