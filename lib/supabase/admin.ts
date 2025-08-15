@@ -16,3 +16,9 @@ export function getSupabaseAdminClient() {
   })
 }
 
+// Back-compat alias: some routes may still import { supabaseAdmin }.
+// Keep it as a *function* to avoid creating a client at build time.
+export const supabaseAdmin = getSupabaseAdminClient
+
+export type SupabaseAdminClient = ReturnType<typeof getSupabaseAdminClient>
+
