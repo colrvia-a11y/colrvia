@@ -40,4 +40,30 @@ describe('createPaletteFromInterview', () => {
     expect(lsGet).toHaveBeenCalled()
     vi.unstubAllEnvs()
   })
+
+  it('returns AUTH_REQUIRED when API responds 401', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    // @ts-ignore
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({ error: 'AUTH_REQUIRED' })
+    })
+    const res = await mod.createPaletteFromInterview({ vibe: 'Custom' })
+    expect(res).toEqual({ error: 'AUTH_REQUIRED' })
+    vi.unstubAllEnvs()
+  })
+
+  it('returns CREATE_FAILED when API fails', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    // @ts-ignore
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({})
+    })
+    const res = await mod.createPaletteFromInterview({ vibe: 'Custom' })
+    expect(res).toEqual({ error: 'CREATE_FAILED' })
+    vi.unstubAllEnvs()
+  })
 })

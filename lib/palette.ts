@@ -103,7 +103,7 @@ export function decodePalette(value: unknown): DecodedSwatch[] {
 }
 
 // Create a palette (story) from interview answers. Prefer explicit answers when provided.
-export async function createPaletteFromInterview(answersOverride?: any) {
+export async function createPaletteFromInterview(answersOverride?: any): Promise<{ id: string } | { error: 'AUTH_REQUIRED' | 'CREATE_FAILED' }> {
   // Skip network work in tests
   if (process.env.NODE_ENV === 'test') return { id: 'mock' };
 
@@ -153,11 +153,16 @@ export async function createPaletteFromInterview(answersOverride?: any) {
       if (typeof window !== 'undefined') {
         try { console.error('/api/stories failed', resp.status); } catch {}
       }
+      if (resp.status === 401 || data?.error === 'AUTH_REQUIRED') {
+        return { error: 'AUTH_REQUIRED' };
+      }
+      return { error: 'CREATE_FAILED' };
     }
   } catch (err) {
     if (typeof window !== 'undefined') {
       try { console.error('createPaletteFromInterview error', err); } catch {}
     }
+    return { error: 'CREATE_FAILED' };
   }
-  return null;
+  return { error: 'CREATE_FAILED' };
 }
