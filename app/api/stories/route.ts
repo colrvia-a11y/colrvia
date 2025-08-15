@@ -112,8 +112,8 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Build a new palette with the AI orchestrator, then normalize/repair
-    const generated = await designPalette({ brand: brandCanonical, vibe: vibeSafe } as DesignInput)
+    // 2. Build a new palette with the AI orchestrator using full inputs, then normalize/repair
+    const generated = await designPalette({ ...inputs, brand: brandCanonical, vibe: vibeSafe } as DesignInput)
     const legacy = mapV2ToLegacy(generated as V2Palette)
     let finalPalette: any
     const testEnv =
