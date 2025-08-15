@@ -11,17 +11,19 @@ type Mode = 'magic' | 'password'
 type PwPhase = 'signin' | 'signup'
 
 export default function SignInPage() {
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
-  const [mode, setMode] = useState<Mode>('magic')
-  const [pwPhase, setPwPhase] = useState<PwPhase>('signin')
+  const modeParam = searchParams.get('mode')
+  const pwParam = searchParams.get('pw')
+  const [mode, setMode] = useState<Mode>(() => (modeParam === 'password' ? 'password' : 'magic'))
+  const [pwPhase, setPwPhase] = useState<PwPhase>(() => (pwParam === 'signup' || pwParam === 'create' ? 'signup' : 'signin'))
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [awaitingConfirm, setAwaitingConfirm] = useState(false)
   const supabase = supabaseBrowser()
   const t = useTranslations('SignInPage')
-  const searchParams = useSearchParams()
   const next = searchParams.get('next') || '/dashboard'
 
   const origin =

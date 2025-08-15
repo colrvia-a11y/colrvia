@@ -13,7 +13,8 @@ export default async function AccountPage() {
   const supabase = supabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    return <div className="p-8"><p>Please sign in to view your account.</p></div>
+    const { default: UnauthenticatedAccount } = await import('./Unauthenticated')
+    return <UnauthenticatedAccount />
   }
   const { tier } = await getUserTier()
 
