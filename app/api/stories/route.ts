@@ -47,10 +47,28 @@ export async function POST(req: Request) {
     )
   }
 
+  let brand = (body as any)?.brand
+  let vibe = (body as any)?.vibe
+  let inputs = (body as any)?.inputs
+
+  // If caller passed RealTalk answers (or only inputs), build DesignInput once here
+  try {
+    if (!brand || !vibe || !inputs) {
+      const { mapRealTalkToDesignInput } = await import('@/lib/realtalk/mapToDesignInput')
+      const mapped = mapRealTalkToDesignInput(((raw as any)?.answers || (raw as any)?.inputs || {}) as any)
+      inputs = inputs ?? mapped
+      brand = brand ?? mapped.brand
+      // vibe may be array or string in different code paths
+      vibe = vibe ?? (Array.isArray(mapped.vibe) ? mapped.vibe.join(' ') : mapped.vibe)
+    }
+  } catch { /* non-fatal; schema already guards */ }
+
+  // Now use these for generation
+  const brandSafe = (brand || 'Sherwin-Williams') as any
+  const vibeSafe = (vibe || 'Custom') as any
+
   // 4) Build or repair palette using existing flow; guard to avoid 500s on downstream throws
   try {
-  const brand = (body.brand || "sherwin_williams") as any
-  const vibe = (body.vibe || "Cozy Neutral") as any
 
     // 1. If palette_v2 is present and allowed, use it (map to legacy)
     let paletteToNormalize: any[] | undefined = undefined
@@ -66,10 +84,10 @@ export async function POST(req: Request) {
     } else if (body.palette && Array.isArray(body.palette) && body.palette.length > 0) {
       paletteToNormalize = body.palette as any[]
     } else {
-      paletteToNormalize = seedPaletteFor({ brand, vibe })
+      paletteToNormalize = seedPaletteFor({ brand: brandSafe, vibe: vibeSafe })
     }
 
-    let basePalette = await normalizePaletteOrRepair(paletteToNormalize, vibe)
+    let basePalette = await normalizePaletteOrRepair(paletteToNormalize, vibeSafe)
     if (!basePalette) {
       // fallback for test/dev: map the palette to NormalizedSwatch[] if normalization fails
       if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || process.env.VITEST) {
@@ -87,9 +105,9 @@ export async function POST(req: Request) {
     }
 
     // 2. Build a new palette with the AI orchestrator, then normalize/repair
-    const generated = await designPalette({ brand, vibe } as DesignInput)
+    const generated = await designPalette({ brand: brandSafe, vibe: vibeSafe } as DesignInput)
     const legacy = mapV2ToLegacy(generated as V2Palette)
-    let finalPalette = await normalizePaletteOrRepair(legacy.swatches, vibe)
+    let finalPalette = await normalizePaletteOrRepair(legacy.swatches, vibeSafe)
     const testEnv = process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || process.env.VITEST
     if (!finalPalette) {
       if (testEnv) {
@@ -102,10 +120,10 @@ export async function POST(req: Request) {
     // 3) Persist the story to the database and always return { id }
     L('insert attempt', {
       userId: user.id,
-      brand,
+      brand: brandSafe,
       hasPalette: Array.isArray(finalPalette),
       paletteLen: Array.isArray(finalPalette) ? finalPalette.length : 0,
-      hasInputs: !!(body as any)?.inputs,
+      hasInputs: !!inputs,
       hasAnswers: !!(body as any)?.answers,
       bodyKeys: Object.keys((body as any) ?? {})
     });
@@ -113,16 +131,12 @@ export async function POST(req: Request) {
       .from('stories')
       .insert({
         user_id: user.id,
-        brand,
-        inputs: (body as any)?.inputs ?? {
-          vibe: (body as any)?.vibe ?? null,
-        },
+        brand: brandSafe,
+        inputs: inputs ?? { vibe: vibeSafe },
         palette: finalPalette,
         has_variants: false,
         status: 'ready',
-        title: (body as any)?.vibe
-          ? `${(body as any).vibe} Palette`
-          : 'Your Color Story',
+        title: vibeSafe ? `${vibeSafe} Palette` : 'Your Color Story',
       })
       .select('id')
       .single();

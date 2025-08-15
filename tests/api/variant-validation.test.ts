@@ -2,8 +2,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import * as variantRoute from '@/app/api/stories/[id]/variant/route'
 
-vi.mock('@/lib/supabase/server', () => ({
-  supabaseServer: () => ({
+vi.mock('@/lib/supabase/server', () => {
+  const client = () => ({
     auth: { getUser: async () => ({ data: { user: { id: 'u1' } }, error: null }) },
     from: () => ({
       select: () => ({
@@ -15,8 +15,9 @@ vi.mock('@/lib/supabase/server', () => ({
         }),
       }),
     }),
-  }),
-}))
+  })
+  return { supabaseServer: client, createSupabaseServerClient: client }
+})
 
 vi.mock('@/lib/ai/variants', () => ({
   makeVariant: (base: any) => base,

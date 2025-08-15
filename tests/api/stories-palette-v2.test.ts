@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 // Use real Sherwin-Williams catalog data so validator passes.
 import sw from '@/data/brands/sw.json';
 
-vi.mock('@/lib/supabase/server', () => ({
-  supabaseServer: () => {
+vi.mock('@/lib/supabase/server', () => {
+  const client = () => {
     const swatches = [
       { brand:'sherwin_williams', code:'SW 7008', name:'Alabaster', hex:'#FFFFFF' },
       { brand:'sherwin_williams', code:'SW 7036', name:'Accessible Beige', hex:'#E5D8C8' },
@@ -19,7 +19,8 @@ vi.mock('@/lib/supabase/server', () => ({
       })
     }
   }
-}))
+  return { supabaseServer: client, createSupabaseServerClient: client }
+})
 
 vi.mock('@/lib/palette/normalize-repair', () => ({
   normalizePaletteOrRepair: async (p: any) => p,

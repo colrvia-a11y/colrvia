@@ -128,15 +128,13 @@ export async function createPaletteFromInterview(answersOverride?: any): Promise
       answers = stored;
     }
 
-    const { mapAnswersToStoryInput } = await import('@/lib/ai/onboardingGraph');
-    const payload = mapAnswersToStoryInput(answers || {});
-    // Ensure we send at least one meaningful field for validation
-    if (!payload.vibe) payload.vibe = 'Custom';
+    const { mapRealTalkToDesignInput } = await import('@/lib/realtalk/mapToDesignInput');
+    const payload = mapRealTalkToDesignInput(answers || {}); // brand, vibe, seed now always set
 
     const resp = await fetch('/api/stories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, source: 'interview' })
+      body: JSON.stringify({ ...payload, inputs: payload, answers, source: 'interview' })
     });
     const data = await resp.json().catch(() => null);
     if (resp.ok && data) {

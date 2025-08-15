@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('@/lib/supabase/server', () => ({
-  supabaseServer: () => {
+vi.mock('@/lib/supabase/server', () => {
+  const client = () => {
     const swatches = [
       { brand:'sherwin_williams', code:'SW 7008', name:'Alabaster', hex:'#FFFFFF' },
       { brand:'sherwin_williams', code:'SW 7036', name:'Accessible Beige', hex:'#E5D8C8' },
@@ -17,7 +17,8 @@ vi.mock('@/lib/supabase/server', () => ({
       })
     }
   }
-}))
+  return { supabaseServer: client, createSupabaseServerClient: client }
+})
 
 const post = (json:any) => new Request('http://localhost/api/stories', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(json) })
 

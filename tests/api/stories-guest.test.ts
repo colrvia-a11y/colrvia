@@ -2,12 +2,13 @@
 import { describe, it, expect, vi } from 'vitest'
 import * as storiesRoute from '@/app/api/stories/route'
 
-vi.mock('@/lib/supabase/server', () => ({
-  supabaseServer: () => ({
+vi.mock('@/lib/supabase/server', () => {
+  const client = () => ({
     auth: { getUser: async () => ({ data: { user: null }, error: null }) },
     from: () => ({ insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) })
   })
-}))
+  return { supabaseServer: client, createSupabaseServerClient: client }
+})
 
 vi.mock('@/lib/ai/palette', () => ({
   seedPaletteFor: () => [{ brand: 'sherwin_williams', code: 'SW 7005', name: 'Pure White', hex: '#FEFEFE' }],

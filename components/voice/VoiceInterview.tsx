@@ -187,7 +187,7 @@ export default function VoiceInterview() {
               const storyRes = await fetch('/api/stories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ designerKey: designerId, ...answersRef.current, seed: `voice:${Date.now()}` }),
+                body: JSON.stringify({ designerKey: designerId, answers: answersRef.current, seed: `voice:${Date.now()}` }),
               })
               const story = await storyRes.json().catch(() => null)
               const id = story?.id || story?.story?.id
