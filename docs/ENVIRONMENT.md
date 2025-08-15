@@ -17,3 +17,12 @@ Optional:
 - `OPENAI_VISION_MODEL`, `OPENAI_REALTIME_MODEL`, etc.
 
 > Never paste secrets in chat. Store them only in Vercel envs.
+
+## Interview Routing
+
+- `POST /api/interview` with `{ "mode": "realtime" }` → returns `{ sessionEndpoint, offerEndpoint, model }`.
+- `POST /api/interview` with `{ "mode": "form", "questionText": "...", "answers": { ... } }` → returns `{ explanation, model }`.
+
+### Envs
+- `OPENAI_REALTIME_MODEL` (default: `gpt-4o-mini`) – used for live talk.
+- `VIA_INTERVIEW_MODEL` (default: `gpt-5-mini`) – used for text form explains.
