@@ -1,13 +1,18 @@
 export const runtime = 'nodejs'
 import { NextResponse } from 'next/server'
-import { AI_ENABLE, AI_MODEL, PALETTE_MODEL, HAS_OPENAI_KEY } from '@/lib/ai/config'
+import { AI_ENABLE, AI_MODEL, HAS_OPENAI_KEY, VIA_CHAT_MODEL, VIA_CHAT_FAST_MODEL, VIA_INTERVIEW_MODEL, PALETTE_MODEL } from '@/lib/ai/config'
 
 export async function GET() {
   return NextResponse.json({
     enabled: AI_ENABLE && HAS_OPENAI_KEY,
     provider: 'openai',
-    model: AI_MODEL,         // chat/narrative model
-    paletteModel: PALETTE_MODEL, // palette generation model
+    model: AI_MODEL,                 // default chat/narrative (legacy)
+    via: {
+      chatModel: VIA_CHAT_MODEL,
+      chatFastModel: VIA_CHAT_FAST_MODEL,
+      interviewModel: VIA_INTERVIEW_MODEL,
+      paletteModel: PALETTE_MODEL
+    },
     hasKey: HAS_OPENAI_KEY
   })
 }

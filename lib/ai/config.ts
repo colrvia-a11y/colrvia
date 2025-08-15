@@ -7,8 +7,19 @@ export const REALTIME_TTS_MODEL =
 export const AI_MODEL =
   process.env.OPENAI_MODEL || 'gpt-4o'
 
-// Palette generation model for LLM-assisted picks.
-// Prefer VIA_PALETTE_MODEL; fallback to OPENAI_MODEL; default to gpt-5.
+// —— Via model map (env-configurable with safe defaults) ——
+// 1) Via (chat bot): long/complex turns
+export const VIA_CHAT_MODEL =
+  process.env.VIA_CHAT_MODEL || 'gpt-5'
+//    Via (chat bot): quick, low-stakes turns
+export const VIA_CHAT_FAST_MODEL =
+  process.env.VIA_CHAT_FAST_MODEL || 'gpt-5-mini'
+
+// 2) Interview helper (explainers / clarifications during intake)
+export const VIA_INTERVIEW_MODEL =
+  process.env.VIA_INTERVIEW_MODEL || 'gpt-5-mini'
+
+// 3) Palette generation (deep reasoning over catalog + formula)
 export const PALETTE_MODEL =
   process.env.VIA_PALETTE_MODEL || process.env.OPENAI_MODEL || 'gpt-5'
 
