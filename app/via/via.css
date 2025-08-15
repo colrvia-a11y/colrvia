@@ -1,9 +1,10 @@
 /* ---------- Brand-scoped tokens for /via ---------- */
 .theme-via {
-  /* Background: pastel peach → warm white */
-  --via-peach: oklch(0.92 0.05 45);
-  --via-peach-2: oklch(0.99 0.01 95);
-  --via-bg: linear-gradient(180deg, var(--via-peach) 0%, var(--via-peach-2) 52%);
+  /* Background: stronger peach at top → fade to white sooner */
+  --via-peach: oklch(0.88 0.06 45);
+  --via-peach-2: oklch(0.995 0 95);
+  /* push color into the top ~30%, then get to white by ~60% */
+  --via-bg: linear-gradient(180deg, var(--via-peach) 0%, oklch(0.985 0.02 50) 28%, white 60%);
   background: var(--via-bg);
   /* Card surface + text */
   --via-panel: oklch(0.985 0.005 95);
@@ -109,9 +110,13 @@
 
 /* Input */
 .via-input {
-  background: oklch(.99 .004 95);
+  background: white; /* white surface for maximum contrast */
   border-radius: 16px;
   border: 1px solid color-mix(in oklab, var(--via-olive) 18%, white);
+}
+.via-input textarea,
+.via-input input {
+  color: var(--via-ink); /* black/dark text on white */
 }
 .via-input textarea { resize: none; min-height: 48px; max-height: 168px; }
 
