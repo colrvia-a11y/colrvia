@@ -5,6 +5,7 @@ import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 import { CatalogEmptyError, NormalizeError } from '@/lib/errors'
 import { roleOrder } from '@/lib/palette'
 import type { PaletteRole } from '@/types/palette'
+import { normalizePaintName, extractSwCode } from './normalize-utils'
 
 export type RawSwatch = { brand?: string; code?: string; name?: string; hex?: string } | string
 export type NormalizedSwatch = {
@@ -22,21 +23,42 @@ export function coerceSWCode(input: string): string {
 }
 
 // Minimal interface for tests to inject a fake supabase client
-type SupabaseLite = {
-  from: (table: string) => {
-    select: (cols?: string) => {
-      in: (
-        col: string,
-        vals: any[],
-      ) => Promise<{ data: any[] | null; error: any }>
-      order: (
-        col: string,
-        opts: { ascending: boolean },
-      ) => {
-        limit: (n: number) => Promise<{ data: any[] | null; error: any }>
-      }
-    }
+type SupabaseLite = any
+
+async function findByName(
+  supabase: SupabaseLite,
+  brand: 'Sherwin-Williams' | 'Behr',
+  rawName?: string
+) {
+  if (!rawName) return null
+  const nameKey = normalizePaintName(rawName)
+  if (!nameKey) return null
+  const table = brand === 'Behr' ? 'catalog_behr' : 'catalog_sw'
+  const { data, error } = await supabase
+    .from(table)
+    .select('*')
+    .ilike('name', `%${nameKey.split(' ').slice(0, 3).join(' ')}%`)
+    .order('name', { ascending: true })
+    .limit(5)
+  if (error || !data || data.length === 0) return null
+  const perfect = data.find((d: any) => normalizePaintName(d.name) === nameKey)
+  return perfect || data[0]
+}
+
+async function resolveSwatchWithCatalog(
+  supabase: SupabaseLite,
+  brand: 'Sherwin-Williams' | 'Behr',
+  swatch: { code?: string; name?: string; hex?: string }
+) {
+  const extracted = extractSwCode(swatch.code || swatch.name)
+  const table = brand === 'Behr' ? 'catalog_behr' : 'catalog_sw'
+  if (extracted) {
+    const { data } = await supabase.from(table).select('*').eq('code', extracted).limit(1)
+    if (data && data[0]) return data[0]
   }
+  const byName = await findByName(supabase, brand, swatch.name)
+  if (byName) return byName
+  return null
 }
 
 export async function normalizePaletteOrRepair(
@@ -78,22 +100,53 @@ export async function normalizePaletteOrRepair(
     const seed =
       FALLBACK[(vibe || '').toLowerCase().replace(/[^a-z]+/g, '_')] ||
       FALLBACK.default
-    const targetCodes = Array.from(
-      new Set([...wantedCodes, ...seed]),
-    ).slice(0, 5)
-
     const sb = deps?.supabase ?? getSupabaseAdminClient()
     const { data, error } = await sb
       .from('catalog_sw')
       .select('code,name,hex')
-      .in('code', targetCodes)
+      .in('code', wantedCodes)
     if (error) {
       throw new NormalizeError(
         `Supabase query failed: ${error.message ?? error}`,
       )
     }
-    const foundCodes = new Set((data || []).map((d) => d.code))
-    let rows = data || []
+    const foundCodes = new Set((data || []).map((d: any) => d.code))
+    let rows: any[] = data || []
+
+    const missing = arr
+      .map((x: any) => (typeof x === 'string' ? { code: x } : x))
+      .filter((s: any) => s && (!s.code || !foundCodes.has(coerceSWCode(s.code))))
+
+    for (const m of missing) {
+      const hit = await resolveSwatchWithCatalog(sb, 'Sherwin-Williams', m as any)
+      if (hit && !foundCodes.has(hit.code)) {
+        rows.push(hit)
+        foundCodes.add(hit.code)
+      }
+    }
+
+    if (rows.length < 5) {
+      const need = seed.filter((c) => !foundCodes.has(c)).slice(0, 5 - rows.length)
+      if (need.length) {
+        const { data: fb, error: fbErr } = await sb
+          .from('catalog_sw')
+          .select('code,name,hex')
+          .in('code', need)
+        if (fbErr) {
+          throw new NormalizeError(
+            `Supabase query failed: ${fbErr.message ?? fbErr}`,
+          )
+        }
+        for (const r of fb || []) {
+          if (rows.length >= 5) break
+          if (!foundCodes.has(r.code)) {
+            rows.push(r)
+            foundCodes.add(r.code)
+          }
+        }
+      }
+    }
+
     if (rows.length < 5) {
       const { data: topup, error: topErr } = await sb
         .from('catalog_sw')
@@ -115,6 +168,16 @@ export async function normalizePaletteOrRepair(
     }
     if (rows.length < 5) {
       throw new CatalogEmptyError()
+    }
+    if (process.env.NODE_ENV !== 'production') {
+      const repairedCount = arr.filter((x: any) => {
+        const c = typeof x === 'string' ? x : x?.code
+        if (!c) return true
+        return !foundCodes.has(coerceSWCode(c))
+      }).length
+      if (repairedCount > 0) {
+        console.warn('[normalize] repaired swatches via fallback:', repairedCount)
+      }
     }
     return rows.slice(0, 5).map((d, i) => ({
       brand: 'sherwin_williams',
