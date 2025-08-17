@@ -130,36 +130,21 @@ export default function InterviewChat() {
 
               {/* Chips for single/multi/boolean */}
               {(step.kind === "single" || step.kind === "multi" || step.kind === "boolean") && chips && (
-                <ChipList
-                  chips={step.kind === "boolean"
-                    ? [{ value: "true", label: "Yes" }, { value: "false", label: "No" }]
-                    : chips}
-                  multi={step.kind === "multi"}
-                  onSelect={setSelected}
-                  selected={selected}
-                />
-              )}
-
-              {/* Free input */}
-              {step.kind === "free" && (
-                <div className="flex gap-2">
-                  <input
-                    value={free}
-                    onChange={(e) => setFree(e.target.value)}
-                    placeholder={step.placeholder ?? ""}
-                    className="flex-1 rounded-2xl border border-black/10 px-4 py-3"
-                  />
-                  <button type="button" onClick={submitFree} className="rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5">
-                    Save
-                  </button>
-                </div>
-              )}
-
-              {/* Tag input (arrays of strings) */}
-              {step.kind === "tags" && (
                 <div className="space-y-2">
-                  <TagInput values={tags} onChange={setTags} placeholder="Type a word, press Enter" helper={step.helper ?? undefined} />
-                  <button type="button" onClick={submitTags} className="rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5">
+                  <ChipList
+                    chips={step.kind === "boolean"
+                      ? [{ value: "true", label: "Yes" }, { value: "false", label: "No" }]
+                      : chips}
+                    multi={step.kind === "multi"}
+                    onSelect={setSelected}
+                    selected={selected}
+                  />
+                  <button
+                    type="button"
+                    onClick={submitChips}
+                    className="rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
+                    disabled={sending}
+                  >
                     Save
                   </button>
                 </div>
@@ -169,39 +154,60 @@ export default function InterviewChat() {
         )}
       </div>
 
-      <div className="space-y-2">
-        <UploadImageButton
-          onNotes={(n) => setMessages(m => [...m, { role:"assistant", content: `Photo notes: ${n}` }])}
-        />
-
-        {/* Composer */}
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const form = e.currentTarget;
-            const input = form.elements.namedItem("msg") as HTMLInputElement;
-            const val = input.value;
-            input.value = "";
-            await submitTyping(val);
-          }}
-          className="flex items-center gap-2"
-        >
-          <input
-            name="msg"
-            aria-label="Type a message"
-            placeholder="Ask anything…"
-            className="flex-1 rounded-2xl border border-black/10 px-4 py-3"
+      {(!step || step.kind === "free" || step.kind === "tags") && (
+        <div className="space-y-2">
+          <UploadImageButton
+            onNotes={(n) => setMessages(m => [...m, { role:"assistant", content: `Photo notes: ${n}` }])}
           />
-          <button
-            type="button"
-            onClick={submitChips}
-            className="rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
-            disabled={sending}
-          >
-            Send
-          </button>
-        </form>
-      </div>
+
+          {/* Composer */}
+          {step?.kind === "tags" ? (
+            <div className="space-y-2">
+              <TagInput values={tags} onChange={setTags} placeholder="Type a word, press Enter" helper={step.helper ?? undefined} />
+              <button
+                type="button"
+                onClick={submitTags}
+                className="rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
+                disabled={sending}
+              >
+                Save
+              </button>
+            </div>
+          ) : (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (step && step.kind === "free") {
+                  await submitFree();
+                } else {
+                  const form = e.currentTarget;
+                  const input = form.elements.namedItem("msg") as HTMLInputElement;
+                  const val = input.value;
+                  input.value = "";
+                  await submitTyping(val);
+                }
+              }}
+              className="flex items-center gap-2"
+            >
+              <input
+                name="msg"
+                aria-label="Type a message"
+                placeholder={step?.placeholder ?? "Ask anything…"}
+                className="flex-1 rounded-2xl border border-black/10 px-4 py-3"
+                value={step && step.kind === "free" ? free : undefined}
+                onChange={step && step.kind === "free" ? (e) => setFree(e.target.value) : undefined}
+              />
+              <button
+                type="submit"
+                className="rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
+                disabled={sending}
+              >
+                {step ? "Save" : "Send"}
+              </button>
+            </form>
+          )}
+        </div>
+      )}
     </div>
   );
 }
