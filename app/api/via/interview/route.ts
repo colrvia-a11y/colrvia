@@ -33,11 +33,8 @@ export async function POST(req: NextRequest) {
   }
 
   const s = getStepById(nextId)!;
-  const reply = [
-    sideAnswer ? sideAnswer + "\n\n" : "",
-    leadInFor(s.id),
-    s.title,
-  ].join("");
+  const leadIn = leadInFor(s.id);
+  const reply = sideAnswer ?? "";
 
   const chips =
     s.kind === "single" || s.kind === "multi"
@@ -49,6 +46,7 @@ export async function POST(req: NextRequest) {
   return json({
     done: false,
     reply,
+    leadIn,
     question: {
       id: s.id,
       kind: s.kind,

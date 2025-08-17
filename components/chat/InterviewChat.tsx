@@ -48,7 +48,8 @@ export default function InterviewChat() {
     }).then(r => r.json()).catch(() => ({}));
     setSending(false);
 
-    if (resp.reply) pushAssistant(resp.reply);
+    if (resp.reply && resp.reply !== resp?.question?.title) pushAssistant(resp.reply);
+    if (resp.leadIn) pushAssistant(resp.leadIn);
 
     if (resp.done) {
       // Legacy shim to keep builder happy until full server mapping adopts v2
