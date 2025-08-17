@@ -1,42 +1,43 @@
+// components/chat/InterviewChat.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import { MessageBubble } from "./MessageBubble";
 import { ChipList } from "./ChipList";
 import { UploadImageButton } from "./UploadImageButton";
-import type { Answers, QuestionId } from "@/lib/realtalk/questionnaire";
+import TagInput from "./TagInput";
+import type { Answers } from "@/lib/realtalk/questionnaire";
 import { useRouter } from "next/navigation";
 
 type Msg = { role: "assistant" | "user"; content: string };
+
+type StepDTO = {
+  id: string;
+  kind: "single" | "multi" | "free" | "tags" | "boolean";
+  title: string;
+  placeholder?: string | null;
+  helper?: string | null;
+};
+type Chip = { value: string; label: string };
 
 export default function InterviewChat() {
   const router = useRouter();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [answers, setAnswers] = useState<Answers>({});
-  const [currentId, setCurrentId] = useState<QuestionId | null>(null);
-  const [chips, setChips] = useState<{ value: string; label: string }[] | null>(null);
-  const [question, setQuestion] = useState<{ id: QuestionId; kind: "single"|"multi"|"free"; prompt: string; placeholder?: string|null } | null>(null);
+  const [currentId, setCurrentId] = useState<string | null>(null);
+  const [chips, setChips] = useState<Chip[] | null>(null);
+  const [step, setStep] = useState<StepDTO | null>(null);
   const [free, setFree] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const scroller = useRef<HTMLDivElement>(null);
   const [sending, setSending] = useState(false);
 
-  function pushAssistant(text: string) {
-    setMessages(m => [...m, { role: "assistant", content: text }]);
-  }
-  function pushUser(text: string) {
-    setMessages(m => [...m, { role: "user", content: text }]);
-  }
+  function pushAssistant(text: string) { setMessages(m => [...m, { role: "assistant", content: text }]); }
+  function pushUser(text: string) { setMessages(m => [...m, { role: "user", content: text }]); }
 
-  // Boot
-  useEffect(() => {
-    void fetchNext();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
-  }, [messages, chips, question]);
+  useEffect(() => { void fetchNext(); }, []);
+  useEffect(() => { scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }); }, [messages, chips, step]);
 
   async function fetchNext(lastUser?: string) {
     setSending(true);
@@ -44,77 +45,76 @@ export default function InterviewChat() {
       method: "POST",
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({ answers, lastUser, currentId }),
-    }).then(r => r.json());
+    }).then(r => r.json()).catch(() => ({}));
     setSending(false);
 
     if (resp.reply) pushAssistant(resp.reply);
+
     if (resp.done) {
-      // Finish interview → create story
+      // Legacy shim to keep builder happy until full server mapping adopts v2
+      const legacy = toLegacyAnswers(answers);
       const story = await fetch("/api/stories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers, source: "text_interview" }),
-      }).then(r => r.json());
+        body: JSON.stringify({ answers, answersV1Legacy: legacy, source: "text_interview_v2" }),
+      }).then(r => r.json()).catch(() => null);
       const id = story?.id;
       if (id) router.push(`/reveal/${id}`);
       return;
     }
 
-    setQuestion(resp.question);
-    setChips(resp.chips);
-    setCurrentId(resp.question?.id ?? null);
-    setSelected([]);
-    setFree("");
-  }
-
-  function mergeAnswer(qid: QuestionId, values: string[]) {
-    const a: Answers = { ...answers };
-    if (qid === "mood_words") a.mood_words = values;
-    else if (qid === "dark_color_ok") a.dark_color_ok = values[0] as any;
-    else if (qid === "lighting") a.lighting = values[0] as any;
-    else if (qid === "room_type") a.room_type = values[0]!;
-    else if (qid === "style_primary") a.style_primary = values[0]!;
-    else if (qid === "brand") a.brand = values[0] as any;
-    setAnswers(a);
+    if (resp.question) {
+      setStep(resp.question);
+      setChips(resp.chips ?? null);
+      setCurrentId(resp.question.id);
+      setSelected([]);
+      setFree("");
+      setTags([]);
+    }
   }
 
   async function submitFree() {
-    if (!question) return;
+    if (!step) return;
     const text = free.trim();
     if (!text) return;
     pushUser(text);
-    if (question.id === "fixed_elements") setAnswers(a => ({ ...a, fixed_elements: text }));
-    if (question.id === "avoid_colors") setAnswers(a => ({ ...a, avoid_colors: text }));
+    setAnswers(a => setAtPath({ ...a }, step.id, text));
     await fetchNext(text);
   }
 
-  async function submitChips() {
-    if (!question) return;
-    if (question.kind === "multi" && selected.length === 0) return;
-    if ((question.kind === "single" && selected.length !== 1)) return;
+  async function submitTags() {
+    if (!step) return;
+    pushUser(tags.join(", "));
+    setAnswers(a => setAtPath({ ...a }, step.id, tags));
+    await fetchNext(tags.join(", "));
+  }
 
-    pushUser(selected.map(v => chips?.find(c => c.value === v)?.label ?? v).join(", "));
-    mergeAnswer(question.id, selected);
-    await fetchNext(selected.join(", "));
+  async function submitChips() {
+    if (!step) return;
+    if (step.kind === "multi" && selected.length === 0) return;
+    if (step.kind === "single" && selected.length !== 1) return;
+    if (step.kind === "boolean" && selected.length !== 1) return;
+
+    const display = selected.map(v => chips?.find(c => c.value === v)?.label ?? v).join(", ");
+    pushUser(display);
+
+    const value = step.kind === "boolean" ? (selected[0] === "true") : (step.kind === "single" ? selected[0] : selected);
+    setAnswers(a => setAtPath({ ...a }, step.id, value));
+    await fetchNext(display);
   }
 
   async function submitTyping(text: string) {
     const trimmed = text.trim();
     if (!trimmed) return;
     pushUser(trimmed);
-    // If a current question is free text and empty, treat as answer; else treat as side Q.
-    if (question?.kind === "free" && !free) {
-      if (question.id === "fixed_elements") setAnswers(a => ({ ...a, fixed_elements: trimmed }));
-      if (question.id === "avoid_colors") setAnswers(a => ({ ...a, avoid_colors: trimmed }));
-    }
-    await fetchNext(trimmed);
+    await fetchNext(trimmed); // side question / digression handled server-side
   }
 
   return (
     <div className="mx-auto w-full max-w-screen-sm h-[calc(100dvh-140px)] flex flex-col gap-4">
       <header className="pt-4">
         <h1 className="text-xl font-medium">Text Interview</h1>
-        <p className="text-sm opacity-70">We’ll chat through a few quick questions. You can ask anything as we go.</p>
+        <p className="text-sm opacity-70">We’ll chat through smart questions. You can ask anything as we go.</p>
       </header>
 
       <div ref={scroller} className="flex-1 overflow-y-auto space-y-3 rounded-2xl border border-black/10 p-3 bg-white">
@@ -122,17 +122,46 @@ export default function InterviewChat() {
           <MessageBubble key={i} role={m.role}>{m.content}</MessageBubble>
         ))}
 
-        {question && (
+        {step && (
           <MessageBubble role="assistant">
             <div className="space-y-3">
-              <div className="text-[15px]">{question.prompt}</div>
-              {chips && (
+              <div className="text-[15px]">{step.title}</div>
+
+              {/* Chips for single/multi/boolean */}
+              {(step.kind === "single" || step.kind === "multi" || step.kind === "boolean") && chips && (
                 <ChipList
-                  chips={chips}
-                  multi={question.kind === "multi"}
+                  chips={step.kind === "boolean"
+                    ? [{ value: "true", label: "Yes" }, { value: "false", label: "No" }]
+                    : chips}
+                  multi={step.kind === "multi"}
                   onSelect={setSelected}
                   selected={selected}
                 />
+              )}
+
+              {/* Free input */}
+              {step.kind === "free" && (
+                <div className="flex gap-2">
+                  <input
+                    value={free}
+                    onChange={(e) => setFree(e.target.value)}
+                    placeholder={step.placeholder ?? ""}
+                    className="flex-1 rounded-2xl border border-black/10 px-4 py-3"
+                  />
+                  <button type="button" onClick={submitFree} className="rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5">
+                    Save
+                  </button>
+                </div>
+              )}
+
+              {/* Tag input (arrays of strings) */}
+              {step.kind === "tags" && (
+                <div className="space-y-2">
+                  <TagInput values={tags} onChange={setTags} placeholder="Type a word, press Enter" helper={step.helper ?? undefined} />
+                  <button type="button" onClick={submitTags} className="rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5">
+                    Save
+                  </button>
+                </div>
               )}
             </div>
           </MessageBubble>
@@ -159,7 +188,7 @@ export default function InterviewChat() {
           <input
             name="msg"
             aria-label="Type a message"
-            placeholder="Type a message…"
+            placeholder="Ask anything…"
             className="flex-1 rounded-2xl border border-black/10 px-4 py-3"
           />
           <button
@@ -171,25 +200,68 @@ export default function InterviewChat() {
             Send
           </button>
         </form>
-
-        {question?.kind === "free" && (
-          <div className="flex gap-2">
-            <input
-              value={free}
-              onChange={(e) => setFree(e.target.value)}
-              placeholder={question.placeholder ?? ""}
-              className="flex-1 rounded-2xl border border-black/10 px-4 py-3"
-            />
-            <button
-              type="button"
-              onClick={submitFree}
-              className="rounded-xl border border-black/10 px-3 py-2 text-sm hover:bg-black/5"
-            >
-              Save answer
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
+}
+
+// ---------- small helpers ----------
+
+function setAtPath(obj: any, path: string, value: any) {
+  const keys = path.split(".");
+  let node = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    node[keys[i]] ??= {};
+    node = node[keys[i]];
+  }
+  node[keys[keys.length - 1]] = value;
+  return obj;
+}
+
+// Best-effort legacy shim for existing builder mapping.
+function toLegacyAnswers(a: any) {
+  const roomMap: Record<string,string> = {
+    kitchen: "Kitchen", bathroom: "Bathroom", bedroom: "Bedroom", livingRoom: "Living Room",
+    diningRoom: "Dining Room", office: "Office", kidsRoom: "Kids Room",
+    laundryMudroom: "Laundry/Mudroom", entryHall: "Entry/Hall", other: "Other",
+  };
+  const lightMap: Record<string,"Bright"|"Mixed"|"Low"> = {
+    veryBright: "Bright", kindaBright: "Mixed", dim: "Low",
+  };
+  const contrastMap: Record<string,"Softer"|"Balanced"|"Bolder"> = {
+    verySoft: "Softer", medium: "Balanced", crisp: "Bolder",
+  };
+  const vibe = a?.colorComfort?.overallVibe;
+  const warmCool = a?.colorComfort?.warmCoolFeel;
+  let style = "Cozy Neutral";
+  if (vibe === "mostlySoftNeutrals") style = warmCool === "cooler" ? "Clean Minimal" : "Cozy Neutral";
+  if (vibe === "neutralsPlusGentleColors") style = "Modern Warm";
+  if (vibe === "confidentColorMoments") style = "Bold Color";
+
+  const fixedBits: string[] = [];
+  const floor = a?.existingElements?.floorLook;
+  if (floor) fixedBits.push(`floor:${floor}`);
+  const metals = a?.existingElements?.metals;
+  if (metals) fixedBits.push(`metals:${metals}`);
+  const big = a?.existingElements?.bigThingsToMatch?.join(", ");
+  if (big) fixedBits.push(`match:${big}`);
+  if (a?.existingElements?.mustStaySame) fixedBits.push(a.existingElements.mustStaySame);
+
+  const brandMap: Record<string,string> = {
+    SherwinWilliams: "Sherwin-Williams",
+    BenjaminMoore: "Benjamin Moore",
+    Behr: "Behr",
+    pickForMe: "Sherwin-Williams",
+  };
+
+  return {
+    room_type: roomMap[a?.roomType] ?? "Other",
+    lighting: lightMap[a?.daytimeBrightness] ?? "Mixed",
+    style_primary: style,
+    mood_words: a?.moodWords ?? [],
+    dark_color_ok: contrastMap[a?.colorComfort?.contrastLevel] ?? "Balanced",
+    fixed_elements: fixedBits.join("; "),
+    avoid_colors: (a?.colorsToAvoid ?? []).join(", "),
+    brand: brandMap[a?.brandPreference] ?? "Sherwin-Williams",
+  };
 }

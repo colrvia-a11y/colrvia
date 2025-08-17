@@ -1,18 +1,15 @@
+// app/api/via/interview/route.ts
 import { NextRequest } from "next/server";
-import { getQuestionById, firstQuestionId, nextIdFor, Answers } from "@/lib/realtalk/questionnaire";
+import { Answers, firstStepId, getStepById, nextStepId } from "@/lib/realtalk/questionnaire";
 
 export const runtime = "nodejs";
 
-type Body = {
-  answers?: Answers;
-  lastUser?: string;             // free-typed message, optional
-  currentId?: string | null;     // last asked question id
-};
+type Body = { answers?: Answers; lastUser?: string; currentId?: string | null };
 
 export async function POST(req: NextRequest) {
   const { answers = {}, lastUser, currentId }: Body = await req.json();
 
-  // If user typed something that isn't an answer, gently answer via Q&A, then steer back.
+  // Optional digressions → short answer via Q&A
   let sideAnswer: string | null = null;
   if (lastUser && !looksLikeDirectAnswer(lastUser)) {
     try {
@@ -22,64 +19,62 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({ question: lastUser }),
       }).then(r => r.json());
       sideAnswer = qa?.answer || null;
-    } catch {
-      sideAnswer = null;
-    }
+    } catch { sideAnswer = null; }
   }
 
-  // Compute next question id
-  const nextId = !currentId ? firstQuestionId : nextIdFor(currentId as any, answers);
+  const nextId = !currentId ? firstStepId : nextStepId(currentId, answers);
   if (nextId === "END") {
-    return new Response(
-      JSON.stringify({
-        done: true,
-        reply:
-          sideAnswer
-            ? `${sideAnswer}\n\nThat covers it. I’ve got everything I need—ready to reveal your palette!`
-            : `I’ve got everything I need—ready to reveal your palette!`,
-      }),
-      { headers: { "Content-Type": "application/json" } },
-    );
+    return json({
+      done: true,
+      reply: sideAnswer
+        ? `${sideAnswer}\n\nThat covers it. I’ve got everything I need—ready to reveal your palette!`
+        : `I’ve got everything I need—ready to reveal your palette!`,
+    });
   }
 
-  const q = getQuestionById(nextId as any)!;
-
-  // Compose conversational reply + chips
+  const s = getStepById(nextId)!;
   const reply = [
     sideAnswer ? sideAnswer + "\n\n" : "",
-    leadInFor(q.id),
-    q.prompt,
+    leadInFor(s.id),
+    s.title,
   ].join("");
 
   const chips =
-    q.kind === "single" || q.kind === "multi" ? q.choices : null;
+    s.kind === "single" || s.kind === "multi"
+      ? (s as any).choices
+      : s.kind === "boolean"
+      ? [{ value: "true", label: "Yes" }, { value: "false", label: "No" }]
+      : null;
 
-  return new Response(
-    JSON.stringify({
-      done: false,
-      question: { id: q.id, kind: q.kind, prompt: q.prompt, placeholder: (q as any).placeholder || null },
-      reply,
-      chips,
-    }),
-    { headers: { "Content-Type": "application/json" } },
-  );
+  return json({
+    done: false,
+    reply,
+    question: {
+      id: s.id,
+      kind: s.kind,
+      title: s.title,
+      placeholder: (s as any).placeholder ?? null,
+      helper: (s as any).helper ?? null,
+    },
+    chips,
+  });
+}
+
+function json(data: any, status = 200) {
+  return new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
 }
 
 function looksLikeDirectAnswer(text: string) {
-  // Heuristic: short phrases likely intended as answers are not treated as side questions.
-  return text.length <= 40 && !/[?.!]$/.test(text);
+  // short, no punctuation likely an answer (vs a full question)
+  return text.length <= 40 && !/[?.!]/.test(text);
 }
 
 function leadInFor(id: string) {
-  switch (id) {
-    case "room_type": return "Let’s design your space. ";
-    case "lighting": return "Great—";
-    case "style_primary": return "Got it. ";
-    case "mood_words": return "Nice taste. ";
-    case "dark_color_ok": return "And contrast-wise, ";
-    case "fixed_elements": return "Anything we should honor in the room materials? ";
-    case "avoid_colors": return "Good to know. ";
-    case "brand": return "Last one. ";
-    default: return "";
-  }
+  if (id.startsWith("roomSpecific.")) return "Room details — ";
+  if (id.startsWith("existingElements.")) return "Let’s note a few existing elements. ";
+  if (id.startsWith("colorComfort.")) return "Your color comfort. ";
+  if (id.startsWith("finishes.")) return "Cleanability & finishes. ";
+  if (id.startsWith("guardrails.")) return "Final guardrails. ";
+  if (id === "photos") return "Optional photos. ";
+  return "";
 }
