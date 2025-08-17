@@ -29,3 +29,9 @@ export const VISION_MODEL =
 export const AI_ENABLE = process.env.AI_ENABLE === 'true'
 export const AI_MAX_OUTPUT_TOKENS = Number(process.env.AI_MAX_OUTPUT_TOKENS || 300)
 export const HAS_OPENAI_KEY = !!process.env.OPENAI_API_KEY
+
+export const MODELS = {
+  CHAT: process.env.VIA_CHAT_MODEL || 'gpt-5-mini',
+  PALETTE: process.env.VIA_PALETTE_MODEL || 'gpt-5',
+  REALTIME: process.env.VIA_REALTIME_MODEL || 'gpt-4o-realtime-preview',
+} as const;
