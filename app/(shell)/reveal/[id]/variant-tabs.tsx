@@ -1,7 +1,7 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Chip } from '@/components/ui'
-import { track, initAnalytics } from '@/lib/analytics'
+import { track } from '@/lib/analytics'
 
 interface Props { storyId:string; initialPalette:any[]; initialTitle:string; initialNarrative:string; baseMeta:{brand:string; vibe:string} }
 export default function VariantTabs({ storyId, initialPalette, initialTitle, initialNarrative }: Props){
@@ -17,7 +17,6 @@ export default function VariantTabs({ storyId, initialPalette, initialTitle, ini
   const [title,setTitle]=useState(initialTitle)
   const [narrative,setNarrative]=useState(initialNarrative)
   const [error,setError]=useState<string|null>(null)
-  useEffect(()=>{ initAnalytics() },[])
   async function load(v:'recommended'|'softer'|'bolder'){
     if(v==='recommended') { setVariant('recommended'); setPalette(initialPalette); setTitle(initialTitle); setNarrative(initialNarrative); const sp=new URLSearchParams(window.location.search); sp.delete('v'); history.replaceState(null,'',`?${sp.toString()}`); return }
   if(loading) return

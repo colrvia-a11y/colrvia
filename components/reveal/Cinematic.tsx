@@ -3,13 +3,12 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as Dialog from '@radix-ui/react-dialog'
 import { useReducedMotion } from '@/components/theme/MotionSettings'
-import { track, initAnalytics } from '@/lib/analytics'
+import { track } from '@/lib/analytics'
 
 interface CinematicProps { open:boolean; onExit:()=>void; story:{ id:string; title:string; palette:any[]; narrative:string; placements:any; }; }
 export default function Cinematic({ open, onExit, story }: CinematicProps){
   const startRef = useRef<number| null>(null)
   const [elapsed,setElapsed]=useState(0)
-  useEffect(()=>{ initAnalytics() },[])
   useEffect(()=>{
     if(open){ startRef.current=performance.now(); track('cinematic_play',{ id:story.id }) }
     const t = setInterval(()=>{ if(startRef.current) setElapsed((performance.now()-startRef.current)/1000) },500)
