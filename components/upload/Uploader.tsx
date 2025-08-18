@@ -18,7 +18,13 @@ export function Uploader({ onComplete }:{ onComplete: (files: File[]) => void })
   return (
     <div className="border border-[var(--border)] rounded-2xl p-3">
       <div className="flex items-center gap-2">
-        <button className="px-3 py-2 border rounded" onClick={() => inputRef.current?.click()}>Pick photos</button>
+        <button
+          type="button"
+          className="px-3 py-2 border rounded"
+          onClick={() => inputRef.current?.click()}
+        >
+          Pick photos
+        </button>
         <span className="text-sm text-[var(--ink-subtle)]">JPG, PNG, WEBP</span>
       </div>
       <input ref={inputRef} className="hidden" type="file" accept="image/*" multiple onChange={onPick} />

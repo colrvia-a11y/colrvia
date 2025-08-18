@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import React, { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabaseBrowser } from '@/lib/supabase/client'
 import { postTurn } from '@/lib/realtalk/api'
@@ -42,27 +42,7 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
     }
   })
 
-  useEffect(() => {
-    if (autoStart) void nextTurn()
-  }, [autoStart])
-
-  useEffect(() => {
-    setTextValue('')
-    setChipFocus(0)
-    setTextError(null)
-  }, [current?.id])
-
-  useEffect(() => {
-    if (!current?.choices) return
-    const multi = current.input_type === 'multiSelect'
-    const idx = current.choices.findIndex((c) =>
-      multi ? Array.isArray(answers[current.id]) && (answers[current.id] as string[]).includes(c.id)
-            : answers[current.id] === c.id
-    )
-    setChipFocus(idx >= 0 ? idx : 0)
-  }, [current, answers])
-
-  async function nextTurn(ack?: {id:string; value:string|string[]}){
+  const nextTurn = useCallback(async (ack?: {id:string; value:string|string[]}) => {
     setLoading(true)
     const merged = ack ? { ...answers, [ack.id]: ack.value } : answers
     try {
@@ -80,7 +60,28 @@ export default function RealTalkQuestionnaire({ initialAnswers = {}, autoStart =
     } finally {
       setLoading(false)
     }
-  }
+  }, [answers])
+
+  useEffect(() => {
+    if (autoStart) void nextTurn()
+  }, [autoStart, nextTurn])
+
+  useEffect(() => {
+    setTextValue('')
+    setChipFocus(0)
+    setTextError(null)
+  }, [current?.id])
+
+  useEffect(() => {
+    if (!current?.choices) return
+    const multi = current.input_type === 'multiSelect'
+    const idx = current.choices.findIndex((c) =>
+      multi ? Array.isArray(answers[current.id]) && (answers[current.id] as string[]).includes(c.id)
+            : answers[current.id] === c.id
+    )
+    setChipFocus(idx >= 0 ? idx : 0)
+  }, [current, answers])
+
 
   function updateAnswers(id:string, value:string|string[]){
     setAnswers(a => ({...a, [id]: value}))

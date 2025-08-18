@@ -35,7 +35,12 @@ export default function VoiceInterview() {
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [status, setStatus] = useState<BootStatus>('booting')
-  const [statusReason, setStatusReason] = useState<string | null>(null)
+  const [statusReason, setStatusReasonState] = useState<string | null>(null)
+  const statusReasonRef = useRef<string | null>(null)
+  const setStatusReason = (reason: string | null) => {
+    statusReasonRef.current = reason
+    setStatusReasonState(reason)
+  }
   const bootTimerRef = useRef<number | null>(null)
   const [armed, setArmed] = useState(false) // user tapped Enable Voice
   const [micError, setMicError] = useState<string | null>(null)
@@ -66,16 +71,16 @@ export default function VoiceInterview() {
     async function start() {
       setStatus('booting')
       // fallback to deterministic text if realtime is slow/dead
-      bootTimerRef.current = window.setTimeout(() => {
-        try {
-          kickOffDeterministicFirstQuestion()
-          setStatus('fallback')
-          if (!statusReason) setStatusReason('timeout waiting for realtime')
-        } catch {
-          setStatus('error')
-          setStatusReason('fallback init failed')
-        }
-      }, fallbackDelay)
+          bootTimerRef.current = window.setTimeout(() => {
+            try {
+              kickOffDeterministicFirstQuestion()
+              setStatus('fallback')
+              if (!statusReasonRef.current) setStatusReason('timeout waiting for realtime')
+            } catch {
+              setStatus('error')
+              setStatusReason('fallback init failed')
+            }
+          }, fallbackDelay)
 
       const tokenRes = await fetch('/api/realtime/session', { method: 'POST' })
       if (!tokenRes.ok) {
@@ -297,7 +302,7 @@ export default function VoiceInterview() {
         stream?.getTracks().forEach((t) => t.stop())
       } catch {}
     }
-  }, [armed])
+  }, [armed, fallbackDelay, router])
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-6 p-4">
