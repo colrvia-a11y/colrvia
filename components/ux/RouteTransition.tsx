@@ -1,35 +1,20 @@
-"use client"
-import { AnimatePresence, motion } from 'framer-motion'
-import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+"use client";
+import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 
-function useReducedMotionPref() {
-  const [reduce, setReduce] = useState(true)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReduce(mq.matches)
-    const on = (e: MediaQueryListEvent) => setReduce(e.matches)
-    mq.addEventListener?.('change', on)
-    return () => mq.removeEventListener?.('change', on)
-  }, [])
-  return reduce
-}
-
-export default function RouteTransition({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
-  const reduce = useReducedMotionPref()
-  if (reduce) return <>{children}</>
+export function RouteTransition({ children }: { children: React.ReactNode }) {
+  const key = usePathname();
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" initial={false}>
       <motion.div
-        key={pathname}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-        exit={{ opacity: 0, y: -8, transition: { duration: 0.18 } }}
+        key={key}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
       >
         {children}
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }
