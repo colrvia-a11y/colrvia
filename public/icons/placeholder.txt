@@ -1,1 +1,0 @@
-Placeholder icons will be generated as solid color squares.
