@@ -28,8 +28,9 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <ToastProvider>
-          <StartStoryPortalProvider>
+        <div id="start-story-root" style={{ display: 'contents' }} />
+        <StartStoryPortalProvider>
+          <ToastProvider>
             <CommandPaletteProvider>
               <SettingsProvider>
                 <ErrorBoundary>
@@ -39,8 +40,8 @@ export default function RootLayout({
                 </ErrorBoundary>
               </SettingsProvider>
             </CommandPaletteProvider>
-          </StartStoryPortalProvider>
-        </ToastProvider>
+          </ToastProvider>
+        </StartStoryPortalProvider>
       </body>
     </html>
   );
