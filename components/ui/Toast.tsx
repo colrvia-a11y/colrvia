@@ -1,16 +1,37 @@
-"use client"
-import { useState } from 'react'
+'use client'
+import { createContext, useContext, useState } from 'react'
 
-export function useToast() {
-  const [msg, setMsg] = useState<string | null>(null)
-  function show(message: string, ms = 1800) {
-    setMsg(message)
-    setTimeout(() => setMsg(null), ms)
+type Toast = { id: number; text: string; kind?: 'success' | 'error' | 'info' }
+
+const Ctx = createContext<{ push: (t: Toast) => void }>({ push: () => {} })
+
+export const useToast = () => useContext(Ctx)
+
+export function ToastProvider({ children }:{ children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<Toast[]>([])
+
+  function push(t: Toast) {
+    setToasts(v => [...v, { id: Date.now(), ...t }])
   }
-  const ToastEl = msg ? (
-    <div role="status" aria-live="polite" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-full border px-4 py-2 text-sm bg-white/90 dark:bg-neutral-900/90 backdrop-blur">
-      {msg}
-    </div>
-  ) : null
-  return { show, ToastEl }
+
+  function remove(id: number) {
+    setToasts(v => v.filter(t => t.id !== id))
+  }
+
+  return (
+    <Ctx.Provider value={{ push }}>
+      {children}
+      <div className="fixed bottom-4 right-4 space-y-2 z-[60]">
+        {toasts.map(t => (
+          <div
+            key={t.id}
+            className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow"
+            onClick={() => remove(t.id)}
+          >
+            {t.text}
+          </div>
+        ))}
+      </div>
+    </Ctx.Provider>
+  )
 }

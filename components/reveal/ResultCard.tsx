@@ -1,14 +1,12 @@
 "use client";
 import Image from "next/image";
 import { shimmer, toBase64 } from "@/lib/image-placeholder";
-import { useToast } from "@/components/ui/Toast";
 import { track } from "@/lib/analytics/client";
 
 export function ResultCard({ url, index, storyId, width = 1600, height = 900, onMoreLike, onCompare }:{
   url: string; index: number; storyId: string; width?: number; height?: number;
   onMoreLike?: (idx:number)=>void; onCompare?: (idx:number)=>void;
 }) {
-  const { ToastEl } = useToast();
   return (
     <figure className="group relative rounded-xl border overflow-hidden">
       <Image
@@ -24,7 +22,6 @@ export function ResultCard({ url, index, storyId, width = 1600, height = 900, on
           <button type="button" aria-label="Compare" onClick={() => { track('reveal_action', { story_id: storyId, action: 'compare_open' }); onCompare?.(index); }} className="rounded-md border px-2 py-1 text-xs">🌓</button>
         </span>
       </figcaption>
-      {ToastEl}
     </figure>
   );
 }
