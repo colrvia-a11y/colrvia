@@ -5,6 +5,7 @@ import { CommandPaletteProvider } from "@/components/command/CommandPaletteProvi
 import SettingsProvider from "@/components/settings/SettingsProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { StartStoryPortalProvider } from "@/components/ux/StartStoryPortal";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -28,15 +29,17 @@ export default function RootLayout({
           Skip to content
         </a>
         <ToastProvider>
-          <CommandPaletteProvider>
-            <SettingsProvider>
-              <ErrorBoundary>
-                <RouteTransition>
-                  <main id="content">{children}</main>
-                </RouteTransition>
-              </ErrorBoundary>
-            </SettingsProvider>
-          </CommandPaletteProvider>
+          <StartStoryPortalProvider>
+            <CommandPaletteProvider>
+              <SettingsProvider>
+                <ErrorBoundary>
+                  <RouteTransition>
+                    <main id="content">{children}</main>
+                  </RouteTransition>
+                </ErrorBoundary>
+              </SettingsProvider>
+            </CommandPaletteProvider>
+          </StartStoryPortalProvider>
         </ToastProvider>
       </body>
     </html>
