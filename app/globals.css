@@ -5,6 +5,9 @@ html,
 body {
   height: 100%;
 }
+html {
+  font-size: calc(100% * var(--scale, 1));
+}
 body {
   background: var(--paper);
   color: var(--ink);

@@ -2,6 +2,7 @@ import "./globals.css";
 import { Poppins } from "next/font/google";
 import { RouteTransition } from "@/components/ux/RouteTransition";
 import { CommandPaletteProvider } from "@/components/command/CommandPaletteProvider";
+import SettingsProvider from "@/components/settings/SettingsProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -25,9 +26,11 @@ export default function RootLayout({
           Skip to content
         </a>
         <CommandPaletteProvider>
-          <RouteTransition>
-            <main id="content">{children}</main>
-          </RouteTransition>
+          <SettingsProvider>
+            <RouteTransition>
+              <main id="content">{children}</main>
+            </RouteTransition>
+          </SettingsProvider>
         </CommandPaletteProvider>
       </body>
     </html>
