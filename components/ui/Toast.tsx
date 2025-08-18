@@ -3,14 +3,14 @@ import { createContext, useContext, useState } from 'react'
 
 type Toast = { id: number; text: string; kind?: 'success' | 'error' | 'info' }
 
-const Ctx = createContext<{ push: (t: Toast) => void }>({ push: () => {} })
+const Ctx = createContext<{ push: (t: Omit<Toast, 'id'>) => void }>({ push: () => {} })
 
 export const useToast = () => useContext(Ctx)
 
 export function ToastProvider({ children }:{ children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  function push(t: Toast) {
+  function push(t: Omit<Toast, 'id'>) {
     setToasts(v => [...v, { id: Date.now(), ...t }])
   }
 
@@ -23,13 +23,14 @@ export function ToastProvider({ children }:{ children: React.ReactNode }) {
       {children}
       <div className="fixed bottom-4 right-4 space-y-2 z-[60]">
         {toasts.map(t => (
-          <div
+          <button
             key={t.id}
-            className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow"
+            type="button"
+            className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow text-left"
             onClick={() => remove(t.id)}
           >
             {t.text}
-          </div>
+          </button>
         ))}
       </div>
     </Ctx.Provider>

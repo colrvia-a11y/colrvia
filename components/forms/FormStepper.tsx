@@ -32,11 +32,15 @@ export function FormStepper({ steps, onFinish }:{ steps: Step[]; onFinish: () =>
       <div>{step.element}</div>
       <div className="mt-4 flex gap-2">
         {i > 0 && (
-          <button className="px-3 py-2 border rounded" onClick={back}>
+          <button type="button" className="px-3 py-2 border rounded" onClick={back}>
             Back
           </button>
         )}
-        <button className="px-3 py-2 bg-[var(--accent)] text-white rounded" onClick={next}>
+        <button
+          type="button"
+          className="px-3 py-2 bg-[var(--accent)] text-white rounded"
+          onClick={next}
+        >
           {i === steps.length - 1 ? 'Finish' : 'Next'}
         </button>
       </div>
