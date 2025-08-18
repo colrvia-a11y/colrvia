@@ -5,5 +5,7 @@ export function init() {
 }
 
 export function track<E extends AnalyticsEventName>(name: E, props: AnalyticsEventPayload<E>) {
-  if (typeof window !== "undefined" && (window as any).posthog) (window as any).posthog.capture(name, props);
+  if (typeof window === "undefined") return
+  console.debug('[analytics]', name, props)
+  if ((window as any).posthog) (window as any).posthog.capture(name, props)
 }

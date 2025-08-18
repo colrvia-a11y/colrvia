@@ -21,6 +21,11 @@ export interface AnalyticsEventMap {
   render_started: { story_id: string }
   render_complete: { story_id: string; ms?: number }
   reveal_action: { story_id: string; action: 'download_all' | 'share' | 'retry' | 'more_like' | 'compare_open' }
+  onboarding_complete: Record<string, unknown>
+  palette_saved: Record<string, unknown>
+  upload_started: Record<string, unknown>
+  upload_failed: Record<string, unknown>
+  upload_success: Record<string, unknown>
 }
 
 export type AnalyticsEventName = keyof AnalyticsEventMap
