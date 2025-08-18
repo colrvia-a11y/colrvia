@@ -1,4 +1,0 @@
-/* Local self-hosted font faces (swap strategy) */
-@font-face { font-family:'Inter'; src: url('/fonts/Inter-Regular.woff2') format('woff2'); font-weight:400; font-display:swap; }
-@font-face { font-family:'Inter'; src: url('/fonts/Inter-Medium.woff2') format('woff2'); font-weight:500; font-display:swap; }
-@font-face { font-family:'Fraunces'; src: url('/fonts/Fraunces-SemiBold.woff2') format('woff2'); font-weight:600; font-display:swap; }
