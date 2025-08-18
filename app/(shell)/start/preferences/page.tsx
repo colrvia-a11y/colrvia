@@ -1,17 +1,12 @@
-"use client"
-import { useSearchParams, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+export const dynamic = 'force-dynamic'
 
-export default function PreferencesAlias(){
-  const sp = useSearchParams()
-  const router = useRouter()
-  useEffect(() => {
-    const d = sp.get('designerId')
-    if (d) {
-      router.replace(`/preferences/${d}`)
-    } else {
-      router.replace('/designers')
-    }
-  }, [sp, router])
-  return <main className="px-4 py-12 text-sm text-muted-foreground">Loading preferences…</main>
+import { Suspense } from 'react'
+import StartPreferencesClient from './StartPreferencesClient'
+
+export default function StartPreferencesPage(){
+  return (
+    <Suspense fallback={null}>
+      <StartPreferencesClient />
+    </Suspense>
+  )
 }

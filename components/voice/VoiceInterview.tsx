@@ -48,7 +48,7 @@ export default function VoiceInterview() {
   // Choose a slightly longer fallback on mobile/slow networks so iOS has time to show the mic sheet
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : ''
   const isMobile = /iphone|ipad|android/.test(ua)
-  const net = (navigator as any)?.connection?.effectiveType || ''
+  const net = typeof navigator !== 'undefined' ? (navigator as any)?.connection?.effectiveType || '' : ''
   const slowNet = /2g|3g/.test(net)
   const fallbackDelay = isMobile || slowNet ? 6000 : 3000
   const showDiag =
